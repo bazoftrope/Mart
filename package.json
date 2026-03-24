@@ -8,7 +8,8 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build"
+    "type-check": "vue-tsc --build",
+    "deploy": "npm run build && sshpass -p 'lgosdset' scp -r dist/* root@185.72.145.228:/var/www/mart/ && sshpass -p 'lgosdset' ssh root@185.72.145.228 'chown -R www-data:www-data /var/www/mart'"
   },
   "dependencies": {
     "pinia": "^3.0.4",
