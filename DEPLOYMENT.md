@@ -1,12 +1,13 @@
 # FoodMart — Инструкция по деплою
 
-## 📁 Структура монорепозитория
+## 📁 Структура
 
 ```
 Mart/
 ├── frontend/           # Vue приложение
 ├── backend/            # PocketBase
 ├── scripts/            # Скрипты
+│   └── deploy.sh       # Деплой на сервер
 └── DEPLOYMENT.md
 ```
 
@@ -20,81 +21,62 @@ Mart/
 
 ---
 
-## 🚀 Автоматический деплой (Git)
-
-### Первый раз: настройка сервера
+## 🚀 Быстрый деплой (одной командой)
 
 ```bash
-cd scripts
-./setup-server.sh
+./scripts/deploy.sh
 ```
 
-Скрипт:
-1. Создаёт bare-репозиторий на сервере (`/root/repo/foodmart.git`)
-2. Создаёт post-receive hook
-3. Добавляет remote `production`
-
-### Деплой изменений
-
-```bash
-git push production main
-```
-
-Hook автоматически:
-- Проверит изменения (frontend/backend)
-- Применит миграции PocketBase (если есть)
-- Перезапустит PocketBase (если изменения в бэкенде)
-- Соберёт фронтенд (если изменения во фронтенде)
-- Перезапустит nginx
+Скрипт сам:
+1. Подключится к серверу
+2. Сделаем `git pull`
+3. Соберёт фронтенд
+4. Перезапустит PocketBase
+5. Перезапустит nginx
 
 ---
 
-## 🔧 Ручной деплой
+## 🔧 Ручной деплой (по шагам)
 
-### 1. Подключение к серверу
-
-```bash
-sshpass -p 'lgosdset' ssh -o StrictHostKeyChecking=no root@185.72.145.228
-```
-
-### 2. Проверка состояния
+### 1. Зайти на сервер
 
 ```bash
-# Проверить процессы
-ps aux | grep -E 'pocketbase|nginx'
-
-# Проверить PocketBase
-curl http://localhost:8090/api/health
-
-# Проверить nginx
-nginx -t && systemctl status nginx
+ssh root@185.72.145.228
+# пароль: lgosdset
 ```
 
-### 3. Обновление вручную (если Git не работает)
+### 2. Обновить код
 
 ```bash
 cd /var/www/foodmart
+git pull origin main
+```
 
-# Pull изменений
-git pull
+### 3. Собрать фронтенд
 
-# Если изменения в бэкенде
-cd backend
-./pocketbase migrate --dir=./pb_migrations
-pkill -f pocketbase
+```bash
+cd /var/www/foodmart/frontend
+npm run build:prod
+```
+
+### 4. Перезапустить PocketBase
+
+```bash
+cd /var/www/foodmart/backend
+pkill pocketbase || true
 nohup ./pocketbase serve --http=127.0.0.1:8090 --dir=./pb_data > pocketbase.log 2>&1 &
+```
 
-# Если изменения во фронтенде
-cd ../frontend
-npm install --production
-npm run build
+### 5. Перезапустить nginx
 
-# Исправить права
-chown -R www-data:www-data /var/www/foodmart
-chmod -R 755 /var/www/foodmart
-
-# Перезапустить nginx
+```bash
 nginx -t && systemctl reload nginx
+```
+
+### 6. Выйти
+
+```bash
+exit
 ```
 
 ---
@@ -107,9 +89,6 @@ ssh root@185.72.145.228 "tail -50 /var/www/foodmart/backend/pocketbase.log"
 
 # nginx (ошибки)
 ssh root@185.72.145.228 "tail -50 /var/log/nginx/error.log"
-
-# nginx (доступ)
-ssh root@185.72.145.228 "tail -50 /var/log/nginx/access.log"
 ```
 
 ---
@@ -169,12 +148,12 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ```bash
 # Проверить права
-ssh root@185.72.145.228 "ls -la /var/www/foodmart/"
+ssh root@185.72.145.228 "ls -la /var/www/foodmart/frontend/dist/"
 
 # Исправить права
 ssh root@185.72.145.228 "chown -R www-data:www-data /var/www/foodmart && chmod -R 755 /var/www/foodmart"
 
-# Проверить логи
+# Проверить логи nginx
 ssh root@185.72.145.228 "tail -20 /var/log/nginx/error.log"
 ```
 
@@ -194,28 +173,34 @@ ssh root@185.72.145.228 "
 "
 ```
 
-### Git push не работает
+### Фронтенд не собирается
 
 ```bash
-# Проверить remote
-git remote -v
+# Зайти на сервер
+ssh root@185.72.145.228
 
-# Пересоздать remote
-git remote remove production
-git remote add production root@185.72.145.228:/root/repo/foodmart.git
+# Перейти в папку
+cd /var/www/foodmart/frontend
 
-# Проверить hook на сервере
-ssh root@185.72.145.228 "cat /root/repo/foodmart.git/hooks/post-receive"
+# Установить зависимости заново
+rm -rf node_modules package-lock.json
+npm install
+
+# Собрать
+npm run build:prod
 ```
 
-### Деплой не сработал
+---
 
-```bash
-# Посмотреть логи git
-ssh root@185.72.145.228 "cat /root/repo/foodmart.git/logs/receive.log"
+## 📝 Рабочий процесс
 
-# Проверить post-receive
-ssh root@185.72.145.228 "ls -la /root/repo/foodmart.git/hooks/"
+```
+┌─────────────────────────────────────────────────────────┐
+│  1. Внёс изменения в код                               │
+│  2. git add . && git commit -m "fix: что-то"          │
+│  3. git push origin main                               │
+│  4. ./scripts/deploy.sh  ← деплой на сервер            │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -224,7 +209,7 @@ ssh root@185.72.145.228 "ls -la /root/repo/foodmart.git/hooks/"
 
 | Дата | Что сделано |
 |------|-------------|
-| 2026-04-02 | Монорепозиторий + Git авто-деплой |
+| 2026-04-02 | Простой деплой через deploy.sh |
 | 2026-03-25 | Деплой на SprintBox (IP: 185.72.145.228) |
 | 2026-03-18 | Первоначальная настройка сервера |
 
