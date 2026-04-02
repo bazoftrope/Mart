@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================
-# Скрипт настройки сервера для FoodMart
+# Настройка сервера FoodMart с нуля
 # ============================================
 
 SERVER="185.72.145.228"
@@ -9,142 +9,116 @@ USER="root"
 PASS="lgosdset"
 DEPLOY_DIR="/var/www/foodmart"
 
-echo "🔧 Настройка сервера $SERVER для Git-деплоя..."
+echo "🚀 Настройка сервера $SERVER"
 
-# 1. Создать bare-репозиторий
-echo "📦 Создание bare-репозитория..."
+# 1. Очистка
+echo "📦 Очистка..."
 sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
-    mkdir -p /root/repo/foodmart.git
-    cd /root/repo/foodmart.git
-    git init --bare
-"
-
-# 2. Создать рабочую директорию
-echo "📁 Создание рабочей директории..."
-sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
-    mkdir -p $DEPLOY_DIR
-"
-
-# 3. Создать post-receive hook
-echo "📝 Создание post-receive hook..."
-sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
-    cat > /root/repo/foodmart.git/hooks/post-receive << 'HOOK'
-#!/bin/bash
-
-DEPLOY_DIR=\"/var/www/foodmart\"
-BACKEND_DIR=\"\$DEPLOY_DIR/backend\"
-FRONTEND_DIR=\"\$DEPLOY_DIR/frontend\"
-
-echo \"📦 Деплой в \$DEPLOY_DIR...\"
-
-# Checkout изменений
-git --work-tree=\$DEPLOY_DIR --git-dir=/root/repo/foodmart.git checkout -f
-
-# Проверить изменения в бэкенде
-BACKEND_CHANGED=false
-FRONTEND_CHANGED=false
-
-# Получаем список изменённых файлов
-CHANGED_FILES=\$(git --work-tree=\$DEPLOY_DIR --git-dir=/root/repo/foodmart.git diff --name-only HEAD^ HEAD 2>/dev/null || echo \"\")
-
-if echo \"\$CHANGED_FILES\" | grep -q '^backend/'; then
-    BACKEND_CHANGED=true
-fi
-
-if echo \"\$CHANGED_FILES\" | grep -q '^frontend/'; then
-    FRONTEND_CHANGED=true
-fi
-
-# Если HEAD^ не существует (первый деплой), проверяем все файлы
-if [ -z \"\$CHANGED_FILES\" ]; then
-    CHANGED_FILES=\$(git --work-tree=\$DEPLOY_DIR --git-dir=/root/repo/foodmart.git ls-tree -r --name-only HEAD)
-    
-    if echo \"\$CHANGED_FILES\" | grep -q '^backend/'; then
-        BACKEND_CHANGED=true
-    fi
-    
-    if echo \"\$CHANGED_FILES\" | grep -q '^frontend/'; then
-        FRONTEND_CHANGED=true
-    fi
-fi
-
-echo \"Бэкенд изменён: \$BACKEND_CHANGED\"
-echo \"Фронтенд изменён: \$FRONTEND_CHANGED\"
-
-# Обновить бэкенд
-if [ \"\$BACKEND_CHANGED\" = true ]; then
-    echo \"🔧 Изменения в бэкенде...\"
-    
-    # Применить миграции
-    cd \$BACKEND_DIR
-    ./pocketbase migrate --dir=./pb_migrations
-    
-    # Перезапустить PocketBase
+    rm -rf $DEPLOY_DIR
     pkill -f pocketbase || true
-    sleep 1
-    cd \$BACKEND_DIR
+"
+
+# 2. Клонирование репозитория
+echo "📥 Клонирование репозитория..."
+sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
+    cd /var/www
+    git clone https://github.com/bazoftrope/Mart.git foodmart
+"
+
+# 3. Скачать PocketBase для Linux
+echo "📦 Установка PocketBase (Linux)..."
+sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
+    cd $DEPLOY_DIR/backend
+    wget -q https://github.com/pocketbase/pocketbase/releases/download/v0.25.4/pocketbase_0.25.4_linux_amd64.zip
+    unzip -o pocketbase_0.25.4_linux_amd64.zip
+    rm pocketbase_0.25.4_linux_amd64.zip
+    chmod +x pocketbase
+"
+
+# 4. Установить зависимости фронтенда
+echo "📦 Установка зависимостей фронтенда..."
+sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
+    cd $DEPLOY_DIR/frontend
+    npm install
+"
+
+# 5. Собрать фронтенд
+echo "🔨 Сборка фронтенда..."
+sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
+    cd $DEPLOY_DIR/frontend
+    npm run build:prod
+"
+
+# 6. Настроить nginx
+echo "⚙️ Настройка nginx..."
+sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
+    # Создать сертификат
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout /etc/ssl/private/app.key \
+        -out /etc/ssl/certs/app.crt \
+        -subj '/CN=185.72.145.228' \
+        -addext 'subjectAltName=IP:185.72.145.228'
+
+    # Конфиг nginx
+    cat > /etc/nginx/sites-available/foodmart << 'NGINX'
+server {
+    listen 443 ssl;
+    server_name 185.72.145.228;
+
+    ssl_certificate /etc/ssl/certs/app.crt;
+    ssl_certificate_key /etc/ssl/private/app.key;
+
+    location / {
+        root /var/www/foodmart/frontend/dist;
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:8090/api/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location /_/ {
+        proxy_pass http://localhost:8090/_/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    server_name 185.72.145.228;
+    return 301 https://\$host\$request_uri;
+}
+NGINX
+
+    # Включить сайт
+    ln -sf /etc/nginx/sites-available/foodmart /etc/nginx/sites-enabled/foodmart
+    rm -f /etc/nginx/sites-enabled/default
+    nginx -t && systemctl reload nginx
+"
+
+# 7. Запустить PocketBase
+echo "🚀 Запуск PocketBase..."
+sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$SERVER "
+    cd $DEPLOY_DIR/backend
     nohup ./pocketbase serve --http=127.0.0.1:8090 --dir=./pb_data > pocketbase.log 2>&1 &
     sleep 2
     
-    # Проверить что запустился
     if curl -s http://localhost:8090/api/health > /dev/null; then
-        echo \"✅ PocketBase запущен\"
+        echo '✅ PocketBase запущен'
     else
-        echo \"⚠️ PocketBase не запустился, проверяем логи...\"
-        cat pocketbase.log
+        echo '⚠️ PocketBase не запустился'
     fi
-fi
-
-# Обновить фронтенд
-if [ \"\$FRONTEND_CHANGED\" = true ]; then
-    echo \"🎨 Изменения в фронтенде...\"
-    
-    cd \$FRONTEND_DIR
-    
-    # Установить зависимости (если package-lock.json изменился или node_modules нет)
-    if [ ! -d \"node_modules\" ] || echo \"\$CHANGED_FILES\" | grep -q '^frontend/package'; then
-        echo \"📦 Установка зависимостей...\"
-        npm install --production
-    fi
-    
-    # Собрать фронтенд
-    echo \"🔨 Сборка фронтенда...\"
-    npm run build
-    
-    echo \"✅ Фронтенд обновлён\"
-fi
-
-# Исправить права
-chown -R www-data:www-data \$DEPLOY_DIR
-chmod -R 755 \$DEPLOY_DIR
-
-# Перезапустить nginx (для обновления кэша)
-nginx -t && systemctl reload nginx
-
-echo \"\"
-echo \"============================================\"
-echo \"✅ ДЕПЛОЙ ЗАВЕРШЁН!\"
-echo \"============================================\"
-echo \"📍 URL: https://185.72.145.228\"
-echo \"🔐 Admin: https://185.72.145.228/_/\"
-HOOK
-
-    chmod +x /root/repo/foodmart.git/hooks/post-receive
 "
-
-# 4. Добавить remote
-echo "🔗 Добавление remote..."
-cd "$(dirname "$0")/.."
-git remote remove production 2>/dev/null || true
-git remote add production root@$SERVER:/root/repo/foodmart.git
 
 echo ""
 echo "============================================"
 echo "✅ СЕРВЕР НАСТРОЕН!"
 echo "============================================"
+echo "📍 URL: https://185.72.145.228"
+echo "🔐 Admin: https://185.72.145.228/_/"
 echo ""
-echo "Теперь для деплоя выполните:"
-echo "  git push production main"
-echo ""
-echo "Или добавьте в package.json:"
-echo '  "deploy": "git push production main"'
+echo "Для обновлений теперь используй:"
+echo "  ./scripts/deploy.sh"

@@ -43,6 +43,7 @@ frontend/.env
 frontend/.env.*.local
 
 # Backend (PocketBase)
+backend/pocketbase
 backend/pb_data/
 backend/*.log
 backend/.env
