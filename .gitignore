@@ -31,3 +31,22 @@ dist-ssr
 
 # Build output
 *.tsbuildinfo
+
+# ============================================
+# Монорепозиторий FoodMart
+# ============================================
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.env
+frontend/.env.*.local
+
+# Backend (PocketBase)
+backend/pb_data/
+backend/*.log
+backend/.env
+backend/.env.*.local
+
+# Scripts
+scripts/*.log

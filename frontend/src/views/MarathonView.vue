@@ -1,0 +1,239 @@
+<template>
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem">
+        <div v-if="marathonsStore.isLoading" class="loading">Загрузка...</div>
+
+        <div v-else-if="!marathonsStore.currentMarathon" class="error">
+            Марафон не найден
+        </div>
+
+        <div v-else>
+            <!-- Шапка марафона -->
+            <div class="card mb-1" :class="{ 'mentor-mode': isMentorOfMarathon }">
+                <div v-if="isMentorOfMarathon" class="mentor-badge">
+                    👨‍🏫 Режим ментора
+                </div>
+                <button
+                    class="btn btn-secondary"
+                    style="margin-bottom: 1rem"
+                    @click="router.back()"
+                >
+                    ← Назад
+                </button>
+                <h1>{{ marathonsStore.currentMarathon.title }}</h1>
+                <p style="color: var(--text-muted); margin: 0.5rem 0">
+                    {{ marathonsStore.currentMarathon.description }}
+                </p>
+
+                <div
+                    style="
+                        display: flex;
+                        gap: 1rem;
+                        font-size: 0.875rem;
+                        color: var(--text-muted);
+                        flex-wrap: wrap;
+                    "
+                >
+                    <span
+                        >📅
+                        {{ marathonsStore.currentMarathon.durationDays }}
+                        дней</span
+                    >
+                    <span
+                        >👥
+                        {{ marathonsStore.currentMarathon.participants.length }}
+                        участников</span
+                    >
+                    <span
+                        :style="{
+                            color: marathonsStore.currentMarathon.isActive
+                                ? 'var(--primary)'
+                                : 'var(--text-muted)',
+                            marginLeft: 'auto',
+                            fontWeight: 500,
+                        }"
+                    >
+                        {{
+                            marathonsStore.currentMarathon.isActive
+                                ? "Активен"
+                                : "Завершён"
+                        }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Для ментора: управление -->
+            <div
+                v-if="isMentorOfMarathon"
+                class="card mb-1"
+                style="background: #e3f2fd"
+            >
+                <h3 style="margin-bottom: 0.5rem">Панель ментора</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap">
+                    <button class="btn btn-primary" @click="openEditModal">
+                        ✏️ Редактировать
+                    </button>
+                    <button class="btn btn-primary" @click="showAddTask = true">
+                        + Добавить задание
+                    </button>
+                </div>
+            </div>
+
+            <!-- Список дней -->
+            <div class="card mb-1">
+                <h2 style="margin-bottom: 1rem">Дни марафона</h2>
+
+                <div
+                    v-if="marathonsStore.tasks.length === 0"
+                    class="text-center"
+                    style="color: var(--text-muted); padding: 2rem"
+                >
+                    Заданий пока нет
+                </div>
+
+                <div
+                    v-for="task in marathonsStore.tasks"
+                    :key="task.id"
+                    class="card"
+                    style="margin-bottom: 1rem; border: 1px solid var(--border)"
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 0.5rem;
+                        "
+                    >
+                        <span style="font-weight: 600; color: var(--primary)"
+                            >День {{ task.dayNumber }}</span
+                        >
+                        <span
+                            style="
+                                font-size: 0.875rem;
+                                color: var(--text-muted);
+                            "
+                        >
+                            {{ taskTypeLabel(task.type) }}
+                        </span>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.5rem">{{ task.title }}</h4>
+                    <p
+                        style="
+                            color: var(--text-muted);
+                            font-size: 0.875rem;
+                            margin-bottom: 1rem;
+                        "
+                    >
+                        {{ task.description }}
+                    </p>
+
+                    <button
+                        v-if="authStore.isParticipant"
+                        class="btn btn-primary"
+                        @click="openReport(task)"
+                    >
+                        Сдать отчёт
+                    </button>
+                </div>
+            </div>
+
+            <!-- Чат -->
+            <div class="card">
+                <h2 style="margin-bottom: 1rem">Чат марафона</h2>
+                <div
+                    style="
+                        min-height: 200px;
+                        background: var(--bg);
+                        border-radius: var(--radius);
+                        padding: 1rem;
+                    "
+                >
+                    <p class="text-center" style="color: var(--text-muted)">
+                        Сообщений пока нет
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Модалка редактирования марафона -->
+    <CreateEditMarathonModal
+        v-show="showEditModal"
+        :marathon="marathonsStore.currentMarathon"
+        @close="closeEditModal"
+        @saved="onMarathonSaved"
+    />
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { useMarathonsStore } from "@/stores/marathons";
+import type { DailyTask, Marathon } from "@/types";
+import CreateEditMarathonModal from "@/components/CreateEditMarathonModal.vue";
+
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const marathonsStore = useMarathonsStore();
+
+const showAddTask = ref(false);
+const showEditModal = ref(false);
+
+const isMentorOfMarathon = computed(() => {
+    return (
+        authStore.isMentor &&
+        marathonsStore.currentMarathon?.mentorId === authStore.user?.id
+    );
+});
+
+const taskTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+        meal: "🍽️ Питание",
+        exercise: "🏃 Тренировка",
+        both: "🍽️🏃 Питание + Тренировка",
+    };
+    return labels[type] || type;
+};
+
+const openReport = (task: DailyTask) => {
+    console.log("Отчёт по заданию:", task.id);
+};
+
+const openEditModal = () => {
+    showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+    showEditModal.value = false;
+};
+
+const onMarathonSaved = () => {
+    showEditModal.value = false;
+};
+
+onMounted(() => {
+    const id = route.params.id as string;
+    marathonsStore.fetchMarathonById(id);
+});
+</script>
+
+<style scoped>
+.mentor-mode {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #2196f3;
+    position: relative;
+}
+
+.mentor-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #2196f3;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+</style>

@@ -1,56 +1,64 @@
 # FoodMart — Инструкция по деплою
 
-## 📦 Что развёрнуто
+## 📁 Структура монорепозитория
 
-| Компонент | Версия | Порт | Путь |
-|-----------|--------|------|------|
-| **PocketBase** | 0.25.4 | 8090 | `/root/app/pocketbase` |
-| **Vue Frontend** | 3.5.29 | 443 (nginx) | `/var/www/mart` |
-| **nginx** | 1.24.0 | 80, 443 | `/etc/nginx/sites-available/app` |
-
----
+```
+Mart/
+├── frontend/           # Vue приложение
+├── backend/            # PocketBase
+├── scripts/            # Скрипты
+└── DEPLOYMENT.md
+```
 
 ## 🌐 Доступы
 
-### Сервер (SprintBox)
-- **IP:** `185.72.145.228`
-- **SSH:** `root` / `lgosdset`
-
-### PocketBase Admin
-- **URL:** https://185.72.145.228/_/
-- **Email:** `4433800@gmail.com`
-- **Пароль:** `lgosdset`
-
-### Фронтенд
-- **URL:** https://185.72.145.228
+| Компонент | URL | Логин/Пароль |
+|-----------|-----|--------------|
+| **Сервер** | 185.72.145.228 | root / lgosdset |
+| **PocketBase Admin** | https://185.72.145.228/_/ | 4433800@gmail.com / lgosdset |
+| **Фронтенд** | https://185.72.145.228 | — |
 
 ---
 
-## 🚀 Быстрый деплой (автоматически)
+## 🚀 Автоматический деплой (Git)
+
+### Первый раз: настройка сервера
 
 ```bash
-cd /Users/bazoftrope/projects/PocketBase
-./deploy.sh
+cd scripts
+./setup-server.sh
 ```
 
-Скрипт делает:
-1. Очищает сервер
-2. Загружает PocketBase и миграции
-3. Собирает Vue приложение
-4. Загружает `dist` на сервер
-5. Настраивает nginx
-6. Запускает PocketBase
+Скрипт:
+1. Создаёт bare-репозиторий на сервере (`/root/repo/foodmart.git`)
+2. Создаёт post-receive hook
+3. Добавляет remote `production`
+
+### Деплой изменений
+
+```bash
+git push production main
+```
+
+Hook автоматически:
+- Проверит изменения (frontend/backend)
+- Применит миграции PocketBase (если есть)
+- Перезапустит PocketBase (если изменения в бэкенде)
+- Соберёт фронтенд (если изменения во фронтенде)
+- Перезапустит nginx
 
 ---
 
-## 🔧 Ручной деплой (по шагам)
+## 🔧 Ручной деплой
 
 ### 1. Подключение к серверу
+
 ```bash
 sshpass -p 'lgosdset' ssh -o StrictHostKeyChecking=no root@185.72.145.228
 ```
 
 ### 2. Проверка состояния
+
 ```bash
 # Проверить процессы
 ps aux | grep -E 'pocketbase|nginx'
@@ -62,66 +70,87 @@ curl http://localhost:8090/api/health
 nginx -t && systemctl status nginx
 ```
 
-### 3. Обновление PocketBase
+### 3. Обновление вручную (если Git не работает)
+
 ```bash
-# Остановить текущий процесс
+cd /var/www/foodmart
+
+# Pull изменений
+git pull
+
+# Если изменения в бэкенде
+cd backend
+./pocketbase migrate --dir=./pb_migrations
 pkill -f pocketbase
+nohup ./pocketbase serve --http=127.0.0.1:8090 --dir=./pb_data > pocketbase.log 2>&1 &
 
-# Скачать свежую версию (если нужно)
-cd /root/app/pocketbase
-curl -L https://github.com/pocketbase/pocketbase/releases/download/v0.25.4/pocketbase_0.25.4_linux_amd64.zip -o pb.zip
-unzip -o pb.zip && rm pb.zip
-chmod +x pocketbase
-
-# Запустить
-nohup ./pocketbase serve --http=0.0.0.0:8090 --dir=/root/app/pocketbase/pb_data > pocketbase.log 2>&1 &
-
-# Проверить
-curl http://localhost:8090/api/health
-```
-
-### 4. Обновление фронтенда
-```bash
-# Локально: собрать проект
-cd /Users/bazoftrope/projects/Mart
+# Если изменения во фронтенде
+cd ../frontend
+npm install --production
 npm run build
 
-# Загрузить на сервер
-sshpass -p 'lgosdset' scp -r dist/* root@185.72.145.228:/var/www/mart/
-
 # Исправить права
-sshpass -p 'lgosdset' ssh root@185.72.145.228 "chown -R www-data:www-data /var/www/mart && chmod -R 755 /var/www/mart"
-```
+chown -R www-data:www-data /var/www/foodmart
+chmod -R 755 /var/www/foodmart
 
-### 5. Перезапуск nginx
-```bash
-sshpass -p 'lgosdset' ssh root@185.72.145.228 "nginx -t && systemctl restart nginx"
+# Перезапустить nginx
+nginx -t && systemctl reload nginx
 ```
 
 ---
 
-## 📁 Структура на сервере
+## 📊 Логи
 
-```
-/root/app/
-├── pocketbase/
-│   ├── pocketbase              # Бинарник
-│   ├── pb_data/                # База данных
-│   ├── pb_migrations/          # Миграции
-│   └── pocketbase.log          # Логи
-└── vue-app/                    # Старая папка (не используется)
+```bash
+# PocketBase
+ssh root@185.72.145.228 "tail -50 /var/www/foodmart/backend/pocketbase.log"
 
-/var/www/mart/                  # Фронтенд
-├── index.html
-├── favicon.ico
-└── assets/
+# nginx (ошибки)
+ssh root@185.72.145.228 "tail -50 /var/log/nginx/error.log"
+
+# nginx (доступ)
+ssh root@185.72.145.228 "tail -50 /var/log/nginx/access.log"
 ```
+
+---
+
+## 🛠️ Управление службами
+
+```bash
+# Перезапустить nginx
+ssh root@185.72.145.228 "systemctl restart nginx"
+
+# Перезапустить PocketBase
+ssh root@185.72.145.228 "
+    pkill -f pocketbase
+    cd /var/www/foodmart/backend
+    nohup ./pocketbase serve --http=127.0.0.1:8090 --dir=./pb_data > pocketbase.log 2>&1 &
+"
+
+# Проверить статус
+ssh root@185.72.145.228 "systemctl status nginx && ps aux | grep pocketbase"
+```
+
+---
+
+## 🗄️ Коллекции PocketBase
+
+Миграции в `backend/pb_migrations/`:
+
+| Коллекция | Описание |
+|-----------|----------|
+| `users` | Пользователи (роли: ментор, участник) |
+| `marathons` | Марафоны |
+| `tasks` | Задания |
+| `reports` | Отчёты участников |
+| `messages` | Сообщения |
 
 ---
 
 ## 🔐 SSL сертификат
 
 Самоподписанный сертификат (обновляется раз в год):
+
 ```bash
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/ssl/private/app.key \
@@ -134,88 +163,23 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ---
 
-## 🗄️ Коллекции PocketBase
-
-Миграции находятся в `/root/app/pocketbase/pb_migrations/`:
-
-| Коллекция | Описание |
-|-----------|----------|
-| `users` | Пользователи (роли: ментор, участник) |
-| `marathons` | Марафоны |
-| `tasks` | Задания |
-| `reports` | Отчёты участников |
-| `messages` | Сообщения |
-
-### Применить миграции вручную
-```bash
-cd /root/app/pocketbase
-./pocketbase migrate
-```
-
----
-
-## 📊 Логи
-
-```bash
-# PocketBase
-ssh root@185.72.145.228 "tail -50 /root/app/pocketbase/pocketbase.log"
-
-# nginx (ошибки)
-ssh root@185.72.145.228 "tail -50 /var/log/nginx/error.log"
-
-# nginx (доступ)
-ssh root@185.72.145.228 "tail -50 /var/log/nginx/access.log"
-
-# systemd (nginx)
-ssh root@185.72.145.228 "journalctl -u nginx --no-pager -n 50"
-```
-
----
-
-## 🛠️ Управление службами
-
-```bash
-# Перезапустить nginx
-ssh root@185.72.145.228 "systemctl restart nginx"
-
-# Перезапустить PocketBase
-ssh root@185.72.145.228 "pkill -f pocketbase && cd /root/app/pocketbase && nohup ./pocketbase serve --http=0.0.0.0:8090 --dir=/root/app/pocketbase/pb_data > pocketbase.log 2>&1 &"
-
-# Проверить статус
-ssh root@185.72.145.228 "systemctl status nginx && ps aux | grep pocketbase"
-```
-
----
-
-## 🔑 Суперпользователь
-
-### Создать/обновить
-```bash
-ssh root@185.72.145.228 "cd /root/app/pocketbase && ./pocketbase superuser upsert EMAIL PASSWORD"
-```
-
-### Пример
-```bash
-./pocketbase superuser upsert 4433800@gmail.com lgosdset
-```
-
----
-
 ## 🆘 Troubleshooting
 
 ### Ошибка 500 на фронтенде
+
 ```bash
 # Проверить права
-ssh root@185.72.145.228 "ls -la /var/www/mart/"
+ssh root@185.72.145.228 "ls -la /var/www/foodmart/"
 
 # Исправить права
-ssh root@185.72.145.228 "chown -R www-data:www-data /var/www/mart && chmod -R 755 /var/www/mart"
+ssh root@185.72.145.228 "chown -R www-data:www-data /var/www/foodmart && chmod -R 755 /var/www/foodmart"
 
 # Проверить логи
 ssh root@185.72.145.228 "tail -20 /var/log/nginx/error.log"
 ```
 
 ### PocketBase не запускается
+
 ```bash
 # Проверить порт
 ssh root@185.72.145.228 "netstat -tlnp | grep 8090"
@@ -224,19 +188,34 @@ ssh root@185.72.145.228 "netstat -tlnp | grep 8090"
 ssh root@185.72.145.228 "pkill -f pocketbase"
 
 # Запустить заново
-ssh root@185.72.145.228 "cd /root/app/pocketbase && ./pocketbase serve --http=0.0.0.0:8090 --dir=/root/app/pocketbase/pb_data &"
+ssh root@185.72.145.228 "
+    cd /var/www/foodmart/backend
+    ./pocketbase serve --http=127.0.0.1:8090 --dir=./pb_data &
+"
 ```
 
-### Mixed Content Error
-Убедитесь, что `.env` файл содержит:
-```
-VITE_POCKETBASE_URL=https://185.72.145.228
-```
+### Git push не работает
 
-И пересоберите фронтенд:
 ```bash
-cd /Users/bazoftrope/projects/Mart
-npm run build
+# Проверить remote
+git remote -v
+
+# Пересоздать remote
+git remote remove production
+git remote add production root@185.72.145.228:/root/repo/foodmart.git
+
+# Проверить hook на сервере
+ssh root@185.72.145.228 "cat /root/repo/foodmart.git/hooks/post-receive"
+```
+
+### Деплой не сработал
+
+```bash
+# Посмотреть логи git
+ssh root@185.72.145.228 "cat /root/repo/foodmart.git/logs/receive.log"
+
+# Проверить post-receive
+ssh root@185.72.145.228 "ls -la /root/repo/foodmart.git/hooks/"
 ```
 
 ---
@@ -245,6 +224,7 @@ npm run build
 
 | Дата | Что сделано |
 |------|-------------|
+| 2026-04-02 | Монорепозиторий + Git авто-деплой |
 | 2026-03-25 | Деплой на SprintBox (IP: 185.72.145.228) |
 | 2026-03-18 | Первоначальная настройка сервера |
 
@@ -252,5 +232,4 @@ npm run build
 
 ## 📞 Контакты
 
-- **Репозиторий Vue:** https://github.com/bazoftrope/Mart
-- **Репозиторий PocketBase:** https://github.com/bazoftrope/Mart/tree/main/PocketBase
+- **Репозиторий:** https://github.com/bazoftrope/Mart
