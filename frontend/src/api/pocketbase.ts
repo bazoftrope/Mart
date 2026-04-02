@@ -1,8 +1,8 @@
 import PocketBase from 'pocketbase'
 import type { User, Marathon, DailyTask, Report, ChatMessage } from '@/types'
 
-// URL из env или дефолтный
-const POCKETBASE_URL = import.meta.env.VITE_POCKETBASE_URL || 'http://185.72.145.228:8090'
+// URL из env или дефолтный (HTTPS для продакшена)
+const POCKETBASE_URL = import.meta.env.VITE_POCKETBASE_URL || 'https://185.72.145.228'
 
 export const pb = new PocketBase(POCKETBASE_URL)
 
