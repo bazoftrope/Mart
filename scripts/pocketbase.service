@@ -1,0 +1,13 @@
+[Unit]
+Description=PocketBase
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/foodmart/backend
+ExecStart=/var/www/foodmart/backend/pocketbase serve --http=127.0.0.1:8090 --dir=./pb_data
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
