@@ -44,7 +44,9 @@
             <MarathonList
                 v-else
                 :marathons="marathonsStore.myMarathons"
+                :current-user="authStore.user?.id || null"
                 @marathon-click="goToMarathon"
+                @join-click="handleJoin"
             />
         </div>
 
@@ -100,6 +102,10 @@ const closeModal = () => {
 
 const goToMarathon = (id: string) => {
     router.push(`/marathon/${id}`);
+};
+
+const handleJoin = async (id: string) => {
+    await marathonsStore.joinMarathon(id);
 };
 
 const onMarathonSaved = (marathonId: string) => {

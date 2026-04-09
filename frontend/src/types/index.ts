@@ -12,6 +12,9 @@ export interface User {
   updated: string
 }
 
+// Статус марафона
+export type MarathonStatus = 'draft' | 'public' | 'active' | 'completed'
+
 // Марафон
 export interface Marathon {
   id: string
@@ -22,7 +25,7 @@ export interface Marathon {
   endDate: string
   mentorId: string
   participants: string[] // массив ID пользователей
-  isActive: boolean
+  status: MarathonStatus
   created: string
   updated: string
 }

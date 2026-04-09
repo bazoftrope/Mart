@@ -16,13 +16,13 @@
     </div>
 
     <!-- Список марафонов -->
-    <div v-else-if="marathonsStore.marathons.length === 0" class="empty-state">
+    <div v-else-if="visibleMarathons.length === 0" class="empty-state">
       Марафоны пока не найдены.
     </div>
 
     <div v-else class="marathons-grid">
       <div
-        v-for="marathon in marathonsStore.marathons"
+        v-for="marathon in visibleMarathons"
         :key="marathon.id"
         class="marathon-card"
         @click="goToMarathon(marathon.id)"
@@ -36,10 +36,22 @@
           <span class="meta-item">👥 {{ marathon.participants.length }} участников</span>
           <span
             class="status-badge"
-            :class="{ 'status-active': marathon.isActive, 'status-finished': !marathon.isActive }"
+            :class="statusClasses[marathon.status || 'draft']"
           >
-            {{ marathon.isActive ? 'Активен' : 'Завершён' }}
+            {{ statusLabels[marathon.status || 'draft'] }}
           </span>
+        </div>
+        <div class="card-actions" v-if="canJoinMarathon(marathon) && !isJoined(marathon) && !isOwner(marathon)">
+          <button
+            class="btn btn-join"
+            @click.stop="handleJoin(marathon.id)"
+            :disabled="joiningId === marathon.id"
+          >
+            {{ joiningId === marathon.id ? 'Запись...' : '🙋 Присоединиться' }}
+          </button>
+        </div>
+        <div class="card-actions" v-else-if="isJoined(marathon)">
+          <span class="joined-badge">✅ Вы участник</span>
         </div>
       </div>
     </div>
@@ -47,12 +59,49 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMarathonsStore } from '@/stores/marathons'
+import { useAuthStore } from '@/stores/auth'
+import type { MarathonStatus, Marathon } from '@/types'
 
 const router = useRouter()
 const marathonsStore = useMarathonsStore()
+const authStore = useAuthStore()
+const joiningId = ref<string | null>(null)
+
+// Фильтрация: скрываем draft чужих марафонов
+const visibleMarathons = computed(() => {
+  const userId = authStore.user?.id
+  return marathonsStore.marathons.filter(m => {
+    if (m.status === 'draft') return m.mentorId === userId
+    return true
+  })
+})
+
+const canJoinMarathon = (m: Marathon) => m.status === 'public' || m.status === 'active'
+const isJoined = (m: Marathon) => authStore.user?.id && m.participants.includes(authStore.user!.id)
+const isOwner = (m: Marathon) => authStore.user?.id && m.mentorId === authStore.user?.id
+
+const handleJoin = async (id: string) => {
+  joiningId.value = id
+  await marathonsStore.joinMarathon(id)
+  joiningId.value = null
+}
+
+const statusClasses: Record<MarathonStatus, string> = {
+  draft: 'status-draft',
+  public: 'status-public',
+  active: 'status-active',
+  completed: 'status-completed',
+};
+
+const statusLabels: Record<MarathonStatus, string> = {
+  draft: 'Черновик',
+  public: 'Опубликован',
+  active: 'Активен',
+  completed: 'Завершён',
+};
 
 const goToMarathon = (id: string): void => {
   router.push(`/marathon/${id}`)
@@ -147,13 +196,60 @@ onMounted(() => {
   background-color: #f3f4f6;
 }
 
+.status-draft {
+  color: var(--text-muted, #6b7280);
+  background-color: #f3f4f6;
+}
+
+.status-public {
+  color: #059669;
+  background-color: rgba(5, 150, 105, 0.1);
+}
+
 .status-active {
   color: var(--primary, #3b82f6);
   background-color: rgba(59, 130, 246, 0.1);
 }
 
-.status-finished {
+.status-completed {
   color: var(--text-muted, #6b7280);
+  background-color: #e5e7eb;
+}
+
+/* Кнопки и действия в карточке */
+.card-actions {
+  margin-top: 0.75rem;
+}
+
+.btn-join {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: #388e3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-join:hover:not(:disabled) {
+  background: #2e7d32;
+}
+
+.btn-join:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.joined-badge {
+  display: block;
+  text-align: center;
+  padding: 0.5rem;
+  color: #388e3c;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 /* Состояния страницы */

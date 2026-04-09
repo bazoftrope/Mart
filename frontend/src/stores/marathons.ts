@@ -1,7 +1,7 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 import { pb, collections } from "@/api/pocketbase";
-import type { Marathon, DailyTask } from "@/types";
+import type { Marathon, DailyTask, MarathonStatus } from "@/types";
 
 export const useMarathonsStore = defineStore("marathons", () => {
   // State
@@ -21,8 +21,14 @@ export const useMarathonsStore = defineStore("marathons", () => {
   });
 
   const activeMarathons = computed(() =>
-    marathons.value.filter((m) => m.isActive),
+    marathons.value.filter((m) => m.status === "active" || m.status === "public"),
   );
+
+  const draftMarathons = computed(() => {
+    const userId = pb.authStore.model?.id;
+    if (!userId) return [];
+    return marathons.value.filter((m) => m.status === "draft" && m.mentorId === userId);
+  });
 
   // Actions
   const fetchMarathons = async (): Promise<boolean> => {
@@ -132,33 +138,42 @@ export const useMarathonsStore = defineStore("marathons", () => {
   };
 
   const joinMarathon = async (marathonId: string): Promise<boolean> => {
+    console.log('[joinMarathon] marathonId:', marathonId);
+    console.log('[joinMarathon] pb.authStore.model:', pb.authStore.model);
     const userId = pb.authStore.model?.id;
+    console.log('[joinMarathon] userId:', userId);
+    
     if (!userId) {
       error.value = "User not authenticated";
+      console.error('[joinMarathon] User not authenticated');
       return false;
     }
 
-    const marathonIndex = marathons.value.findIndex((m) => m.id === marathonId);
-    if (marathonIndex === -1) {
-      error.value = "Marathon not found";
-      return false;
-    }
+    // Получаем актуальные данные марафона с сервера
+    const marathonData = await collections.marathons.getOne(marathonId);
+    const marathon = marathonData as unknown as Marathon;
 
-    const marathon = marathons.value[marathonIndex];
-    if (marathon?.participants.includes(userId)) {
+    console.log('[joinMarathon] marathon participants:', marathon.participants);
+
+    if (marathon.participants.includes(userId)) {
       return true; // Уже участвует
     }
 
     try {
-      const updatedParticipants = [...marathon!.participants, userId];
+      const updatedParticipants = [...marathon.participants, userId];
 
       // Обновляем на сервере
+      console.log('[joinMarathon] Updating with participants:', updatedParticipants);
       const result = await collections.marathons.update(marathonId, {
         participants: updatedParticipants,
       });
+      console.log('[joinMarathon] Update result:', result);
 
-      // Сразу обновляем локальный стейт (оптимистичное обновление)
-      marathons.value[marathonIndex] = result as unknown as Marathon;
+      // Обновляем локальный стейт
+      const marathonIndex = marathons.value.findIndex((m) => m.id === marathonId);
+      if (marathonIndex !== -1) {
+        marathons.value[marathonIndex] = result as unknown as Marathon;
+      }
 
       // Если этот марафон сейчас открыт, обновим и его тоже
       if (currentMarathon.value?.id === marathonId) {
@@ -169,6 +184,42 @@ export const useMarathonsStore = defineStore("marathons", () => {
     } catch (err: any) {
       error.value = err.message || "Failed to join marathon";
       return false;
+    }
+  };
+
+  // Публикация марафона (draft → public)
+  const publishMarathon = async (id: string): Promise<boolean> => {
+    return await updateMarathon(id, { status: "public" as MarathonStatus });
+  };
+
+  // Завершение марафона (active → completed)
+  const completeMarathon = async (id: string): Promise<boolean> => {
+    return await updateMarathon(id, { status: "completed" as MarathonStatus });
+  };
+
+  // Обновление статусов на основе дат (автоматическое)
+  // public → active когда startDate <= today
+  // active → completed когда today > endDate
+  const updateMarathonStatusesByDate = async (): Promise<void> => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const toUpdate = marathons.value.filter((m) => {
+      if (m.status === "public") {
+        const start = new Date(m.startDate);
+        return start <= today;
+      }
+      if (m.status === "active") {
+        const end = new Date(m.endDate);
+        return today > end;
+      }
+      return false;
+    });
+
+    for (const marathon of toUpdate) {
+      const newStatus: MarathonStatus =
+        marathon.status === "public" ? "active" : "completed";
+      await updateMarathon(marathon.id, { status: newStatus });
     }
   };
 
@@ -187,12 +238,16 @@ export const useMarathonsStore = defineStore("marathons", () => {
     error,
     myMarathons,
     activeMarathons,
+    draftMarathons,
     fetchMarathons,
     fetchMarathonById,
     fetchTasks,
     createMarathon,
     updateMarathon,
     joinMarathon,
+    publishMarathon,
+    completeMarathon,
+    updateMarathonStatusesByDate,
     resetCurrentMarathon,
   };
 });

@@ -55,6 +55,15 @@ body {
     color: var(--text);
 }
 
+.btn-success {
+    background: #388e3c;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #2e7d32;
+}
+
 /* Карточки */
 .card {
     background: var(--bg-white);

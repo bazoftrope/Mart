@@ -59,10 +59,25 @@
                 </div>
 
                 <div class="form-group" v-if="isEditMode">
-                    <label class="checkbox-label">
-                        <input v-model="form.isActive" type="checkbox" />
-                        <span>Активен</span>
-                    </label>
+                    <label>Статус</label>
+                    <div class="status-selector">
+                        <button
+                            type="button"
+                            class="status-badge"
+                            :class="{ active: form.status === 'draft' }"
+                            @click="form.status = 'draft'"
+                        >
+                            Черновик
+                        </button>
+                        <button
+                            type="button"
+                            class="status-badge"
+                            :class="{ active: form.status === 'public' }"
+                            @click="form.status = 'public'"
+                        >
+                            Опубликован
+                        </button>
+                    </div>
                 </div>
 
                 <div v-if="error" class="error">{{ error }}</div>
@@ -100,7 +115,7 @@
 import { reactive, ref, watch, computed } from "vue";
 import { useMarathonsStore } from "@/stores/marathons";
 import { useAuthStore } from "@/stores/auth";
-import type { Marathon } from "@/types";
+import type { Marathon, MarathonStatus } from "@/types";
 
 const props = defineProps<{
     marathon?: Marathon | null;
@@ -124,7 +139,7 @@ const form = reactive({
     description: "",
     durationDays: 21,
     startDate: new Date().toISOString().substring(0, 10) as string,
-    isActive: true,
+    status: "draft" as MarathonStatus,
 });
 
 // Инициализация формы при редактировании
@@ -134,13 +149,13 @@ const initForm = () => {
         form.description = props.marathon.description;
         form.durationDays = props.marathon.durationDays;
         form.startDate = props.marathon.startDate.substring(0, 10);
-        form.isActive = props.marathon.isActive;
+        form.status = props.marathon.status;
     } else {
         form.title = "";
         form.description = "";
         form.durationDays = 21;
         form.startDate = new Date().toISOString().substring(0, 10);
-        form.isActive = true;
+        form.status = "draft";
     }
 };
 
@@ -167,7 +182,7 @@ const handleSubmit = async () => {
             durationDays: form.durationDays,
             startDate: form.startDate as string,
             endDate: end.toISOString().split("T")[0] as string,
-            isActive: form.isActive,
+            status: form.status,
         });
         marathonId = props.marathon.id;
     } else {
@@ -180,7 +195,7 @@ const handleSubmit = async () => {
             endDate: end.toISOString().split("T")[0] as string,
             mentorId: authStore.user.id,
             participants: [],
-            isActive: true,
+            status: "draft",
         });
         success = !!result;
         if (result) marathonId = result;
@@ -247,6 +262,33 @@ const handleSubmit = async () => {
 .checkbox-label input[type="checkbox"] {
     width: auto;
     cursor: pointer;
+}
+
+.status-selector {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.status-badge:hover {
+    border-color: var(--color-primary);
+}
+
+.status-badge.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
 }
 
 .modal-actions {
