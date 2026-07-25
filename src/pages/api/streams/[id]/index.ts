@@ -1,0 +1,67 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import '@/lib/db';
+import { apiHandler, success } from '@/lib/apiHandler';
+import { Stream, MarathonTemplate, User, StreamEnrollment } from '@db/models';
+import { NotFound } from '@/lib/errors';
+import { verifyAccessToken, parseCookies } from '@/lib/auth';
+import type { TokenPayload } from '@/types/auth';
+
+function getCurrentUser(req: NextApiRequest): TokenPayload | null {
+  const cookies = parseCookies(req);
+  const token = cookies.mp_access_token;
+  if (!token) return null;
+  try {
+    return verifyAccessToken(token);
+  } catch {
+    return null;
+  }
+}
+
+async function getHandler(req: NextApiRequest, res: NextApiResponse) {
+  const { id } = req.query;
+  const stream = await Stream.findByPk(id as string);
+  if (!stream) {
+    throw new NotFound('Stream not found');
+  }
+
+  const template = await MarathonTemplate.findByPk(stream.templateId);
+  const mentor = template ? await User.findByPk(template.mentorId, { attributes: ['id', 'name', 'email'] }) : null;
+
+  let isEnrolled = false;
+  const currentUser = getCurrentUser(req);
+  if (currentUser && currentUser.role === 'participant') {
+    const enrollment = await StreamEnrollment.findOne({
+      where: { streamId: stream.id, participantId: currentUser.userId },
+    });
+    isEnrolled = Boolean(enrollment);
+  }
+
+  const enrollmentsCount = await StreamEnrollment.count({
+    where: { streamId: stream.id },
+  });
+
+  return success(res, {
+    id: stream.id,
+    startDate: stream.startDate,
+    status: stream.status,
+    createdAt: stream.createdAt,
+    enrollmentsCount,
+    isEnrolled,
+    template: template
+      ? {
+          id: template.id,
+          title: template.title,
+          description: template.description,
+          durationDays: template.durationDays,
+          status: template.status,
+        }
+      : null,
+    mentor: mentor
+      ? { id: mentor.id, name: mentor.name, email: mentor.email }
+      : null,
+  });
+}
+
+export default apiHandler({
+  GET: getHandler,
+});
