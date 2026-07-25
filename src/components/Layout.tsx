@@ -1,24 +1,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { getCookie, deleteCookie } from '@/lib/cookies';
-
-type UserRole = 'admin' | 'mentor' | 'participant' | undefined;
+import { useAuthStore } from '@/stores/authStore';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [role, setRole] = useState<UserRole>(undefined);
+  const role = useAuthStore((s) => s.role);
+  const initAuth = useAuthStore((s) => s.initAuth);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const rawRole = getCookie('mp_role');
-    if (rawRole === 'admin' || rawRole === 'mentor' || rawRole === 'participant') {
-      setRole(rawRole);
-    } else {
-      setRole(undefined);
-    }
+    initAuth();
     setLoading(false);
-  }, [router.asPath]);
+  }, [router.asPath, initAuth]);
 
   async function handleLogout() {
     try {
@@ -27,10 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         credentials: 'include',
       });
     } finally {
-      deleteCookie('mp_access_token');
-      deleteCookie('mp_refresh_token');
-      deleteCookie('mp_role');
-      setRole(undefined);
+      clearAuth();
       window.location.href = '/';
     }
   }
@@ -56,6 +48,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <>
           <Link href="/admin" style={linkStyle}>
             Pending Review
+          </Link>
+          <Link href="/admin/users" style={linkStyle}>
+            Users
           </Link>
           <button onClick={handleLogout} style={buttonStyle}>
             Logout

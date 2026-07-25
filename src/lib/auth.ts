@@ -109,20 +109,27 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
+function getAdminHash(): string {
+  const raw = process.env.ADMIN_PASSWORD_HASH;
+  if (!raw) return '';
+  // dotenv escapes \$ in .env files — restore them
+  return raw.replace(/\\\$/g, '$');
+}
+
 export function isAdminCredential(email: string): boolean {
   const adminEmail = process.env.ADMIN_EMAIL;
   return Boolean(adminEmail && email.toLowerCase() === adminEmail.toLowerCase());
 }
 
 export async function validateAdminPassword(password: string): Promise<boolean> {
-  const adminHash = process.env.ADMIN_PASSWORD_HASH;
+  const adminHash = getAdminHash();
   if (!adminHash) return false;
   return bcrypt.compare(password, adminHash);
 }
 
 export async function ensureAdminUser(): Promise<User> {
   const adminEmail = process.env.ADMIN_EMAIL;
-  const adminHash = process.env.ADMIN_PASSWORD_HASH;
+  const adminHash = getAdminHash();
   if (!adminEmail || !adminHash) {
     throw new Error('Admin credentials are not configured');
   }

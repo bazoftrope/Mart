@@ -72,7 +72,12 @@ export const saveReportSchema = z.object({
   lines: z.array(reportLineSchema).min(1, 'At least one line is required'),
 });
 
+export const updateUserRoleSchema = z.object({
+  role: z.enum(['mentor', 'participant']),
+});
+
 export type CreateStreamInput = z.infer<typeof createStreamSchema>;
 export type UpdateTemplateDaysInput = z.infer<typeof updateTemplateDaysSchema>;
 export type ReportLineInput = z.infer<typeof reportLineSchema>;
 export type SaveReportInput = z.infer<typeof saveReportSchema>;
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;

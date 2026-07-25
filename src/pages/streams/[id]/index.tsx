@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { getCookie } from '@/lib/cookies';
+import { useAuthStore } from '@/stores/authStore';
 
 type StreamDetails = {
   id: string;
@@ -27,15 +27,16 @@ type StreamDetails = {
 export default function StreamPage() {
   const router = useRouter();
   const { id } = router.query;
+  const role = useAuthStore((s) => s.role);
 
   const [stream, setStream] = useState<StreamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
-  const [role, setRole] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    setRole(getCookie('mp_role'));
+    const initAuth = useAuthStore.getState().initAuth;
+    initAuth();
   }, []);
 
   useEffect(() => {
@@ -125,13 +126,13 @@ export default function StreamPage() {
         </div>
       )}
 
-      {role !== 'participant' && role !== undefined && (
+      {role !== 'participant' && role !== null && (
         <p style={{ marginTop: '1.5rem', color: '#777' }}>
           Only participants can enroll in streams.
         </p>
       )}
 
-      {role === undefined && (
+      {role === null && (
         <p style={{ marginTop: '1.5rem' }}>
           <Link href="/login">Login</Link> or <Link href="/register">register</Link> to enroll.
         </p>

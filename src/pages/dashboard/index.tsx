@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { getCookie } from '@/lib/cookies';
+import { useAuthStore } from '@/stores/authStore';
 
 type Enrollment = {
   id: string;
@@ -31,8 +31,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const role = getCookie('mp_role');
-    if (role !== 'participant') {
+    useAuthStore.getState().initAuth();
+    const currentRole = useAuthStore.getState().role;
+    if (currentRole !== 'participant') {
       router.push('/login');
       return;
     }

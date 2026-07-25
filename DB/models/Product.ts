@@ -13,6 +13,7 @@ import {
   tableName: 'products',
   underscored: true,
   timestamps: true,
+  updatedAt: false,
 })
 export class Product extends Model {
   @PrimaryKey
@@ -31,7 +32,7 @@ export class Product extends Model {
     type: DataType.DECIMAL(8, 2),
     allowNull: false,
   })
-  caloriesPer100g!: number;
+  calories!: number;
 
   @CreatedAt
   createdAt!: Date;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores/authStore';
 
 type Template = {
   id: string;
@@ -11,12 +12,6 @@ type Template = {
   createdAt: string;
   updatedAt: string;
 };
-
-function getCookie(name: string): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : undefined;
-}
 
 function statusLabel(status: Template['status']): string {
   switch (status) {
@@ -38,7 +33,9 @@ export default function MentorTemplatesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const role = getCookie('mp_role');
+    const initAuth = useAuthStore.getState().initAuth;
+    initAuth();
+    const role = useAuthStore.getState().role;
     if (role !== 'mentor') {
       router.push('/login');
       return;

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 export type Product = {
   id: string;
   name: string;
-  caloriesPer100g: number;
+  calories: number;
 };
 
 type ProductSearchProps = {
@@ -123,7 +123,7 @@ export default function ProductSearch({ onSelect, disabled }: ProductSearchProps
             >
               {product.name}{' '}
               <span style={{ color: '#666' }}>
-                ({product.caloriesPer100g} kcal/100g)
+                ({product.calories} kcal/100g)
               </span>
             </button>
           ))}

@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { getCookie } from '@/lib/cookies';
+import { useAuthStore } from '@/stores/authStore';
 
 type Template = {
   id: string;
@@ -21,7 +21,9 @@ export default function LaunchStreamPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const role = getCookie('mp_role');
+    const initAuth = useAuthStore.getState().initAuth;
+    initAuth();
+    const role = useAuthStore.getState().role;
     if (role !== 'mentor') {
       router.push('/login');
       return;

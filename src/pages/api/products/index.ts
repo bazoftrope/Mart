@@ -23,7 +23,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   const data = products.map((product) => ({
     id: product.id,
     name: product.name,
-    caloriesPer100g: Number(product.caloriesPer100g),
+    calories: Number(product.calories),
   }));
 
   return success(res, data);

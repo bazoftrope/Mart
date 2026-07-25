@@ -50,7 +50,7 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
       throw new BadRequest(`Product ${line.productId} not found`);
     }
     const lineCalories = round2(
-      (line.weightGrams * Number(product.caloriesPer100g)) / 100
+      (line.weightGrams * Number(product.calories)) / 100
     );
     totalCalories += lineCalories;
     return {
@@ -86,7 +86,7 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
       return {
         productId: record.productId,
         name: product.name,
-        caloriesPer100g: Number(product.caloriesPer100g),
+        calories: Number(product.calories),
         weightGrams: record.weightGrams,
         lineCalories: record.lineCalories,
       };

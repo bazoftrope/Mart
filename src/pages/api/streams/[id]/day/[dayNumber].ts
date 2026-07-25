@@ -100,7 +100,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     id: string;
     productId: string;
     name: string;
-    caloriesPer100g: number;
+    calories: number;
     weightGrams: number;
     lineCalories: number;
   }> = [];
@@ -121,7 +121,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
         id: line.id,
         productId: line.productId,
         name: product?.name || 'Unknown product',
-        caloriesPer100g: Number(product?.caloriesPer100g || 0),
+        calories: Number(product?.calories || 0),
         weightGrams: Number(line.weightGrams),
         lineCalories: Number(line.lineCalories),
       };
@@ -191,7 +191,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       throw new BadRequest(`Product ${line.productId} not found`);
     }
     const lineCalories = round2(
-      (line.weightGrams * Number(product.caloriesPer100g)) / 100
+      (line.weightGrams * Number(product.calories)) / 100
     );
     totalCalories += lineCalories;
     return {
@@ -237,7 +237,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       return {
         productId: record.productId,
         name: product.name,
-        caloriesPer100g: Number(product.caloriesPer100g),
+        calories: Number(product.calories),
         weightGrams: record.weightGrams,
         lineCalories: record.lineCalories,
       };

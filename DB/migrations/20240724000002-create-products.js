@@ -14,7 +14,7 @@ module.exports = {
         allowNull: false,
         unique: true,
       },
-      calories_per_100g: {
+      calories: {
         type: Sequelize.DECIMAL(8, 2),
         allowNull: false,
       },

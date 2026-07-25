@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { getCookie } from '@/lib/cookies';
+import { useAuthStore } from '@/stores/authStore';
 import ProductSearch, { type Product } from '@/components/ProductSearch';
 import ReportTable, {
   type ReportLineItem,
@@ -39,7 +39,9 @@ export default function DayPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    const role = getCookie('mp_role');
+    const initAuth = useAuthStore.getState().initAuth;
+    initAuth();
+    const role = useAuthStore.getState().role;
     if (role !== 'participant') {
       router.push('/login');
       return;
@@ -81,9 +83,9 @@ export default function DayPage() {
     const newLine: ReportLineItem = {
       productId: product.id,
       name: product.name,
-      caloriesPer100g: product.caloriesPer100g,
+      calories: product.calories,
       weightGrams: 100,
-      lineCalories: computeLineCalories(100, product.caloriesPer100g),
+      lineCalories: computeLineCalories(100, product.calories),
     };
     setLines((prev) => [...prev, newLine]);
     setSaveError(null);

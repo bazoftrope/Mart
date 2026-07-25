@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
+import { useAuthStore } from '@/stores/authStore';
 
 type TemplateDay = {
   id: string;
@@ -23,12 +24,6 @@ type TemplateDetail = {
   days: TemplateDay[];
 };
 
-function getCookie(name: string): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : undefined;
-}
-
 export default function AdminReviewTemplatePage() {
   const router = useRouter();
   const { id } = router.query;
@@ -39,7 +34,9 @@ export default function AdminReviewTemplatePage() {
   const [approved, setApproved] = useState(false);
 
   useEffect(() => {
-    const role = getCookie('mp_role');
+    const initAuth = useAuthStore.getState().initAuth;
+    initAuth();
+    const role = useAuthStore.getState().role;
     if (role !== 'admin') {
       router.push('/login');
       return;

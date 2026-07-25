@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
+import { useAuthStore } from '@/stores/authStore';
 
 type PendingTemplate = {
   id: string;
@@ -14,12 +15,6 @@ type PendingTemplate = {
   mentor: PublicUser | null;
 };
 
-function getCookie(name: string): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : undefined;
-}
-
 export default function AdminPendingPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<PendingTemplate[]>([]);
@@ -27,7 +22,9 @@ export default function AdminPendingPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const role = getCookie('mp_role');
+    const initAuth = useAuthStore.getState().initAuth;
+    initAuth();
+    const role = useAuthStore.getState().role;
     if (role !== 'admin') {
       router.push('/login');
       return;

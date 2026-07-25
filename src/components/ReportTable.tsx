@@ -2,7 +2,7 @@ export type ReportLineItem = {
   id?: string;
   productId: string;
   name: string;
-  caloriesPer100g: number;
+  calories: number;
   weightGrams: number;
   lineCalories: number;
 };
@@ -15,9 +15,9 @@ type ReportTableProps = {
 
 export function computeLineCalories(
   weightGrams: number,
-  caloriesPer100g: number
+  calories: number
 ): number {
-  return Math.round(weightGrams * caloriesPer100g) / 100;
+  return Math.round(weightGrams * calories) / 100;
 }
 
 export default function ReportTable({
@@ -34,7 +34,7 @@ export default function ReportTable({
       return {
         ...line,
         weightGrams: weight,
-        lineCalories: computeLineCalories(weight, line.caloriesPer100g),
+        lineCalories: computeLineCalories(weight, line.calories),
       };
     });
     onChange(next);
@@ -65,7 +65,7 @@ export default function ReportTable({
             {lines.map((line, index) => (
               <tr key={`${line.productId}-${index}`}>
                 <td style={tdStyle}>{line.name}</td>
-                <td style={tdStyle}>{line.caloriesPer100g}</td>
+                <td style={tdStyle}>{line.calories}</td>
                 <td style={tdStyle}>
                   {readOnly ? (
                     line.weightGrams

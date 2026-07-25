@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { getCookie } from '@/lib/cookies';
+import { useAuthStore } from '@/stores/authStore';
 
 type Mentor = {
   id: string;
@@ -24,13 +24,13 @@ type Stream = {
 };
 
 export default function Home() {
-  const [role, setRole] = useState<string | undefined>(undefined);
+  const role = useAuthStore((s) => s.role);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setRole(getCookie('mp_role'));
+    useAuthStore.getState().initAuth();
 
     async function loadStreams() {
       try {

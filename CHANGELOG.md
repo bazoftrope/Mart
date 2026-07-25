@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-07-25
+
+### feat
+- Централизовано управление auth-состоянием через Zustand:
+  - `src/stores/authStore.ts` — store с `role`, `userId`, `initAuth()`, `clearAuth()`.
+  - Убрано дублирование `getCookie('mp_role')` из 20 файлов.
+  - Единый источник правды для роли пользователя во всём приложении.
+
+### feat
+- Реализован рейтинг участников (Step 8):
+  - `src/lib/ratingCalculator.ts` — расчёт рейтинга: `filledDays`, `disciplinePercent`, `rank` для потоков `running`/`finished`.
+  - `GET /api/streams/[id]/rating` — таблица рейтинга потока.
+  - `POST /api/rating/calculate` — ручной пересчёт рейтинга (admin only).
+  - Страница `/dashboard/marathon/[streamId]/rating.tsx` — рейтинг с подсветкой текущего участника.
+  - Cron: `node-cron` для ежедневного пересчёта в 00:05 (`npm run cron`).
+
+### feat
+- Реализованы результаты и графики (Step 9):
+  - `GET /api/streams/[id]/results` — агрегация калорий по дням + среднее по потоку + рейтинг.
+  - Страница `/dashboard/marathon/[streamId]/results.tsx` — Recharts LineChart (участник vs среднее) и сводка (ранг, дисциплина, средние калории).
+
 ## 2026-07-24
 
 ### feat
