@@ -7,7 +7,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const role = useAuthStore((s) => s.role);
   const initAuth = useAuthStore((s) => s.initAuth);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const logout = useAuthStore((s) => s.logout);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,15 +16,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [router.asPath, initAuth]);
 
   async function handleLogout() {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } finally {
-      clearAuth();
-      window.location.href = '/';
-    }
+    await logout();
+    window.location.href = '/';
   }
 
   function renderNav() {

@@ -1,5 +1,6 @@
 import type { NextApiRequest } from 'next';
-import type { UserRole } from '@db/models/User';
+
+export type UserRole = 'mentor' | 'participant' | 'admin';
 
 export interface TokenPayload {
   userId: string;

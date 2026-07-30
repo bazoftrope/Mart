@@ -1,6 +1,14 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores/authStore';
+import type { UserRole } from '@/types/auth';
+
+function getDashboardPath(role: UserRole): string {
+  if (role === 'admin') return '/admin';
+  if (role === 'mentor') return '/mentor';
+  return '/dashboard';
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -8,40 +16,17 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'participant' | 'mentor'>('participant');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const register = useAuthStore((s) => s.register);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const error = useAuthStore((s) => s.error);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password, name, role }),
-      });
-
-      const data = await res.json().catch(() => ({ data: null }));
-
-      if (!res.ok) {
-        throw new Error(data.message || data.error || 'Registration failed');
-      }
-
-      const user = data.data?.user;
-      const registeredRole = user?.role;
-
-      if (registeredRole === 'mentor') {
-        router.push('/mentor');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setLoading(false);
+      const user = await register({ email, password, name, role });
+      router.push(getDashboardPath(user.role));
+    } catch {
+      // Error is already handled and stored by authStore.
     }
   }
 
@@ -96,8 +81,8 @@ export default function RegisterPage() {
             <option value="mentor">Mentor</option>
           </select>
         </div>
-        <button type="submit" disabled={loading} style={{ width: '100%' }}>
-          {loading ? 'Registering...' : 'Register'}
+        <button type="submit" disabled={isLoading} style={{ width: '100%' }}>
+          {isLoading ? 'Registering...' : 'Register'}
         </button>
       </form>
       <p>

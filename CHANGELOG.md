@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-07-30
+
+### feat
+- Реализован клиентский API-слой и перенесена авторизация в `authStore`:
+  - `src/lib/apiClient.ts` — базовый HTTP-клиент на `fetch` с единой обработкой ошибок (`ApiClientError`).
+  - `src/services/authService.ts` — сервис авторизации: `login`, `register`, `logout`, `refresh`.
+  - `src/stores/authStore.ts` — расширен: добавлены `login`, `register`, `logout`, состояния `isLoading`, `error`, `user`.
+  - `src/pages/login.tsx`, `src/pages/register.tsx` — убран прямой `fetch`, используется `authStore`.
+  - `src/components/Layout.tsx` — логаут через `authStore.logout()`.
+  - `src/types/auth.ts` — `UserRole` вынесен из модели БД для безопасного использования на клиенте.
+
+### refactor
+- Убрано дублирование обработки ошибок и `credentials: 'include'` из страниц авторизации.
+
 ## 2026-07-25
 
 ### feat

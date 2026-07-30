@@ -1,47 +1,30 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores/authStore';
+import type { UserRole } from '@/types/auth';
+
+function getDashboardPath(role: UserRole): string {
+  if (role === 'admin') return '/admin';
+  if (role === 'mentor') return '/mentor';
+  return '/dashboard';
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const login = useAuthStore((s) => s.login);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const error = useAuthStore((s) => s.error);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json().catch(() => ({ data: null }));
-
-      if (!res.ok) {
-        throw new Error(data.message || data.error || 'Login failed');
-      }
-
-      const user = data.data?.user;
-      const role = user?.role;
-
-      if (role === 'admin') {
-        router.push('/admin');
-      } else if (role === 'mentor') {
-        router.push('/mentor');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setLoading(false);
+      const user = await login({ email, password });
+      router.push(getDashboardPath(user.role));
+    } catch {
+      // Error is already handled and stored by authStore.
     }
   }
 
@@ -72,8 +55,8 @@ export default function LoginPage() {
             style={{ width: '100%' }}
           />
         </div>
-        <button type="submit" disabled={loading} style={{ width: '100%' }}>
-          {loading ? 'Logging in...' : 'Login'}
+        <button type="submit" disabled={isLoading} style={{ width: '100%' }}>
+          {isLoading ? 'Logging in...' : 'Login'}
         </button>
       </form>
       <p>
