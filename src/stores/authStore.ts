@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       return user;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
+      const message = err instanceof Error ? err.message : 'Ошибка входа';
       set({ error: message });
       throw err;
     } finally {
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       return user;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
+      const message = err instanceof Error ? err.message : 'Ошибка регистрации';
       set({ error: message });
       throw err;
     } finally {

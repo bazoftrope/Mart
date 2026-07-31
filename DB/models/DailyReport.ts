@@ -9,7 +9,6 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript';
 
-
 @Table({
   tableName: 'daily_reports',
   underscored: true,
@@ -40,11 +39,44 @@ export class DailyReport extends Model {
   })
   totalCalories!: number;
 
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  })
+  waterLiters!: number | null;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  })
+  steps!: number | null;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  })
+  sleepHours!: number | null;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  })
+  activityMinutes!: number | null;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  })
+  weightKg!: number | null;
+
   @CreatedAt
   filledAt!: Date;
 
   @UpdatedAt
   updatedAt!: Date;
-
-
 }

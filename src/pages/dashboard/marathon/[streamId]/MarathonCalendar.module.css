@@ -1,0 +1,28 @@
+.main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.error {
+  color: red;
+}
+
+.backLink {
+  color: #1a1a2e;
+}
+
+.title {
+  margin-top: 1rem;
+}
+
+.description {
+  color: #555;
+  margin-top: 0.5rem;
+}
+
+.infoBlock {
+  margin-top: 1.5rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}

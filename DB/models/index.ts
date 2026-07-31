@@ -1,4 +1,3 @@
-import { Sequelize } from 'sequelize-typescript';
 import { User } from './User';
 import { Product } from './Product';
 import { MarathonTemplate } from './MarathonTemplate';
@@ -8,6 +7,7 @@ import { StreamEnrollment } from './StreamEnrollment';
 import { DailyReport } from './DailyReport';
 import { ReportLine } from './ReportLine';
 import { StreamRating } from './StreamRating';
+import { PulseReading } from './PulseReading';
 
 export * from './User';
 export * from './Product';
@@ -18,6 +18,7 @@ export * from './StreamEnrollment';
 export * from './DailyReport';
 export * from './ReportLine';
 export * from './StreamRating';
+export * from './PulseReading';
 
 export const models = {
   User,
@@ -29,6 +30,7 @@ export const models = {
   DailyReport,
   ReportLine,
   StreamRating,
+  PulseReading,
 };
 
 export type AppModels = typeof models;

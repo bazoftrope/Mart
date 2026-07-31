@@ -31,34 +31,34 @@ export default function RegisterPage() {
   }
 
   return (
-    <main style={{ maxWidth: 400, margin: '4rem auto', padding: '0 1rem' }}>
-      <h1>Register</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <main className="containerNarrow">
+      <h1 className="pageTitle">Регистрация</h1>
+      {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="name">Name</label>
+        <div className="formGroup">
+          <label htmlFor="name">Имя</label>
           <input
             id="name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="email">Email</label>
+        <div className="formGroup">
+          <label htmlFor="email">Эл. почта</label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="password">Password</label>
+        <div className="formGroup">
+          <label htmlFor="password">Пароль</label>
           <input
             id="password"
             type="password"
@@ -66,27 +66,27 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="role">Role</label>
+        <div className="formGroup">
+          <label htmlFor="role">Роль</label>
           <select
             id="role"
             value={role}
             onChange={(e) => setRole(e.target.value as 'participant' | 'mentor')}
-            style={{ width: '100%' }}
+            className="input"
           >
-            <option value="participant">Participant</option>
-            <option value="mentor">Mentor</option>
+            <option value="participant">Участник</option>
+            <option value="mentor">Ментор</option>
           </select>
         </div>
-        <button type="submit" disabled={isLoading} style={{ width: '100%' }}>
-          {isLoading ? 'Registering...' : 'Register'}
+        <button type="submit" disabled={isLoading} className="btn btnPrimary btnBlock">
+          {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
         </button>
       </form>
       <p>
-        Already have an account? <Link href="/login">Login</Link>
+        Уже есть аккаунт? <Link href="/login">Войти</Link>
       </p>
     </main>
   );

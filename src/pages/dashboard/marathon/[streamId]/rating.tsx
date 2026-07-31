@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './Rating.module.css';
 
 type RatingEntry = {
   rank: number;
@@ -46,11 +47,11 @@ export default function RatingPage() {
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load rating');
+          throw new Error(json.message || json.error || 'Не удалось загрузить рейтинг');
         }
         setData(json.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -61,7 +62,7 @@ export default function RatingPage() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
+      <main className={styles.main}>
         <p>Loading...</p>
       </main>
     );
@@ -69,8 +70,8 @@ export default function RatingPage() {
 
   if (error || !data) {
     return (
-      <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-        <p style={{ color: 'red' }}>{error || 'Failed to load rating'}</p>
+      <main className={styles.main}>
+        <p className={styles.error}>{error || 'Failed to load rating'}</p>
       </main>
     );
   }
@@ -78,29 +79,23 @@ export default function RatingPage() {
   const { ratings } = data;
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <Link href={`/dashboard/marathon/${streamId}`} style={{ color: '#1a1a2e' }}>
-        &larr; Back to calendar
+    <main className={styles.main}>
+      <Link href={`/dashboard/marathon/${streamId}`} className={styles.backLink}>
+        &larr; Назад к календарю
       </Link>
 
-      <h1 style={{ marginTop: '1rem' }}>Rating</h1>
+      <h1 className={styles.title}>Рейтинг</h1>
 
       {ratings.length === 0 ? (
-        <p style={{ color: '#555', marginTop: '1rem' }}>No ratings calculated yet.</p>
+        <p className={styles.empty}>Рейтинг ещё не рассчитан.</p>
       ) : (
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            marginTop: '1.5rem',
-          }}
-        >
+        <table className={styles.table}>
           <thead>
-            <tr style={{ borderBottom: '2px solid #ddd', textAlign: 'left' }}>
-              <th style={{ padding: '0.75rem 0.5rem' }}>#</th>
-              <th style={{ padding: '0.75rem 0.5rem' }}>Participant</th>
-              <th style={{ padding: '0.75rem 0.5rem' }}>Filled days</th>
-              <th style={{ padding: '0.75rem 0.5rem' }}>Discipline</th>
+            <tr className={styles.headerRow}>
+              <th className={styles.cell}>#</th>
+              <th className={styles.cell}>Участник</th>
+              <th className={styles.cell}>Заполнено дней</th>
+              <th className={styles.cell}>Дисциплина</th>
             </tr>
           </thead>
           <tbody>
@@ -109,19 +104,19 @@ export default function RatingPage() {
               return (
                 <tr
                   key={entry.participantId}
+                  className={styles.row}
                   style={{
-                    borderBottom: '1px solid #eee',
                     backgroundColor: isMe ? '#f0f7ff' : undefined,
                     fontWeight: isMe ? 600 : undefined,
                   }}
                 >
-                  <td style={{ padding: '0.75rem 0.5rem' }}>{entry.rank}</td>
-                  <td style={{ padding: '0.75rem 0.5rem' }}>
+                  <td className={styles.cell}>{entry.rank}</td>
+                  <td className={styles.cell}>
                     {entry.participantName}
-                    {isMe && ' (you)'}
+                    {isMe && ' (вы)'}
                   </td>
-                  <td style={{ padding: '0.75rem 0.5rem' }}>{entry.filledDays}</td>
-                  <td style={{ padding: '0.75rem 0.5rem' }}>{entry.disciplinePercent}%</td>
+                  <td className={styles.cell}>{entry.filledDays}</td>
+                  <td className={styles.cell}>{entry.disciplinePercent}%</td>
                 </tr>
               );
             })}

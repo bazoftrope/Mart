@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './AdminReviewTemplate.module.css';
 
 type TemplateDay = {
   id: string;
@@ -52,12 +53,12 @@ export default function AdminReviewTemplatePage() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load template');
+          throw new Error(json.message || json.error || 'Не удалось загрузить шаблон');
         }
 
         setTemplate(json.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -80,7 +81,7 @@ export default function AdminReviewTemplatePage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to approve template');
+        throw new Error(json.message || json.error || 'Не удалось одобрить шаблон');
       }
 
       setApproved(true);
@@ -88,70 +89,65 @@ export default function AdminReviewTemplatePage() {
         router.push('/admin');
       }, 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
       setApproving(false);
     }
   }
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
+    <main className={styles.main}>
       <p>
-        <Link href="/admin">← Back to pending list</Link>
+        <Link href="/admin">← Назад к списку</Link>
       </p>
-      <h1>Review Template</h1>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !template && !error && <p>Template not found.</p>}
+      <h1>Проверка шаблона</h1>
+      {loading && <p>Загрузка...</p>}
+      {error && <p className={styles.error}>{error}</p>}
+      {!loading && !template && !error && <p>Шаблон не найден.</p>}
       {template && (
         <>
-          <section style={{ marginBottom: '1.5rem' }}>
+          <section className={styles.section}>
             <h2>{template.title}</h2>
             {template.description && <p>{template.description}</p>}
             <p>
-              <strong>Duration:</strong> {template.durationDays} days
+              <strong>Длительность:</strong> {template.durationDays} дн.
             </p>
             <p>
-              <strong>Mentor:</strong>{' '}
+              <strong>Ментор:</strong>{' '}
               {template.mentor
                 ? `${template.mentor.name} (${template.mentor.email})`
-                : 'Unknown'}
+                : 'Неизвестно'}
             </p>
             <p>
-              <strong>Status:</strong> {template.status}
+              <strong>Статус:</strong> {template.status}
             </p>
           </section>
 
-          <section style={{ marginBottom: '1.5rem' }}>
-            <h3>Days</h3>
-            {template.days.length === 0 && <p>No days configured.</p>}
+          <section className={styles.section}>
+            <h3>Дни</h3>
+            {template.days.length === 0 && <p>Дни не настроены.</p>}
             {template.days.map((day) => (
               <article
                 key={day.id}
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: 8,
-                  padding: '1rem',
-                  marginBottom: '1rem',
-                }}
+                className={styles.card}
               >
-                <h4 style={{ marginTop: 0 }}>Day {day.dayNumber}</h4>
+                <h4 className={styles.cardTitle}>День {day.dayNumber}</h4>
                 {day.textContent ? (
-                  <p style={{ whiteSpace: 'pre-wrap' }}>{day.textContent}</p>
+                  <p className={styles.preWrap}>{day.textContent}</p>
                 ) : (
-                  <p style={{ color: '#666' }}>No content</p>
+                  <p className={styles.muted}>Нет содержимого</p>
                 )}
                 {day.audioUrl && (
                   <p>
                     <a href={day.audioUrl} target="_blank" rel="noreferrer">
-                      Audio
+                      Аудио
                     </a>
                   </p>
                 )}
                 {day.videoUrl && (
                   <p>
                     <a href={day.videoUrl} target="_blank" rel="noreferrer">
-                      Video
+                      Видео
                     </a>
                   </p>
                 )}
@@ -160,20 +156,16 @@ export default function AdminReviewTemplatePage() {
           </section>
 
           {approved ? (
-            <p style={{ color: 'green', fontWeight: 'bold' }}>
-              Template approved. Redirecting...
+            <p className={styles.success}>
+              Шаблон одобрен. Перенаправление...
             </p>
           ) : (
             <button
               onClick={handleApprove}
               disabled={approving}
-              style={{
-                padding: '0.75rem 1.5rem',
-                fontSize: '1rem',
-                cursor: 'pointer',
-              }}
+              className={styles.approveBtn}
             >
-              {approving ? 'Approving...' : 'Approve Template'}
+              {approving ? 'Одобрение...' : 'Одобрить шаблон'}
             </button>
           )}
         </>

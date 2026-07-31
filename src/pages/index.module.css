@@ -1,0 +1,10 @@
+.lead {
+  margin-top: 1rem;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}

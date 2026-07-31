@@ -20,7 +20,7 @@
 | База данных | PostgreSQL | 15+ | Надёжность, сложные агрегации |
 | Аутентификация | JWT (jsonwebtoken) | 9.x | Полный контроль, без магии NextAuth |
 | Валидация | Zod | 3.x | Схемы для API и форм |
-| UI | Tailwind CSS | 3.x | Утилитарный, быстрая вёрстка |
+| UI | Чистый CSS (CSS Modules + utility-классы в `globals.css`) | — | Минимум зависимостей, собственные design tokens |
 | Иконки | Lucide React | latest | Минималистичные, tree-shakeable |
 | Графики | Recharts | 2.x | Для страницы результатов (калории по дням) |
 | Хостинг | Timeweb Cloud | — | Фронт + БД в одном месте, Россия |

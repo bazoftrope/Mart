@@ -1,0 +1,16 @@
+.description {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.details {
+  margin-top: 1.5rem;
+  line-height: 1.8;
+}
+
+.participantCard {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}

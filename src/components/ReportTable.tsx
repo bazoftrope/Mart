@@ -1,3 +1,5 @@
+import styles from './ReportTable.module.css';
+
 export type ReportLineItem = {
   id?: string;
   productId: string;
@@ -49,24 +51,24 @@ export default function ReportTable({
   return (
     <div>
       {lines.length === 0 ? (
-        <p style={{ color: '#666' }}>No products added yet.</p>
+        <p className={styles.emptyText}>Продукты ещё не добавлены.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table className={styles.table}>
           <thead>
-            <tr style={{ backgroundColor: '#f5f5f5' }}>
-              <th style={thStyle}>Product</th>
-              <th style={thStyle}>kcal/100g</th>
-              <th style={thStyle}>Weight (g)</th>
-              <th style={thStyle}>kcal</th>
-              {!readOnly && <th style={thStyle}></th>}
+            <tr className={styles.headerRow}>
+              <th className={styles.th}>Продукт</th>
+              <th className={styles.th}>ккал/100г</th>
+              <th className={styles.th}>Вес (г)</th>
+              <th className={styles.th}>ккал</th>
+              {!readOnly && <th className={styles.th}></th>}
             </tr>
           </thead>
           <tbody>
             {lines.map((line, index) => (
               <tr key={`${line.productId}-${index}`}>
-                <td style={tdStyle}>{line.name}</td>
-                <td style={tdStyle}>{line.calories}</td>
-                <td style={tdStyle}>
+                <td className={styles.td}>{line.name}</td>
+                <td className={styles.td}>{line.calories}</td>
+                <td className={styles.td}>
                   {readOnly ? (
                     line.weightGrams
                   ) : (
@@ -76,30 +78,19 @@ export default function ReportTable({
                       step="0.1"
                       value={line.weightGrams}
                       onChange={(e) => updateWeight(index, e.target.value)}
-                      style={{
-                        width: 80,
-                        padding: '0.35rem 0.5rem',
-                        border: '1px solid #ccc',
-                        borderRadius: 4,
-                      }}
+                      className={styles.input}
                     />
                   )}
                 </td>
-                <td style={tdStyle}>{line.lineCalories.toFixed(2)}</td>
+                <td className={styles.td}>{line.lineCalories.toFixed(2)}</td>
                 {!readOnly && (
-                  <td style={tdStyle}>
+                  <td className={styles.td}>
                     <button
                       type="button"
                       onClick={() => removeLine(index)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#c0392b',
-                        cursor: 'pointer',
-                        fontSize: '0.9rem',
-                      }}
+                      className={styles.removeButton}
                     >
-                      Remove
+                      Удалить
                     </button>
                   </td>
                 )}
@@ -108,22 +99,9 @@ export default function ReportTable({
           </tbody>
         </table>
       )}
-      <div style={{ marginTop: '1rem', textAlign: 'right', fontWeight: 'bold' }}>
-        Total: {total.toFixed(2)} kcal
+      <div className={styles.total}>
+        Итого: {total.toFixed(2)} ккал
       </div>
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: '0.6rem 0.5rem',
-  textAlign: 'left',
-  borderBottom: '2px solid #ddd',
-  fontSize: '0.9rem',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.6rem 0.5rem',
-  borderBottom: '1px solid #eee',
-  fontSize: '0.95rem',
-};

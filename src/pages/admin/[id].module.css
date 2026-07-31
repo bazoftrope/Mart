@@ -1,0 +1,8 @@
+.dayHeading {
+  margin-top: 0;
+}
+
+.successBold {
+  color: var(--text-success);
+  font-weight: bold;
+}

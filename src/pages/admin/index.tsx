@@ -38,12 +38,12 @@ export default function AdminPendingPage() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load pending templates');
+          throw new Error(json.message || json.error || 'Не удалось загрузить шаблоны на проверке');
         }
 
         setTemplates(json.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -53,37 +53,29 @@ export default function AdminPendingPage() {
   }, [router]);
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>Admin — Pending Marathon Templates</h1>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <main className="container">
+      <h1 className="pageTitle">Админ — шаблоны на проверке</h1>
+      {loading && <p>Загрузка...</p>}
+      {error && <p className="error">{error}</p>}
       {!loading && !error && templates.length === 0 && (
-        <p>No templates are pending review.</p>
+        <p>Нет шаблонов на проверке.</p>
       )}
       {!loading && !error && templates.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="listPlain">
           {templates.map((template) => (
-            <li
-              key={template.id}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: 8,
-                padding: '1rem',
-                marginBottom: '1rem',
-              }}
-            >
-              <Link href={`/admin/${template.id}`} style={{ textDecoration: 'none' }}>
-                <h2 style={{ margin: '0 0 0.5rem' }}>{template.title}</h2>
+            <li key={template.id} className="card">
+              <Link href={`/admin/${template.id}`} className="cardLink">
+                <h2 className="cardTitle">{template.title}</h2>
               </Link>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Mentor:</strong>{' '}
-                {template.mentor ? template.mentor.name : 'Unknown'}
+              <p className="meta">
+                <strong>Ментор:</strong>{' '}
+                {template.mentor ? template.mentor.name : 'Неизвестно'}
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Duration:</strong> {template.durationDays} days
+              <p className="meta">
+                <strong>Длительность:</strong> {template.durationDays} дн.
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Submitted:</strong>{' '}
+              <p className="meta">
+                <strong>Отправлен:</strong>{' '}
                 {new Date(template.createdAt).toLocaleDateString()}
               </p>
             </li>

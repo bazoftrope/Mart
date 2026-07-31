@@ -2,6 +2,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './new.module.css';
 
 export default function NewTemplatePage() {
   const router = useRouter();
@@ -35,24 +36,24 @@ export default function NewTemplatePage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to create template');
+        throw new Error(json.message || json.error || 'Не удалось создать шаблон');
       }
 
       router.push(`/mentor/templates/${json.data.id}/days`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main style={{ maxWidth: 700, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>Create Marathon Template</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <main className="containerMd">
+      <h1 className="pageTitle">Создать шаблон марафона</h1>
+      {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="title">Title</label>
+        <div className="formGroup">
+          <label htmlFor="title">Название</label>
           <input
             id="title"
             type="text"
@@ -60,21 +61,21 @@ export default function NewTemplatePage() {
             onChange={(e) => setTitle(e.target.value)}
             required
             maxLength={255}
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="description">Description</label>
+        <div className="formGroup">
+          <label htmlFor="description">Описание</label>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="durationDays">Duration (days)</label>
+        <div className="formGroup">
+          <label htmlFor="durationDays">Длительность (дней)</label>
           <input
             id="durationDays"
             type="number"
@@ -83,15 +84,15 @@ export default function NewTemplatePage() {
             value={durationDays}
             onChange={(e) => setDurationDays(Number(e.target.value))}
             required
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button type="submit" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Template'}
+        <div className={styles.actions}>
+          <button type="submit" disabled={loading} className="btn btnPrimary">
+            {loading ? 'Создание...' : 'Создать шаблон'}
           </button>
           <Link href="/mentor/templates">
-            <button type="button">Cancel</button>
+            <button type="button" className="btn btnOutline">Отмена</button>
           </Link>
         </div>
       </form>

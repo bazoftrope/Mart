@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './MentorStreams.module.css';
 
 type StreamItem = {
   id: string;
@@ -35,11 +36,11 @@ export default function MentorStreamsPage() {
         const res = await fetch('/api/streams/my', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load streams');
+          throw new Error(json.message || json.error || 'Не удалось загрузить потоки');
         }
         setStreams(json.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -49,42 +50,37 @@ export default function MentorStreamsPage() {
   }, [router]);
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>My Streams</h1>
+    <main className={styles.main}>
+      <div className={styles.header}>
+        <h1>Мои потоки</h1>
         <Link href="/mentor/streams/launch">
-          <button style={{ padding: '0.5rem 1rem' }}>Launch New Stream</button>
+          <button className={styles.launchBtn}>Запустить поток</button>
         </Link>
       </div>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {loading && <p>Загрузка...</p>}
+      {error && <p className={styles.error}>{error}</p>}
       {!loading && !error && streams.length === 0 && (
-        <p style={{ marginTop: '1rem' }}>You have not launched any streams yet.</p>
+        <p className={styles.emptyText}>Вы ещё не запустили ни одного потока.</p>
       )}
       {!loading && !error && streams.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem' }}>
+        <ul className={styles.list}>
           {streams.map((stream) => (
             <li
               key={stream.id}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: 8,
-                padding: '1rem',
-                marginBottom: '1rem',
-              }}
+              className={styles.listItem}
             >
-              <Link href={`/mentor/streams/${stream.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <h2 style={{ margin: '0 0 0.5rem' }}>{stream.template?.title || 'Untitled Stream'}</h2>
+              <Link href={`/mentor/streams/${stream.id}`} className={styles.streamLink}>
+                <h2 className={styles.streamTitle}>{stream.template?.title || 'Поток без названия'}</h2>
               </Link>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Start date:</strong> {new Date(stream.startDate).toLocaleDateString()}
+              <p className={styles.info}>
+                <strong>Дата начала:</strong> {new Date(stream.startDate).toLocaleDateString()}
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Duration:</strong> {stream.template?.durationDays} days
+              <p className={styles.info}>
+                <strong>Длительность:</strong> {stream.template?.durationDays} дн.
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Status:</strong> {stream.status}
+              <p className={styles.info}>
+                <strong>Статус:</strong> {stream.status}
               </p>
             </li>
           ))}

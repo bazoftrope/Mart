@@ -28,6 +28,31 @@ module.exports = {
         allowNull: false,
         defaultValue: 0,
       },
+      water_liters: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
+      steps: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
+      sleep_hours: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
+      activity_minutes: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
+      weight_kg: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
       filled_at: {
         type: Sequelize.DATE,
         allowNull: false,

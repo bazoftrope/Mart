@@ -43,11 +43,11 @@ export default function DashboardPage() {
         const res = await fetch('/api/streams/my', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load enrollments');
+          throw new Error(json.message || json.error || 'Не удалось загрузить записи');
         }
         setEnrollments(json.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -57,59 +57,51 @@ export default function DashboardPage() {
   }, [router]);
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>My Marathons</h1>
+    <main className="container">
+      <h1 className="pageTitle">Мои марафоны</h1>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {loading && <p>Загрузка...</p>}
+      {error && <p className="error">{error}</p>}
       {!loading && !error && enrollments.length === 0 && (
-        <div style={{ marginTop: '1rem' }}>
-          <p>You are not enrolled in any marathon yet.</p>
+        <div className="mt-1">
+          <p>Вы ещё не записаны ни на один марафон.</p>
           <Link href="/">
-            <button style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
-              Browse open streams
+            <button className="btn btnPrimary mt-1">
+              Посмотреть открытые потоки
             </button>
           </Link>
         </div>
       )}
       {!loading && !error && enrollments.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem' }}>
+        <ul className="listPlain mt-1">
           {enrollments.map((enrollment) => (
-            <li
-              key={enrollment.id}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: 8,
-                padding: '1rem',
-                marginBottom: '1rem',
-              }}
-            >
+            <li key={enrollment.id} className="card">
               <Link
                 href={`/dashboard/marathon/${enrollment.stream?.id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                className="cardLink"
               >
-                <h2 style={{ margin: '0 0 0.5rem' }}>
-                  {enrollment.stream?.template?.title || 'Unknown Marathon'}
+                <h2 className="cardTitle">
+                  {enrollment.stream?.template?.title || 'Неизвестный марафон'}
                 </h2>
               </Link>
-              <p style={{ margin: '0.25rem 0', color: '#555' }}>
-                {enrollment.stream?.template?.description || 'No description'}
+              <p className="meta textSecondary">
+                {enrollment.stream?.template?.description || 'Нет описания'}
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Mentor:</strong>{' '}
-                {enrollment.stream?.mentor?.name || 'Unknown'}
+              <p className="meta">
+                <strong>Ментор:</strong>{' '}
+                {enrollment.stream?.mentor?.name || 'Неизвестно'}
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Start date:</strong>{' '}
+              <p className="meta">
+                <strong>Дата начала:</strong>{' '}
                 {enrollment.stream
                   ? new Date(enrollment.stream.startDate).toLocaleDateString()
                   : '-'}
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Status:</strong> {enrollment.stream?.status}
+              <p className="meta">
+                <strong>Статус:</strong> {enrollment.stream?.status}
               </p>
-              <p style={{ margin: '0.25rem 0' }}>
-                <strong>Enrolled:</strong>{' '}
+              <p className="meta">
+                <strong>Записан:</strong>{' '}
                 {new Date(enrollment.enrolledAt).toLocaleString()}
               </p>
             </li>

@@ -1,0 +1,48 @@
+.main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.error {
+  color: red;
+}
+
+.backLink {
+  color: #1a1a2e;
+}
+
+.title {
+  margin-top: 1rem;
+}
+
+.description {
+  margin-top: 0.5rem;
+  color: #555;
+}
+
+.infoBlock {
+  margin-top: 1.5rem;
+  line-height: 1.8;
+}
+
+.section {
+  margin-top: 2rem;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+.listItem {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.info {
+  margin: 0.25rem 0;
+}

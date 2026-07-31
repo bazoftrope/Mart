@@ -9,6 +9,7 @@ import { StreamEnrollment } from './models/StreamEnrollment';
 import { DailyReport } from './models/DailyReport';
 import { ReportLine } from './models/ReportLine';
 import { StreamRating } from './models/StreamRating';
+import { PulseReading } from './models/PulseReading';
 
 const parseDatabaseUrl = (url?: string) => {
   if (!url) return null;
@@ -48,6 +49,7 @@ export const sequelize = new Sequelize({
     DailyReport,
     ReportLine,
     StreamRating,
+    PulseReading,
   ],
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
   define: {

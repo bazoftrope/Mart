@@ -5,7 +5,7 @@ import { apiHandler, success } from '@/lib/apiHandler';
 import { withParticipant } from '@/lib/middleware';
 import { BadRequest, Forbidden, NotFound } from '@/lib/errors';
 import { saveReportSchema } from '@/lib/validation';
-import { getCurrentDayNumber, isDayAccessible } from '@/lib/calendar';
+import { getCurrentDayNumber, isDayAccessible, buildMeasuredAtUtc } from '@/lib/calendar';
 import {
   Stream,
   MarathonTemplate,
@@ -14,6 +14,7 @@ import {
   DailyReport,
   ReportLine,
   Product,
+  PulseReading,
   User,
 } from '@db/models';
 import type { AuthenticatedRequest } from '@/types/auth';
@@ -104,11 +105,19 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     weightGrams: number;
     lineCalories: number;
   }> = [];
+  let pulseReadings: Array<{ id: string; measuredAt: Date; pulse: number }> = [];
 
   if (report) {
-    const reportLines = await ReportLine.findAll({
-      where: { reportId: report.id },
-    });
+    const [reportLines, reportPulseReadings] = await Promise.all([
+      ReportLine.findAll({
+        where: { reportId: report.id },
+      }),
+      PulseReading.findAll({
+        where: { reportId: report.id },
+        order: [['measured_at', 'ASC']],
+      }),
+    ]);
+
     const productIds = reportLines.map((line) => line.productId);
     const products = productIds.length
       ? await Product.findAll({ where: { id: productIds } })
@@ -126,6 +135,12 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
         lineCalories: Number(line.lineCalories),
       };
     });
+
+    pulseReadings = reportPulseReadings.map((p) => ({
+      id: p.id,
+      measuredAt: p.measuredAt,
+      pulse: p.pulse,
+    }));
   }
 
   return success(res, {
@@ -146,6 +161,12 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
           totalCalories: Number(report.totalCalories),
           filledAt: report.filledAt,
           updatedAt: report.updatedAt,
+          waterLiters: report.waterLiters,
+          steps: report.steps,
+          sleepHours: report.sleepHours,
+          activityMinutes: report.activityMinutes,
+          weightKg: report.weightKg,
+          pulseReadings,
           lines,
         }
       : null,
@@ -177,15 +198,24 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const body = saveReportSchema.parse(req.body);
+  const lines = body.lines ?? [];
+  const {
+    waterLiters,
+    steps,
+    sleepHours,
+    activityMinutes,
+    weightKg,
+    pulseReadings,
+  } = body;
 
-  const productIds = body.lines.map((line) => line.productId);
+  const productIds = lines.map((line) => line.productId);
   const products = productIds.length
     ? await Product.findAll({ where: { id: productIds } })
     : [];
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   let totalCalories = 0;
-  const lineRecords = body.lines.map((line) => {
+  const lineRecords = lines.map((line) => {
     const product = productMap.get(line.productId);
     if (!product) {
       throw new BadRequest(`Product ${line.productId} not found`);
@@ -215,6 +245,11 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     report.totalCalories = totalCalories;
+    report.waterLiters = waterLiters ?? null;
+    report.steps = steps ?? null;
+    report.sleepHours = sleepHours ?? null;
+    report.activityMinutes = activityMinutes ?? null;
+    report.weightKg = weightKg ?? null;
     await report.save({ transaction });
 
     await ReportLine.destroy({
@@ -230,6 +265,27 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       { transaction }
     );
 
+    await PulseReading.destroy({
+      where: { reportId: report.id },
+      transaction,
+    });
+
+    const pulseRecords =
+      pulseReadings?.map((reading) => ({
+        reportId: report.id,
+        measuredAt: buildMeasuredAtUtc(
+          stream.startDate,
+          dayNumber,
+          reading.measuredAt,
+          currentUser.timezone
+        ),
+        pulse: reading.pulse,
+      })) ?? [];
+
+    const createdPulse = pulseRecords.length
+      ? await PulseReading.bulkCreate(pulseRecords, { transaction })
+      : [];
+
     await transaction.commit();
 
     const savedLines = lineRecords.map((record) => {
@@ -243,11 +299,25 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       };
     });
 
+    createdPulse.sort(
+      (a, b) => a.measuredAt.getTime() - b.measuredAt.getTime()
+    );
+
     return success(res, {
       id: report.id,
       totalCalories,
       filledAt: report.filledAt,
       updatedAt: report.updatedAt,
+      waterLiters: report.waterLiters,
+      steps: report.steps,
+      sleepHours: report.sleepHours,
+      activityMinutes: report.activityMinutes,
+      weightKg: report.weightKg,
+      pulseReadings: createdPulse.map((p) => ({
+        id: p.id,
+        measuredAt: p.measuredAt,
+        pulse: p.pulse,
+      })),
       lines: savedLines,
     });
   } catch (error) {

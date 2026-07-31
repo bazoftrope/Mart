@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import styles from './ProductSearch.module.css';
 
 export type Product = {
   id: string;
@@ -66,64 +67,33 @@ export default function ProductSearch({ onSelect, disabled }: ProductSearchProps
   }
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative', width: '100%' }}>
+    <div ref={wrapperRef} className={styles.wrapper}>
       <input
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search product..."
+        placeholder="Поиск продукта..."
         disabled={disabled}
-        style={{
-          width: '100%',
-          padding: '0.5rem 0.75rem',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          fontSize: '1rem',
-        }}
+        className={styles.input}
       />
       {open && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            marginTop: 4,
-            maxHeight: 240,
-            overflowY: 'auto',
-            backgroundColor: '#fff',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            zIndex: 10,
-            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-          }}
-        >
+        <div className={styles.dropdown}>
           {loading && products.length === 0 && (
-            <div style={{ padding: '0.75rem', color: '#666' }}>Loading...</div>
+            <div className={styles.hint}>Загрузка...</div>
           )}
           {!loading && products.length === 0 && (
-            <div style={{ padding: '0.75rem', color: '#666' }}>No products found</div>
+            <div className={styles.hint}>Продукты не найдены</div>
           )}
           {products.map((product) => (
             <button
               key={product.id}
               type="button"
               onClick={() => handleSelect(product)}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '0.75rem',
-                background: 'none',
-                border: 'none',
-                borderBottom: '1px solid #f0f0f0',
-                cursor: 'pointer',
-                fontSize: '0.95rem',
-              }}
+              className={styles.option}
             >
               {product.name}{' '}
-              <span style={{ color: '#666' }}>
-                ({product.calories} kcal/100g)
+              <span className={styles.calories}>
+                ({product.calories} ккал/100г)
               </span>
             </button>
           ))}

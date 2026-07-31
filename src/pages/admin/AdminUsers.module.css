@@ -1,0 +1,53 @@
+.main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.filterDiv {
+  margin-bottom: 1rem;
+}
+
+.filterLabel {
+  margin-right: 0.5rem;
+}
+
+.filterSelect {
+  padding: 0.25rem 0.5rem;
+}
+
+.error {
+  color: red;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+}
+
+.listItem {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.userLink {
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.userEmail {
+  margin: 0.25rem 0 0;
+  color: #666;
+}
+
+.roleBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}

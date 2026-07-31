@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import styles from './Results.module.css';
 
 type ResultsData = {
   participant: {
@@ -57,11 +58,11 @@ export default function ResultsPage() {
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load results');
+          throw new Error(json.message || json.error || 'Не удалось загрузить результаты');
         }
         setData(json.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -72,23 +73,22 @@ export default function ResultsPage() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-        <p>Loading...</p>
+      <main className={styles.main}>
+        <p>Загрузка...</p>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-        <p style={{ color: 'red' }}>{error || 'Failed to load results'}</p>
+      <main className={styles.main}>
+        <p className={styles.error}>{error || 'Не удалось загрузить результаты'}</p>
       </main>
     );
   }
 
   const { participant, streamAverage, summary } = data;
 
-  // Merge data for the chart
   const chartData = participant.dailyCalories.map((d) => {
     const avg = streamAverage.find((a) => a.day === d.day);
     return {
@@ -99,50 +99,41 @@ export default function ResultsPage() {
   });
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <Link href={`/dashboard/marathon/${streamId}`} style={{ color: '#1a1a2e' }}>
-        &larr; Back to calendar
+    <main className={styles.main}>
+      <Link href={`/dashboard/marathon/${streamId}`} className={styles.backLink}>
+        &larr; Назад к календарю
       </Link>
 
-      <h1 style={{ marginTop: '1rem' }}>Results</h1>
+      <h1 className={styles.title}>Результаты</h1>
 
-      {/* Summary cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '1rem',
-          marginTop: '1.5rem',
-        }}
-      >
-        <div style={cardStyle}>
-          <div style={cardLabel}>Rank</div>
-          <div style={cardValue}>
+      <div className={styles.cardGrid}>
+        <div className={styles.card}>
+          <div className={styles.cardLabel}>Место</div>
+          <div className={styles.cardValue}>
             {summary.rank !== null ? `${summary.rank} / ${summary.totalParticipants}` : '—'}
           </div>
         </div>
-        <div style={cardStyle}>
-          <div style={cardLabel}>Discipline</div>
-          <div style={cardValue}>{summary.disciplinePercent}%</div>
+        <div className={styles.card}>
+          <div className={styles.cardLabel}>Дисциплина</div>
+          <div className={styles.cardValue}>{summary.disciplinePercent}%</div>
         </div>
-        <div style={cardStyle}>
-          <div style={cardLabel}>Filled days</div>
-          <div style={cardValue}>{summary.filledDays}</div>
+        <div className={styles.card}>
+          <div className={styles.cardLabel}>Заполнено дней</div>
+          <div className={styles.cardValue}>{summary.filledDays}</div>
         </div>
-        <div style={cardStyle}>
-          <div style={cardLabel}>Avg calories</div>
-          <div style={cardValue}>{summary.avgCalories}</div>
+        <div className={styles.card}>
+          <div className={styles.cardLabel}>Ср. калории</div>
+          <div className={styles.cardValue}>{summary.avgCalories}</div>
         </div>
       </div>
 
-      {/* Chart */}
       {chartData.length > 0 ? (
-        <div style={{ marginTop: '2rem' }}>
-          <h2>Calories per day</h2>
+        <div className={styles.chartSection}>
+          <h2>Калории по дням</h2>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" label={{ value: 'Day', position: 'bottom', offset: -5 }} />
+              <XAxis dataKey="day" label={{ value: 'День', position: 'bottom', offset: -5 }} />
               <YAxis />
               <Tooltip />
               <Legend />
@@ -165,28 +156,8 @@ export default function ResultsPage() {
           </ResponsiveContainer>
         </div>
       ) : (
-        <p style={{ color: '#555', marginTop: '2rem' }}>No data to display yet.</p>
+        <p className={styles.noData}>Нет данных для отображения.</p>
       )}
     </main>
   );
 }
-
-const cardStyle: React.CSSProperties = {
-  background: '#f9fafb',
-  border: '1px solid #e5e7eb',
-  borderRadius: 8,
-  padding: '1rem',
-  textAlign: 'center',
-};
-
-const cardLabel: React.CSSProperties = {
-  fontSize: '0.8rem',
-  color: '#6b7280',
-  marginBottom: '0.25rem',
-};
-
-const cardValue: React.CSSProperties = {
-  fontSize: '1.4rem',
-  fontWeight: 600,
-  color: '#111827',
-};

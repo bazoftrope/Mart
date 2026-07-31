@@ -29,38 +29,38 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ maxWidth: 400, margin: '4rem auto', padding: '0 1rem' }}>
-      <h1>Login</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <main className="containerNarrow">
+      <h1 className="pageTitle">Вход</h1>
+      {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="email">Email</label>
+        <div className="formGroup">
+          <label htmlFor="email">Эл. почта</label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="password">Password</label>
+        <div className="formGroup">
+          <label htmlFor="password">Пароль</label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <button type="submit" disabled={isLoading} style={{ width: '100%' }}>
-          {isLoading ? 'Logging in...' : 'Login'}
+        <button type="submit" disabled={isLoading} className="btn btnPrimary btnBlock">
+          {isLoading ? 'Вход...' : 'Войти'}
         </button>
       </form>
       <p>
-        Don&apos;t have an account? <Link href="/register">Register</Link>
+        Нет аккаунта? <Link href="/register">Зарегистрироваться</Link>
       </p>
     </main>
   );

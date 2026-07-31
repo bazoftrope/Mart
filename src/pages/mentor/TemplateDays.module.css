@@ -1,0 +1,35 @@
+.main {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.error {
+  color: red;
+}
+
+.fieldset {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.formGroup {
+  margin-bottom: 0.75rem;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.submitReviewBtn {
+  background: #27ae60;
+  color: #fff;
+}

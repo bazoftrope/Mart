@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './Layout.module.css';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -26,11 +27,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (!role) {
       return (
         <>
-          <Link href="/login" style={linkStyle}>
-            Login
+          <Link href="/login" className={styles.link}>
+            Войти
           </Link>
-          <Link href="/register" style={linkStyle}>
-            Register
+          <Link href="/register" className={styles.link}>
+            Регистрация
           </Link>
         </>
       );
@@ -39,14 +40,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (role === 'admin') {
       return (
         <>
-          <Link href="/admin" style={linkStyle}>
-            Pending Review
+          <Link href="/admin" className={styles.link}>
+            На проверку
           </Link>
-          <Link href="/admin/users" style={linkStyle}>
-            Users
+          <Link href="/admin/users" className={styles.link}>
+            Пользователи
           </Link>
-          <button onClick={handleLogout} style={buttonStyle}>
-            Logout
+          <button onClick={handleLogout} className={styles.button}>
+            Выйти
           </button>
         </>
       );
@@ -55,20 +56,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (role === 'mentor') {
       return (
         <>
-          <Link href="/mentor" style={linkStyle}>
-            Dashboard
+          <Link href="/mentor" className={styles.link}>
+            Панель
           </Link>
-          <Link href="/mentor/templates" style={linkStyle}>
-            My Templates
+          <Link href="/mentor/templates" className={styles.link}>
+            Мои шаблоны
           </Link>
-          <Link href="/mentor/templates/new" style={linkStyle}>
-            Create Template
+          <Link href="/mentor/templates/new" className={styles.link}>
+            Создать шаблон
           </Link>
-          <Link href="/mentor/streams" style={linkStyle}>
-            My Streams
+          <Link href="/mentor/streams" className={styles.link}>
+            Мои потоки
           </Link>
-          <button onClick={handleLogout} style={buttonStyle}>
-            Logout
+          <button onClick={handleLogout} className={styles.button}>
+            Выйти
           </button>
         </>
       );
@@ -77,76 +78,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     // role === 'participant'
     return (
       <>
-        <Link href="/dashboard" style={linkStyle}>
-          My Marathons
+        <Link href="/dashboard" className={styles.link}>
+          Мои марафоны
         </Link>
-        <button onClick={handleLogout} style={buttonStyle}>
-          Logout
+        <button onClick={handleLogout} className={styles.button}>
+          Выйти
         </button>
       </>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
-      <header style={headerStyle}>
-        <div style={containerStyle}>
-          <Link href="/" style={logoStyle}>
+    <div className={styles.wrapper}>
+      <header className={styles.header}>
+        <div className={styles.container}>
+          <Link href="/" className={styles.logo}>
             Marathon Platform
           </Link>
-          <nav style={navStyle}>{renderNav()}</nav>
+          <nav className={styles.nav}>{renderNav()}</nav>
         </div>
       </header>
-      <main style={mainStyle}>{children}</main>
+      <main className={styles.main}>{children}</main>
     </div>
   );
 }
-
-const headerStyle: React.CSSProperties = {
-  backgroundColor: '#1a1a2e',
-  color: '#fff',
-  padding: '0 1rem',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-};
-
-const containerStyle: React.CSSProperties = {
-  maxWidth: 960,
-  margin: '0 auto',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  minHeight: 56,
-};
-
-const logoStyle: React.CSSProperties = {
-  color: '#fff',
-  fontSize: '1.25rem',
-  fontWeight: 'bold',
-  textDecoration: 'none',
-};
-
-const navStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1.25rem',
-};
-
-const linkStyle: React.CSSProperties = {
-  color: '#fff',
-  textDecoration: 'none',
-  fontSize: '0.95rem',
-};
-
-const buttonStyle: React.CSSProperties = {
-  background: 'transparent',
-  border: '1px solid #fff',
-  color: '#fff',
-  padding: '0.35rem 0.75rem',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '0.95rem',
-};
-
-const mainStyle: React.CSSProperties = {
-  paddingTop: '1.5rem',
-};

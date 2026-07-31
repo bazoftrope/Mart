@@ -1,0 +1,75 @@
+.main {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: red;
+}
+
+.card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.roleBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.changeRoleSection {
+  margin-top: 1.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+.buttonGroup {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnMentor {
+  background-color: #2563eb;
+}
+
+.btnParticipant {
+  background-color: #16a34a;
+}
+
+.selfNote {
+  margin-top: 1rem;
+  color: #666;
+  font-style: italic;
+}
+
+.saveError {
+  margin-top: 0.5rem;
+  color: red;
+}

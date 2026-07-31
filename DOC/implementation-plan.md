@@ -3,7 +3,7 @@
 ## Фиксированные решения
 
 - **Фреймворк:** Next.js 14, **Pages Router**
-- **Стили:** чистый CSS (CSS Modules + глобальные переменные), без Tailwind
+- **Стили:** чистый CSS (CSS Modules + глобальные переменные + utility-классы в `globals.css`), без Tailwind
 - **Язык:** TypeScript
 - **База данных:** PostgreSQL
 - **ORM:** Sequelize + sequelize-typescript
@@ -234,4 +234,4 @@
 
 Когда начинаешь новую сессию, передай агенту:
 
-> Платформа марафонов по здоровому питанию. Next.js 14 + Pages Router + TypeScript, чистый CSS, PostgreSQL, Sequelize. Проект в `/Users/bazoftrope/projects/Irina/marafon/marathon-platform`. Документация в `DOC/`. Начинаем реализацию по плану `DOC/implementation-plan.md`, шаг N.
+> Платформа марафонов по здоровому питанию. Next.js 14 + Pages Router + TypeScript, чистый CSS (CSS Modules + utility-классы в `globals.css`), PostgreSQL, Sequelize. Проект в `/Users/bazoftrope/projects/Irina/marafon/marathon-platform`. Документация в `DOC/`. Начинаем реализацию по плану `DOC/implementation-plan.md`, шаг N.

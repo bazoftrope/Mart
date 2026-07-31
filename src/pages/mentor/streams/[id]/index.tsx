@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './MentorStreamDetails.module.css';
 
 type Participant = {
   id: string;
@@ -59,16 +60,16 @@ export default function MentorStreamDetailsPage() {
         const enrollmentsJson = await enrollmentsRes.json().catch(() => ({}));
 
         if (!streamRes.ok) {
-          throw new Error(streamJson.message || streamJson.error || 'Failed to load stream');
+          throw new Error(streamJson.message || streamJson.error || 'Не удалось загрузить поток');
         }
         if (!enrollmentsRes.ok) {
-          throw new Error(enrollmentsJson.message || enrollmentsJson.error || 'Failed to load enrollments');
+          throw new Error(enrollmentsJson.message || enrollmentsJson.error || 'Не удалось загрузить записи');
         }
 
         setStream(streamJson.data);
         setEnrollments(enrollmentsJson.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -77,48 +78,43 @@ export default function MentorStreamDetailsPage() {
     load();
   }, [id, router]);
 
-  if (loading) return <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}><p>Loading...</p></main>;
-  if (error) return <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}><p style={{ color: 'red' }}>{error}</p></main>;
-  if (!stream) return <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}><p>Stream not found</p></main>;
+  if (loading) return <main className={styles.main}><p>Загрузка...</p></main>;
+  if (error) return <main className={styles.main}><p className={styles.error}>{error}</p></main>;
+  if (!stream) return <main className={styles.main}><p>Поток не найден</p></main>;
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <Link href="/mentor/streams" style={{ color: '#1a1a2e' }}>← Back to my streams</Link>
-      <h1 style={{ marginTop: '1rem' }}>{stream.template?.title || 'Stream'}</h1>
-      <p style={{ marginTop: '0.5rem', color: '#555' }}>
-        {stream.template?.description || 'No description'}
+    <main className={styles.main}>
+      <Link href="/mentor/streams" className={styles.backLink}>← Назад к моим потокам</Link>
+      <h1 className={styles.title}>{stream.template?.title || 'Поток'}</h1>
+      <p className={styles.description}>
+        {stream.template?.description || 'Нет описания'}
       </p>
 
-      <div style={{ marginTop: '1.5rem', lineHeight: 1.8 }}>
-        <p><strong>Duration:</strong> {stream.template?.durationDays} days</p>
-        <p><strong>Start date:</strong> {new Date(stream.startDate).toLocaleDateString()}</p>
-        <p><strong>Status:</strong> {stream.status}</p>
-        <p><strong>Total participants:</strong> {stream.enrollmentsCount}</p>
+      <div className={styles.infoBlock}>
+        <p><strong>Длительность:</strong> {stream.template?.durationDays} дн.</p>
+        <p><strong>Дата начала:</strong> {new Date(stream.startDate).toLocaleDateString()}</p>
+        <p><strong>Статус:</strong> {stream.status}</p>
+        <p><strong>Всего участников:</strong> {stream.enrollmentsCount}</p>
       </div>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Participants</h2>
-        {enrollments.length === 0 && <p>No participants yet.</p>}
+      <section className={styles.section}>
+        <h2>Участники</h2>
+        {enrollments.length === 0 && <p>Участников пока нет.</p>}
         {enrollments.length > 0 && (
-          <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem' }}>
+          <ul className={styles.list}>
             {enrollments.map((enrollment) => (
               <li
                 key={enrollment.id}
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: 8,
-                  padding: '1rem',
-                  marginBottom: '0.75rem',
-                }}
+                className={styles.listItem}
               >
-                <p style={{ margin: '0.25rem 0' }}>
-                  <strong>Name:</strong> {enrollment.participant?.name || 'Unknown'}
+                <p className={styles.info}>
+                  <strong>Имя:</strong> {enrollment.participant?.name || 'Неизвестно'}
                 </p>
-                <p style={{ margin: '0.25rem 0' }}>
-                  <strong>Email:</strong> {enrollment.participant?.email || 'Unknown'}
+                <p className={styles.info}>
+                  <strong>Email:</strong> {enrollment.participant?.email || 'Неизвестно'}
                 </p>
-                <p style={{ margin: '0.25rem 0' }}>
-                  <strong>Enrolled:</strong>{' '}
+                <p className={styles.info}>
+                  <strong>Записан:</strong>{' '}
                   {new Date(enrollment.enrolledAt).toLocaleString()}
                 </p>
               </li>

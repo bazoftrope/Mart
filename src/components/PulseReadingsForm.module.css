@@ -1,0 +1,58 @@
+.section {
+  margin-top: 1.5rem;
+}
+
+.title {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.timeInput,
+.pulseInput {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.95rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.timeInput {
+  width: 6rem;
+}
+
+.pulseInput {
+  width: 5rem;
+}
+
+.removeButton {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.removeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.addButton {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.emptyText {
+  color: #666;
+  font-size: 0.9rem;
+}

@@ -2,6 +2,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './edit.module.css';
 
 type Template = {
   id: string;
@@ -43,7 +44,7 @@ export default function EditTemplatePage() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load template');
+          throw new Error(json.message || json.error || 'Не удалось загрузить шаблон');
         }
 
         const data: Template = json.data;
@@ -52,7 +53,7 @@ export default function EditTemplatePage() {
         setDescription(data.description || '');
         setDurationDays(data.durationDays);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -78,12 +79,12 @@ export default function EditTemplatePage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to update template');
+        throw new Error(json.message || json.error || 'Не удалось обновить шаблон');
       }
 
       router.push('/mentor/templates');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
       setSaving(false);
     }
@@ -91,18 +92,18 @@ export default function EditTemplatePage() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: 700, margin: '2rem auto', padding: '0 1rem' }}>
-        <p>Loading...</p>
+      <main className="containerMd">
+        <p>Загрузка...</p>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main style={{ maxWidth: 700, margin: '2rem auto', padding: '0 1rem' }}>
-        <p style={{ color: 'red' }}>{error}</p>
+      <main className="containerMd">
+        <p className="error">{error}</p>
         <Link href="/mentor/templates">
-          <button>Back to Templates</button>
+          <button className="btn btnOutline">Назад к шаблонам</button>
         </Link>
       </main>
     );
@@ -110,8 +111,8 @@ export default function EditTemplatePage() {
 
   if (!template) {
     return (
-      <main style={{ maxWidth: 700, margin: '2rem auto', padding: '0 1rem' }}>
-        <p>Template not found.</p>
+      <main className="containerMd">
+        <p>Шаблон не найден.</p>
       </main>
     );
   }
@@ -119,16 +120,16 @@ export default function EditTemplatePage() {
   const isEditable = template.status === 'draft';
 
   return (
-    <main style={{ maxWidth: 700, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>Edit Marathon Template</h1>
+    <main className="containerMd">
+      <h1 className="pageTitle">Редактировать шаблон марафона</h1>
       {!isEditable && (
-        <p style={{ color: '#c0392b' }}>
-          This template is {template.status === 'approved' ? 'approved' : 'pending review'} and cannot be edited.
+        <p className="error">
+          Этот шаблон {template.status === 'approved' ? 'одобрен' : 'на проверке'} и не может быть изменён.
         </p>
       )}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="title">Title</label>
+        <div className="formGroup">
+          <label htmlFor="title">Название</label>
           <input
             id="title"
             type="text"
@@ -137,22 +138,22 @@ export default function EditTemplatePage() {
             required
             maxLength={255}
             disabled={!isEditable}
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="description">Description</label>
+        <div className="formGroup">
+          <label htmlFor="description">Описание</label>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
             disabled={!isEditable}
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="durationDays">Duration (days)</label>
+        <div className="formGroup">
+          <label htmlFor="durationDays">Длительность (дней)</label>
           <input
             id="durationDays"
             type="number"
@@ -162,15 +163,15 @@ export default function EditTemplatePage() {
             onChange={(e) => setDurationDays(Number(e.target.value))}
             required
             disabled={!isEditable}
-            style={{ width: '100%' }}
+            className="input"
           />
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button type="submit" disabled={saving || !isEditable}>
-            {saving ? 'Saving...' : 'Save Changes'}
+        <div className={styles.actions}>
+          <button type="submit" disabled={saving || !isEditable} className="btn btnPrimary">
+            {saving ? 'Сохранение...' : 'Сохранить изменения'}
           </button>
           <Link href="/mentor/templates">
-            <button type="button">Cancel</button>
+            <button type="button" className="btn btnOutline">Отмена</button>
           </Link>
         </div>
       </form>

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './AdminUsers.module.css';
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -31,12 +32,12 @@ export default function AdminUsersPage() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load users');
+          throw new Error(json.message || json.error || 'Не удалось загрузить пользователей');
         }
 
         setUsers(json.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -59,12 +60,12 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>Admin — Users</h1>
+    <main className={styles.main}>
+      <h1>Админ — пользователи</h1>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="role-filter" style={{ marginRight: '0.5rem' }}>
-          Filter by role:
+      <div className={styles.filterDiv}>
+        <label htmlFor="role-filter" className={styles.filterLabel}>
+          Фильтр по роли:
         </label>
         <select
           id="role-filter"
@@ -73,52 +74,41 @@ export default function AdminUsersPage() {
             setFilterRole(e.target.value);
             setLoading(true);
           }}
-          style={{ padding: '0.25rem 0.5rem' }}
+          className={styles.filterSelect}
         >
-          <option value="">All roles</option>
-          <option value="admin">Admin</option>
-          <option value="mentor">Mentor</option>
-          <option value="participant">Participant</option>
+          <option value="">Все роли</option>
+          <option value="admin">Админ</option>
+          <option value="mentor">Ментор</option>
+          <option value="participant">Участник</option>
         </select>
       </div>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {loading && <p>Загрузка...</p>}
+      {error && <p className={styles.error}>{error}</p>}
       {!loading && !error && users.length === 0 && (
-        <p>No users found.</p>
+        <p>Пользователи не найдены.</p>
       )}
       {!loading && !error && users.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className={styles.list}>
           {users.map((user) => (
             <li
               key={user.id}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: 8,
-                padding: '1rem',
-                marginBottom: '0.75rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
+              className={styles.listItem}
             >
               <div>
                 <Link
                   href={`/admin/users/${user.id}`}
-                  style={{ textDecoration: 'none', fontWeight: 'bold' }}
+                  className={styles.userLink}
                 >
                   {user.name}
                 </Link>
-                <p style={{ margin: '0.25rem 0 0', color: '#666' }}>{user.email}</p>
+                <p className={styles.userEmail}>{user.email}</p>
               </div>
               <span
                 style={{
                   ...getRoleBadgeStyle(user.role),
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: 12,
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
                 }}
+                className={styles.roleBadge}
               >
                 {user.role}
               </span>

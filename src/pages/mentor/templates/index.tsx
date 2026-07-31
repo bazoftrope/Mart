@@ -16,11 +16,11 @@ type Template = {
 function statusLabel(status: Template['status']): string {
   switch (status) {
     case 'draft':
-      return 'Draft';
+      return 'Черновик';
     case 'pending_review':
-      return 'Pending Review';
+      return 'На проверке';
     case 'approved':
-      return 'Approved';
+      return 'Одобрен';
     default:
       return status;
   }
@@ -47,12 +47,12 @@ export default function MentorTemplatesPage() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load templates');
+          throw new Error(json.message || json.error || 'Не удалось загрузить шаблоны');
         }
 
         setTemplates(json.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -62,7 +62,7 @@ export default function MentorTemplatesPage() {
   }, [router]);
 
   async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this draft template?')) {
+    if (!confirm('Вы уверены, что хотите удалить этот черновик шаблона?')) {
       return;
     }
 
@@ -74,12 +74,12 @@ export default function MentorTemplatesPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to delete template');
+        throw new Error(json.message || json.error || 'Не удалось удалить шаблон');
       }
 
       setTemplates((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     }
   }
 
@@ -92,73 +92,65 @@ export default function MentorTemplatesPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to submit template');
+        throw new Error(json.message || json.error || 'Не удалось отправить шаблон');
       }
 
       setTemplates((prev) =>
         prev.map((t) => (t.id === id ? { ...t, status: 'pending_review' } : t))
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     }
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>My Marathon Templates</h1>
+    <main className="container2xl">
+      <div className="flexBetween">
+        <h1 className="pageTitle">Мои шаблоны марафонов</h1>
         <Link href="/mentor/templates/new">
-          <button>Create Template</button>
+          <button className="btn btnPrimary">Создать шаблон</button>
         </Link>
       </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {loading && <p>Loading...</p>}
+      {error && <p className="error">{error}</p>}
+      {loading && <p>Загрузка...</p>}
 
-      {!loading && templates.length === 0 && <p>No templates yet.</p>}
+      {!loading && templates.length === 0 && <p>Шаблонов пока нет.</p>}
 
       {!loading && templates.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="listPlain mt-1">
           {templates.map((template) => (
-            <li
-              key={template.id}
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: 8,
-                padding: '1rem',
-                marginBottom: '1rem',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                <div>
-                  <h2 style={{ margin: '0 0 0.5rem' }}>{template.title}</h2>
-                  <p style={{ margin: '0.25rem 0', color: '#666' }}>
-                    {template.description || 'No description'}
+            <li key={template.id} className="card">
+              <div className="cardHeader">
+                <div className="cardBody">
+                  <h2 className="cardTitle">{template.title}</h2>
+                  <p className="description">
+                    {template.description || 'Нет описания'}
                   </p>
-                  <p style={{ margin: '0.25rem 0' }}>
-                    <strong>Duration:</strong> {template.durationDays} days
+                  <p className="meta">
+                    <strong>Длительность:</strong> {template.durationDays} дн.
                   </p>
-                  <p style={{ margin: '0.25rem 0' }}>
-                    <strong>Status:</strong> {statusLabel(template.status)}
+                  <p className="meta">
+                    <strong>Статус:</strong> {statusLabel(template.status)}
                   </p>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div className="cardActions">
                   <Link href={`/mentor/templates/${template.id}/edit`}>
-                    <button style={{ width: '100%' }}>Edit</button>
+                    <button className="btn btnOutline">Редакт.</button>
                   </Link>
                   <Link href={`/mentor/templates/${template.id}/days`}>
-                    <button style={{ width: '100%' }}>Days</button>
+                    <button className="btn btnOutline">Дни</button>
                   </Link>
                   {template.status === 'draft' && (
                     <>
-                      <button onClick={() => handleSubmit(template.id)} style={{ width: '100%' }}>
-                        Submit
+                      <button onClick={() => handleSubmit(template.id)} className="btn btnPrimary">
+                        Отправить
                       </button>
                       <button
                         onClick={() => handleDelete(template.id)}
-                        style={{ width: '100%', background: '#c0392b', color: '#fff' }}
+                        className="btn btnDanger"
                       >
-                        Delete
+                        Удалить
                       </button>
                     </>
                   )}

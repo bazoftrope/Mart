@@ -2,6 +2,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from '../../TemplateDays.module.css';
 
 type Template = {
   id: string;
@@ -57,7 +58,7 @@ export default function TemplateDaysPage() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load template');
+          throw new Error(json.message || json.error || 'Не удалось загрузить шаблон');
         }
 
         const data: Template & { days: DayInput[] } = json.data;
@@ -69,7 +70,7 @@ export default function TemplateDaysPage() {
           setDays(createEmptyDays(data.durationDays));
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -103,12 +104,12 @@ export default function TemplateDaysPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to save days');
+        throw new Error(json.message || json.error || 'Не удалось сохранить дни');
       }
 
-      alert('Days saved successfully');
+      alert('Дни успешно сохранены');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
       setSaving(false);
     }
@@ -128,12 +129,12 @@ export default function TemplateDaysPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to submit template');
+        throw new Error(json.message || json.error || 'Не удалось отправить шаблон');
       }
 
       router.push('/mentor/templates');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
       setSubmitting(false);
     }
@@ -141,16 +142,16 @@ export default function TemplateDaysPage() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
-        <p>Loading...</p>
+      <main className={styles.main}>
+        <p>Загрузка...</p>
       </main>
     );
   }
 
   if (error && !template) {
     return (
-      <main style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
-        <p style={{ color: 'red' }}>{error}</p>
+      <main className={styles.main}>
+        <p className={styles.error}>{error}</p>
         <Link href="/mentor/templates">
           <button>Back to Templates</button>
         </Link>
@@ -160,8 +161,8 @@ export default function TemplateDaysPage() {
 
   if (!template) {
     return (
-      <main style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
-        <p>Template not found.</p>
+      <main className={styles.main}>
+        <p>Шаблон не найден.</p>
       </main>
     );
   }
@@ -169,80 +170,75 @@ export default function TemplateDaysPage() {
   const isEditable = template.status === 'draft';
 
   return (
-    <main style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>Days: {template.title}</h1>
+    <main className={styles.main}>
+      <h1>Дни: {template.title}</h1>
       <p>
-        Duration: {template.durationDays} days. Fill in the content for each day.
+        Длительность: {template.durationDays} дн. Заполните содержимое для каждого дня.
       </p>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className={styles.error}>{error}</p>}
 
       <form onSubmit={handleSave}>
         {days.map((day, index) => (
           <fieldset
             key={index}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              padding: '1rem',
-              marginBottom: '1rem',
-            }}
+            className={styles.fieldset}
           >
-            <legend>Day {day.dayNumber}</legend>
-            <div style={{ marginBottom: '0.75rem' }}>
-              <label htmlFor={`text-${index}`}>Text Content</label>
+            <legend>День {day.dayNumber}</legend>
+            <div className={styles.formGroup}>
+              <label htmlFor={`text-${index}`}>Текстовое содержимое</label>
               <textarea
                 id={`text-${index}`}
                 value={day.textContent}
                 onChange={(e) => updateDay(index, 'textContent', e.target.value)}
                 rows={6}
                 disabled={!isEditable}
-                style={{ width: '100%' }}
+                className={styles.fullWidth}
               />
             </div>
-            <div style={{ marginBottom: '0.75rem' }}>
-              <label htmlFor={`audio-${index}`}>Audio URL</label>
+            <div className={styles.formGroup}>
+              <label htmlFor={`audio-${index}`}>Ссылка на аудио</label>
               <input
                 id={`audio-${index}`}
                 type="url"
                 value={day.audioUrl}
                 onChange={(e) => updateDay(index, 'audioUrl', e.target.value)}
                 disabled={!isEditable}
-                style={{ width: '100%' }}
+                className={styles.fullWidth}
               />
             </div>
             <div>
-              <label htmlFor={`video-${index}`}>Video URL</label>
+              <label htmlFor={`video-${index}`}>Ссылка на видео</label>
               <input
                 id={`video-${index}`}
                 type="url"
                 value={day.videoUrl}
                 onChange={(e) => updateDay(index, 'videoUrl', e.target.value)}
                 disabled={!isEditable}
-                style={{ width: '100%' }}
+                className={styles.fullWidth}
               />
             </div>
           </fieldset>
         ))}
 
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+        <div className={styles.buttonRow}>
           {isEditable && (
             <>
               <button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : 'Save Days'}
+                {saving ? 'Сохранение...' : 'Сохранить дни'}
               </button>
               <button
                 type="button"
                 disabled={submitting}
                 onClick={handleSubmit}
-                style={{ background: '#27ae60', color: '#fff' }}
+                className={styles.submitReviewBtn}
               >
-                {submitting ? 'Submitting...' : 'Submit for Review'}
+                {submitting ? 'Отправка...' : 'Отправить на проверку'}
               </button>
             </>
           )}
           <Link href="/mentor/templates">
-            <button type="button">Back to Templates</button>
+            <button type="button">Назад к шаблонам</button>
           </Link>
         </div>
       </form>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './index.module.css';
 
 type StreamDetails = {
   id: string;
@@ -47,11 +48,11 @@ export default function StreamPage() {
         const res = await fetch(`/api/streams/${id}`, { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load stream');
+          throw new Error(json.message || json.error || 'Не удалось загрузить поток');
         }
         setStream(json.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -73,7 +74,7 @@ export default function StreamPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Enrollment failed');
+        throw new Error(json.message || json.error || 'Не удалось записаться');
       }
 
       setStream({ ...stream, isEnrolled: true, enrollmentsCount: stream.enrollmentsCount + 1 });
@@ -84,57 +85,57 @@ export default function StreamPage() {
     }
   }
 
-  if (loading) return <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}><p>Loading...</p></main>;
-  if (error) return <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}><p style={{ color: 'red' }}>{error}</p></main>;
-  if (!stream) return <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}><p>Stream not found</p></main>;
+  if (loading) return <main className="container"><p>Загрузка...</p></main>;
+  if (error) return <main className="container"><p className="error">{error}</p></main>;
+  if (!stream) return <main className="container"><p>Поток не найден</p></main>;
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <Link href="/" style={{ color: '#1a1a2e' }}>← Back to streams</Link>
-      <h1 style={{ marginTop: '1rem' }}>{stream.template?.title || 'Stream'}</h1>
-      <p style={{ marginTop: '0.5rem', color: '#555' }}>
-        {stream.template?.description || 'No description'}
+    <main className="container">
+      <Link href="/" className="backLink">← Назад к потокам</Link>
+      <h1 className="mt-1">{stream.template?.title || 'Поток'}</h1>
+      <p className={styles.description}>
+        {stream.template?.description || 'Нет описания'}
       </p>
 
-      <div style={{ marginTop: '1.5rem', lineHeight: 1.8 }}>
-        <p><strong>Duration:</strong> {stream.template?.durationDays} days</p>
-        <p><strong>Start date:</strong> {new Date(stream.startDate).toLocaleDateString()}</p>
-        <p><strong>Status:</strong> {stream.status}</p>
-        <p><strong>Mentor:</strong> {stream.mentor?.name || 'Unknown'}</p>
-        <p><strong>Participants:</strong> {stream.enrollmentsCount}</p>
+      <div className={styles.details}>
+        <p><strong>Длительность:</strong> {stream.template?.durationDays} дн.</p>
+        <p><strong>Дата начала:</strong> {new Date(stream.startDate).toLocaleDateString()}</p>
+        <p><strong>Статус:</strong> {stream.status}</p>
+        <p><strong>Ментор:</strong> {stream.mentor?.name || 'Неизвестно'}</p>
+        <p><strong>Участников:</strong> {stream.enrollmentsCount}</p>
       </div>
 
       {role === 'participant' && (
-        <div style={{ marginTop: '1.5rem' }}>
+        <div className="mt-1-5">
           {stream.isEnrolled ? (
-            <button disabled style={{ padding: '0.75rem 1.5rem' }}>
-              You are enrolled
+            <button disabled className="btn">
+              Вы записаны
             </button>
           ) : stream.status === 'finished' ? (
-            <button disabled style={{ padding: '0.75rem 1.5rem' }}>
-              Stream finished
+            <button disabled className="btn">
+              Поток завершён
             </button>
           ) : (
             <button
               onClick={handleEnroll}
               disabled={enrolling}
-              style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+              className="btn btnPrimary"
             >
-              {enrolling ? 'Enrolling...' : 'Enroll in this stream'}
+              {enrolling ? 'Запись...' : 'Записаться в поток'}
             </button>
           )}
         </div>
       )}
 
       {role !== 'participant' && role !== null && (
-        <p style={{ marginTop: '1.5rem', color: '#777' }}>
-          Only participants can enroll in streams.
+        <p className="textMuted mt-1-5">
+          Только участники могут записываться в потоки.
         </p>
       )}
 
       {role === null && (
-        <p style={{ marginTop: '1.5rem' }}>
-          <Link href="/login">Login</Link> or <Link href="/register">register</Link> to enroll.
+        <p className="mt-1-5">
+          <Link href="/login">Войдите</Link> или <Link href="/register">зарегистрируйтесь</Link>, чтобы записаться.
         </p>
       )}
     </main>

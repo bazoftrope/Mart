@@ -1,0 +1,10 @@
+.description {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.details {
+  margin-top: 1.5rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}

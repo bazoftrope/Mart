@@ -2,6 +2,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './LaunchStream.module.css';
 
 type Template = {
   id: string;
@@ -34,12 +35,12 @@ export default function LaunchStreamPage() {
         const res = await fetch('/api/marathons', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load templates');
+          throw new Error(json.message || json.error || 'Не удалось загрузить шаблоны');
         }
         const approved = (json.data || []).filter((t: Template) => t.status === 'approved');
         setTemplates(approved);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -63,65 +64,65 @@ export default function LaunchStreamPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to launch stream');
+        throw new Error(json.message || json.error || 'Не удалось запустить поток');
       }
 
       router.push('/mentor/streams');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <main style={{ maxWidth: 600, margin: '2rem auto', padding: '0 1rem' }}>
-      <Link href="/mentor/streams" style={{ color: '#1a1a2e' }}>← Back to streams</Link>
-      <h1 style={{ marginTop: '1rem' }}>Launch New Stream</h1>
+    <main className={styles.main}>
+      <Link href="/mentor/streams" className={styles.backLink}>← Назад к потокам</Link>
+      <h1 className={styles.title}>Запустить новый поток</h1>
 
-      {loading && <p>Loading templates...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {loading && <p>Загрузка шаблонов...</p>}
+      {error && <p className={styles.error}>{error}</p>}
 
       {!loading && templates.length === 0 && (
-        <p style={{ marginTop: '1rem' }}>
-          You have no approved templates. Create and submit a template for admin review first.
+        <p className={styles.noTemplates}>
+          У вас нет одобренных шаблонов. Создайте шаблон и отправьте его на проверку администратору.
         </p>
       )}
 
       {!loading && templates.length > 0 && (
-        <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="template">Marathon Template</label>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="template">Шаблон марафона</label>
             <select
               id="template"
               value={selectedTemplateId}
               onChange={(e) => setSelectedTemplateId(e.target.value)}
               required
-              style={{ width: '100%', padding: '0.5rem' }}
+              className={styles.fullWidth}
             >
-              <option value="">Select a template</option>
+              <option value="">Выберите шаблон</option>
               {templates.map((template) => (
                 <option key={template.id} value={template.id}>
-                  {template.title} ({template.durationDays} days)
+                  {template.title} ({template.durationDays} дн.)
                 </option>
               ))}
             </select>
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="startDate">Start Date</label>
+          <div className={styles.formGroup}>
+            <label htmlFor="startDate">Дата начала</label>
             <input
               id="startDate"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
-              style={{ width: '100%', padding: '0.5rem' }}
+              className={styles.fullWidth}
             />
           </div>
 
-          <button type="submit" disabled={submitting} style={{ width: '100%', padding: '0.75rem' }}>
-            {submitting ? 'Launching...' : 'Launch Stream'}
+          <button type="submit" disabled={submitting} className={styles.submitBtn}>
+            {submitting ? 'Запуск...' : 'Запустить поток'}
           </button>
         </form>
       )}

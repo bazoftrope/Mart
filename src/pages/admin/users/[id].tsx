@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
+import styles from './AdminUserDetail.module.css';
 
 export default function AdminUserDetailPage() {
   const router = useRouter();
@@ -49,12 +50,12 @@ export default function AdminUserDetailPage() {
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load user');
+          throw new Error(json.message || json.error || 'Не удалось загрузить пользователя');
         }
 
         setUser(json.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -79,12 +80,12 @@ export default function AdminUserDetailPage() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Failed to update role');
+        throw new Error(json.message || json.error || 'Не удалось обновить роль');
       }
 
       setUser(json.data);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Something went wrong');
+      setSaveError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
       setSaving(false);
     }
@@ -93,42 +94,33 @@ export default function AdminUserDetailPage() {
   const isSelf = currentUserId === user?.id;
 
   return (
-    <main style={{ maxWidth: 600, margin: '2rem auto', padding: '0 1rem' }}>
-      <Link href="/admin/users" style={{ display: 'inline-block', marginBottom: '1rem' }}>
-        &larr; Back to users
+    <main className={styles.main}>
+      <Link href="/admin/users" className={styles.backLink}>
+        &larr; Назад к пользователям
       </Link>
 
-      <h1>User Details</h1>
+      <h1>Детали пользователя</h1>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && !user && <p>User not found.</p>}
+      {loading && <p>Загрузка...</p>}
+      {error && <p className={styles.error}>{error}</p>}
+      {!loading && !error && !user && <p>Пользователь не найден.</p>}
 
       {user && (
-        <div
-          style={{
-            border: '1px solid #ccc',
-            borderRadius: 8,
-            padding: '1.5rem',
-          }}
-        >
-          <div style={{ marginBottom: '1rem' }}>
-            <strong>Name:</strong> {user.name}
+        <div className={styles.card}>
+          <div className={styles.field}>
+            <strong>Имя:</strong> {user.name}
           </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <strong>Email:</strong> {user.email}
+          <div className={styles.field}>
+            <strong>Эл. почта:</strong> {user.email}
           </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <strong>Timezone:</strong> {user.timezone}
+          <div className={styles.field}>
+            <strong>Часовой пояс:</strong> {user.timezone}
           </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <strong>Current Role:</strong>{' '}
+          <div className={styles.field}>
+            <strong>Текущая роль:</strong>{' '}
             <span
+              className={styles.roleBadge}
               style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: 12,
-                fontSize: '0.85rem',
-                fontWeight: 500,
                 backgroundColor:
                   user.role === 'admin'
                     ? '#fee2e2'
@@ -148,41 +140,25 @@ export default function AdminUserDetailPage() {
           </div>
 
           {user.role !== 'admin' && !isSelf && (
-            <div style={{ marginTop: '1.5rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
-              <strong>Change Role:</strong>
-              <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+            <div className={styles.changeRoleSection}>
+              <strong>Сменить роль:</strong>
+              <div className={styles.buttonGroup}>
                 {user.role !== 'mentor' && (
                   <button
                     onClick={() => handleRoleChange('mentor')}
                     disabled={saving}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#2563eb',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: 4,
-                      cursor: saving ? 'not-allowed' : 'pointer',
-                      opacity: saving ? 0.6 : 1,
-                    }}
+                    className={`${styles.actionBtn} ${styles.btnMentor}`}
                   >
-                    Make Mentor
+                    Сделать ментором
                   </button>
                 )}
                 {user.role !== 'participant' && (
                   <button
                     onClick={() => handleRoleChange('participant')}
                     disabled={saving}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#16a34a',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: 4,
-                      cursor: saving ? 'not-allowed' : 'pointer',
-                      opacity: saving ? 0.6 : 1,
-                    }}
+                    className={`${styles.actionBtn} ${styles.btnParticipant}`}
                   >
-                    Make Participant
+                    Сделать участником
                   </button>
                 )}
               </div>
@@ -190,13 +166,13 @@ export default function AdminUserDetailPage() {
           )}
 
           {isSelf && (
-            <p style={{ marginTop: '1rem', color: '#666', fontStyle: 'italic' }}>
-              You cannot change your own role.
+            <p className={styles.selfNote}>
+              Вы не можете изменить свою собственную роль.
             </p>
           )}
 
           {saveError && (
-            <p style={{ marginTop: '0.5rem', color: 'red' }}>{saveError}</p>
+            <p className={styles.saveError}>{saveError}</p>
           )}
         </div>
       )}

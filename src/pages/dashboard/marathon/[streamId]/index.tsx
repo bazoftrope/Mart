@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import CalendarGrid from '@/components/CalendarGrid';
+import styles from './MarathonCalendar.module.css';
 
 type StreamCalendar = {
   stream: {
@@ -48,11 +49,11 @@ export default function MarathonCalendarPage() {
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(json.message || json.error || 'Failed to load calendar');
+          throw new Error(json.message || json.error || 'Не удалось загрузить календарь');
         }
         setData(json.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : 'Что-то пошло не так');
       } finally {
         setLoading(false);
       }
@@ -63,16 +64,16 @@ export default function MarathonCalendarPage() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-        <p>Loading...</p>
+      <main className={styles.main}>
+        <p>Загрузка...</p>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-        <p style={{ color: 'red' }}>{error || 'Failed to load calendar'}</p>
+      <main className={styles.main}>
+        <p className={styles.error}>{error || 'Не удалось загрузить календарь'}</p>
       </main>
     );
   }
@@ -80,30 +81,30 @@ export default function MarathonCalendarPage() {
   const { stream, currentDayNumber, reports } = data;
 
   return (
-    <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <Link href="/dashboard" style={{ color: '#1a1a2e' }}>
-        ← Back to my marathons
+    <main className={styles.main}>
+      <Link href="/dashboard" className={styles.backLink}>
+        ← Назад к моим марафонам
       </Link>
 
-      <h1 style={{ marginTop: '1rem' }}>{stream.template.title}</h1>
-      <p style={{ color: '#555', marginTop: '0.5rem' }}>
-        {stream.template.description || 'No description'}
+      <h1 className={styles.title}>{stream.template.title}</h1>
+      <p className={styles.description}>
+        {stream.template.description || 'Нет описания'}
       </p>
 
-      <div style={{ marginTop: '1.5rem', lineHeight: 1.8, marginBottom: '1.5rem' }}>
+      <div className={styles.infoBlock}>
         <p>
-          <strong>Duration:</strong> {stream.template.durationDays} days
+          <strong>Длительность:</strong> {stream.template.durationDays} дн.
         </p>
         <p>
-          <strong>Start date:</strong>{' '}
+          <strong>Дата начала:</strong>{' '}
           {new Date(stream.startDate).toLocaleDateString()}
         </p>
         <p>
-          <strong>Status:</strong> {stream.status}
+          <strong>Статус:</strong> {stream.status}
         </p>
         <p>
-          <strong>Current day:</strong>{' '}
-          {currentDayNumber > 0 ? currentDayNumber : 'Not started yet'}
+          <strong>Текущий день:</strong>{' '}
+          {currentDayNumber > 0 ? currentDayNumber : 'Ещё не начат'}
         </p>
       </div>
 

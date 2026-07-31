@@ -1,0 +1,22 @@
+.backMb {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.roleSection {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border-lighter);
+  padding-top: 1rem;
+}
+
+.roleActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mutedItalic {
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
