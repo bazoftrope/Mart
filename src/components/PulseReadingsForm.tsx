@@ -9,7 +9,10 @@ export type PulseFormItem = {
 
 type PulseReadingsFormProps = {
   readings: PulseFormItem[];
-  onChange: (readings: PulseFormItem[]) => void;
+  onChange?: (readings: PulseFormItem[]) => void;
+  onUpdateReading?: (index: number, patch: Partial<PulseFormItem>) => void;
+  onAddReading?: () => void;
+  onRemoveReading?: (index: number) => void;
   readOnly?: boolean;
 };
 
@@ -59,27 +62,42 @@ export function apiToPulseFormItems(
 export default function PulseReadingsForm({
   readings,
   onChange,
+  onUpdateReading,
+  onAddReading,
+  onRemoveReading,
   readOnly,
 }: PulseReadingsFormProps) {
   const updateItem = useCallback(
     (index: number, patch: Partial<PulseFormItem>) => {
+      if (onUpdateReading) {
+        onUpdateReading(index, patch);
+        return;
+      }
       const next = readings.map((item, i) =>
         i === index ? { ...item, ...patch } : item
       );
-      onChange(next);
+      onChange?.(next);
     },
-    [readings, onChange]
+    [readings, onChange, onUpdateReading]
   );
 
   const addReading = useCallback(() => {
-    onChange([...readings, { time: getCurrentTime(), pulse: '' }]);
-  }, [readings, onChange]);
+    if (onAddReading) {
+      onAddReading();
+      return;
+    }
+    onChange?.([...readings, { time: getCurrentTime(), pulse: '' }]);
+  }, [readings, onChange, onAddReading]);
 
   const removeReading = useCallback(
     (index: number) => {
-      onChange(readings.filter((_, i) => i !== index));
+      if (onRemoveReading) {
+        onRemoveReading(index);
+        return;
+      }
+      onChange?.(readings.filter((_, i) => i !== index));
     },
-    [readings, onChange]
+    [readings, onChange, onRemoveReading]
   );
 
   return (

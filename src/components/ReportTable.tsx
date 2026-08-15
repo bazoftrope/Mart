@@ -11,7 +11,9 @@ export type ReportLineItem = {
 
 type ReportTableProps = {
   lines: ReportLineItem[];
-  onChange: (lines: ReportLineItem[]) => void;
+  onChange?: (lines: ReportLineItem[]) => void;
+  onUpdateLine?: (index: number, weightGrams: number) => void;
+  onRemoveLine?: (index: number) => void;
   readOnly?: boolean;
 };
 
@@ -25,11 +27,18 @@ export function computeLineCalories(
 export default function ReportTable({
   lines,
   onChange,
+  onUpdateLine,
+  onRemoveLine,
   readOnly,
 }: ReportTableProps) {
   function updateWeight(index: number, value: string) {
     const weight = parseFloat(value);
     if (Number.isNaN(weight) || weight <= 0) return;
+
+    if (onUpdateLine) {
+      onUpdateLine(index, weight);
+      return;
+    }
 
     const next = lines.map((line, i) => {
       if (i !== index) return line;
@@ -39,11 +48,15 @@ export default function ReportTable({
         lineCalories: computeLineCalories(weight, line.calories),
       };
     });
-    onChange(next);
+    onChange?.(next);
   }
 
   function removeLine(index: number) {
-    onChange(lines.filter((_, i) => i !== index));
+    if (onRemoveLine) {
+      onRemoveLine(index);
+      return;
+    }
+    onChange?.(lines.filter((_, i) => i !== index));
   }
 
   const total = lines.reduce((sum, line) => sum + line.lineCalories, 0);

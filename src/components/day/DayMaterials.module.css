@@ -1,0 +1,26 @@
+.section {
+  margin-top: 1rem;
+}
+
+.empty {
+  color: #555;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.textContent {
+  line-height: 1.7;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.mediaBlock {
+  margin-top: 1rem;
+}
+
+.mediaLink {
+  color: #1a1a2e;
+  text-decoration: underline;
+}

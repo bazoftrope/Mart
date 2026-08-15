@@ -1,0 +1,53 @@
+import type { ReportLineItem } from '@/components/ReportTable';
+import type { PulseFormItem } from '@/components/PulseReadingsForm';
+
+export type DayMaterialsData = {
+  textContent: string | null;
+  audioUrl: string | null;
+  videoUrl: string | null;
+};
+
+export type PulseReadingItem = {
+  id?: string;
+  measuredAt: string;
+  pulse: number;
+};
+
+export type DayReportData = {
+  id: string;
+  totalCalories: number;
+  filledAt: string;
+  updatedAt: string;
+  waterLiters: number | null;
+  steps: number | null;
+  sleepHours: number | null;
+  activityMinutes: number | null;
+  weightKg: number | null;
+  pulseReadings: PulseReadingItem[];
+  lines: ReportLineItem[];
+};
+
+export type MetricsState = {
+  waterLiters: number | '';
+  steps: number | '';
+  sleepHours: number | '';
+  activityHours: number | '';
+  activityMinutes: number | '';
+  weightKg: number | '';
+};
+
+export type ParticipantDayData = {
+  streamId: string;
+  dayNumber: number;
+  currentDayNumber: number;
+  isEditable: boolean;
+  stream: {
+    template: {
+      title: string;
+    };
+  };
+  day: DayMaterialsData | null;
+  report: DayReportData | null;
+};
+
+export type { ReportLineItem, PulseFormItem };

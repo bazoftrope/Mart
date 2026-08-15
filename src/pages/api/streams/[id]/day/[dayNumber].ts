@@ -148,6 +148,11 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     dayNumber,
     currentDayNumber,
     isEditable: isDayAccessible(dayNumber, currentDayNumber),
+    stream: {
+      template: {
+        title: template.title,
+      },
+    },
     day: day
       ? {
           textContent: day.textContent || null,

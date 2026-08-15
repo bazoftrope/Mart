@@ -1,0 +1,27 @@
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.backLink {
+  color: #1a1a2e;
+  font-size: 0.95rem;
+}
+
+.title {
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #555;
+  margin: 0;
+}
+
+.notice {
+  color: #856404;
+  background-color: #fff3cd;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
