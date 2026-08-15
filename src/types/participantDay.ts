@@ -23,6 +23,10 @@ export type DayReportData = {
   sleepHours: number | null;
   activityMinutes: number | null;
   weightKg: number | null;
+  chestCm: number | null;
+  waistCm: number | null;
+  hipCm: number | null;
+  legCm: number | null;
   pulseReadings: PulseReadingItem[];
   lines: ReportLineItem[];
 };
@@ -34,6 +38,10 @@ export type MetricsState = {
   activityHours: number | '';
   activityMinutes: number | '';
   weightKg: number | '';
+  chestCm: number | '';
+  waistCm: number | '';
+  hipCm: number | '';
+  legCm: number | '';
 };
 
 export type ParticipantDayData = {

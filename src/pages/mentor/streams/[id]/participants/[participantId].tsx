@@ -30,6 +30,10 @@ type DayReport = {
   sleepHours: number | null;
   activityMinutes: number | null;
   weightKg: number | null;
+  chestCm: number | null;
+  waistCm: number | null;
+  hipCm: number | null;
+  legCm: number | null;
   lines: ReportLineItem[];
   pulseReadings: PulseReadingItem[];
 };
@@ -227,6 +231,10 @@ export default function ParticipantDetailPage() {
                 <th className={styles.numCol}>Сон (ч)</th>
                 <th>Активность</th>
                 <th className={styles.numCol}>Вес (кг)</th>
+                <th className={styles.numCol}>ОГ (см)</th>
+                <th className={styles.numCol}>ОТ (см)</th>
+                <th className={styles.numCol}>ОБ (см)</th>
+                <th className={styles.numCol}>ОН (см)</th>
               </tr>
             </thead>
             <tbody>
@@ -237,7 +245,11 @@ export default function ParticipantDetailPage() {
                   report.steps !== null ||
                   report.sleepHours !== null ||
                   report.activityMinutes !== null ||
-                  report.weightKg !== null
+                  report.weightKg !== null ||
+                  report.chestCm !== null ||
+                  report.waistCm !== null ||
+                  report.hipCm !== null ||
+                  report.legCm !== null
                 );
                 return (
                   <tr key={day} className={filled ? '' : styles.emptyRow}>
@@ -247,6 +259,10 @@ export default function ParticipantDetailPage() {
                     <td className={styles.numCol}>{report?.sleepHours ?? '—'}</td>
                     <td>{formatActivity(report?.activityMinutes ?? null)}</td>
                     <td className={styles.numCol}>{report?.weightKg ?? '—'}</td>
+                    <td className={styles.numCol}>{report?.chestCm ?? '—'}</td>
+                    <td className={styles.numCol}>{report?.waistCm ?? '—'}</td>
+                    <td className={styles.numCol}>{report?.hipCm ?? '—'}</td>
+                    <td className={styles.numCol}>{report?.legCm ?? '—'}</td>
                   </tr>
                 );
               })}

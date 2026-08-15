@@ -56,6 +56,10 @@ export function emptyMetrics(): MetricsState {
     activityHours: '',
     activityMinutes: '',
     weightKg: '',
+    chestCm: '',
+    waistCm: '',
+    hipCm: '',
+    legCm: '',
   };
 }
 
@@ -85,7 +89,11 @@ export function hasAnyData(
     metrics.sleepHours !== '' ||
     metrics.activityHours !== '' ||
     metrics.activityMinutes !== '' ||
-    metrics.weightKg !== '';
+    metrics.weightKg !== '' ||
+    metrics.chestCm !== '' ||
+    metrics.waistCm !== '' ||
+    metrics.hipCm !== '' ||
+    metrics.legCm !== '';
   if (hasMetrics) return true;
 
   const hasPulse = pulseReadings.some((item) => {
@@ -118,6 +126,10 @@ function buildInitialMetrics(
     activityHours: hours,
     activityMinutes: minutes,
     weightKg: report.weightKg ?? '',
+    chestCm: report.chestCm ?? '',
+    waistCm: report.waistCm ?? '',
+    hipCm: report.hipCm ?? '',
+    legCm: report.legCm ?? '',
   };
 }
 
@@ -202,6 +214,10 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
         metrics.sleepHours === '' ? undefined : Number(metrics.sleepHours),
       activityMinutes: totalActivityMinutes,
       weightKg: metrics.weightKg === '' ? undefined : Number(metrics.weightKg),
+      chestCm: metrics.chestCm === '' ? undefined : Number(metrics.chestCm),
+      waistCm: metrics.waistCm === '' ? undefined : Number(metrics.waistCm),
+      hipCm: metrics.hipCm === '' ? undefined : Number(metrics.hipCm),
+      legCm: metrics.legCm === '' ? undefined : Number(metrics.legCm),
       pulseReadings: pulseFormItemsToApi(pulseReadings),
     };
 
@@ -234,6 +250,10 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
         sleepHours: json.data.sleepHours ?? null,
         activityMinutes: json.data.activityMinutes ?? null,
         weightKg: json.data.weightKg ?? null,
+        chestCm: json.data.chestCm ?? null,
+        waistCm: json.data.waistCm ?? null,
+        hipCm: json.data.hipCm ?? null,
+        legCm: json.data.legCm ?? null,
         pulseReadings: json.data.pulseReadings ?? [],
         lines: json.data.lines,
       };
@@ -251,6 +271,10 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
           activityHours: hours,
           activityMinutes: minutes,
           weightKg: json.data.weightKg ?? '',
+          chestCm: json.data.chestCm ?? '',
+          waistCm: json.data.waistCm ?? '',
+          hipCm: json.data.hipCm ?? '',
+          legCm: json.data.legCm ?? '',
         },
         pulseReadings:
           json.data.pulseReadings?.length

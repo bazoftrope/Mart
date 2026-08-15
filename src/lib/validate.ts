@@ -81,6 +81,10 @@ export const saveReportSchema = z
     sleepHours: z.number().int().min(0).max(24, 'Сон не может превышать 24 часа').optional(),
     activityMinutes: z.number().int().min(0).max(1440, 'Активность не может превышать 1440 минут').optional(),
     weightKg: z.number().int().min(20, 'Вес должен быть не менее 20 кг').max(300, 'Вес должен быть не более 300 кг').optional(),
+    chestCm: z.number().min(30, 'ОГ должен быть не менее 30 см').max(300, 'ОГ должен быть не более 300 см').optional(),
+    waistCm: z.number().min(30, 'ОТ должен быть не менее 30 см').max(300, 'ОТ должен быть не более 300 см').optional(),
+    hipCm: z.number().min(30, 'ОБ должен быть не менее 30 см').max(300, 'ОБ должен быть не более 300 см').optional(),
+    legCm: z.number().min(20, 'ОН должен быть не менее 20 см').max(200, 'ОН должен быть не более 200 см').optional(),
     pulseReadings: z.array(pulseReadingSchema).optional(),
   })
   .refine(
@@ -91,7 +95,11 @@ export const saveReportSchema = z
         data.steps !== undefined ||
         data.sleepHours !== undefined ||
         data.activityMinutes !== undefined ||
-        data.weightKg !== undefined;
+        data.weightKg !== undefined ||
+        data.chestCm !== undefined ||
+        data.waistCm !== undefined ||
+        data.hipCm !== undefined ||
+        data.legCm !== undefined;
       const hasPulse = Array.isArray(data.pulseReadings) && data.pulseReadings.length > 0;
       return hasLines || hasMetrics || hasPulse;
     },

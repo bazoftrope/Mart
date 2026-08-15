@@ -74,6 +74,34 @@ export class DailyReport extends Model {
   })
   weightKg!: number | null;
 
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null,
+  })
+  chestCm!: number | null;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null,
+  })
+  waistCm!: number | null;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null,
+  })
+  hipCm!: number | null;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null,
+  })
+  legCm!: number | null;
+
   @CreatedAt
   filledAt!: Date;
 

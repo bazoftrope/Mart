@@ -135,6 +135,62 @@ export default function DayReport({ streamId, dayNumber, isEditable }: DayReport
               className={styles.metricInput}
             />
           </label>
+
+          <label className={styles.metricField}>
+            <span>ОГ — грудь (см)</span>
+            <input
+              type="number"
+              min="30"
+              max="300"
+              step="0.5"
+              value={metrics.chestCm}
+              onChange={(e) => updateMetric('chestCm', e.target.value)}
+              disabled={!isEditable || saving}
+              className={styles.metricInput}
+            />
+          </label>
+
+          <label className={styles.metricField}>
+            <span>ОТ — талия (см)</span>
+            <input
+              type="number"
+              min="30"
+              max="300"
+              step="0.5"
+              value={metrics.waistCm}
+              onChange={(e) => updateMetric('waistCm', e.target.value)}
+              disabled={!isEditable || saving}
+              className={styles.metricInput}
+            />
+          </label>
+
+          <label className={styles.metricField}>
+            <span>ОБ — бёдра (см)</span>
+            <input
+              type="number"
+              min="30"
+              max="300"
+              step="0.5"
+              value={metrics.hipCm}
+              onChange={(e) => updateMetric('hipCm', e.target.value)}
+              disabled={!isEditable || saving}
+              className={styles.metricInput}
+            />
+          </label>
+
+          <label className={styles.metricField}>
+            <span>ОН — нога (см)</span>
+            <input
+              type="number"
+              min="20"
+              max="200"
+              step="0.5"
+              value={metrics.legCm}
+              onChange={(e) => updateMetric('legCm', e.target.value)}
+              disabled={!isEditable || saving}
+              className={styles.metricInput}
+            />
+          </label>
         </div>
       </div>
 

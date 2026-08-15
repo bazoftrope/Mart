@@ -171,6 +171,10 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
           sleepHours: report.sleepHours,
           activityMinutes: report.activityMinutes,
           weightKg: report.weightKg,
+          chestCm: report.chestCm,
+          waistCm: report.waistCm,
+          hipCm: report.hipCm,
+          legCm: report.legCm,
           pulseReadings,
           lines,
         }
@@ -210,6 +214,10 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     sleepHours,
     activityMinutes,
     weightKg,
+    chestCm,
+    waistCm,
+    hipCm,
+    legCm,
     pulseReadings,
   } = body;
 
@@ -255,6 +263,10 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     report.sleepHours = sleepHours ?? null;
     report.activityMinutes = activityMinutes ?? null;
     report.weightKg = weightKg ?? null;
+    report.chestCm = chestCm ?? null;
+    report.waistCm = waistCm ?? null;
+    report.hipCm = hipCm ?? null;
+    report.legCm = legCm ?? null;
     await report.save({ transaction });
 
     await ReportLine.destroy({
@@ -318,6 +330,10 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       sleepHours: report.sleepHours,
       activityMinutes: report.activityMinutes,
       weightKg: report.weightKg,
+      chestCm: report.chestCm,
+      waistCm: report.waistCm,
+      hipCm: report.hipCm,
+      legCm: report.legCm,
       pulseReadings: createdPulse.map((p) => ({
         id: p.id,
         measuredAt: p.measuredAt,

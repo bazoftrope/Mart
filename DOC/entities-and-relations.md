@@ -127,6 +127,15 @@ running → finished (по start_date + duration_days)
 | enrollment_id | FK → StreamEnrollment.id | |
 | day_number | int | Номер дня (1..N) |
 | total_calories | decimal(10,2) | Автоматический расчёт |
+| water_liters | int, nullable | Вода в литрах |
+| steps | int, nullable | Шаги |
+| sleep_hours | int, nullable | Сон в часах |
+| activity_minutes | int, nullable | Активность в минутах |
+| weight_kg | int, nullable | Вес в кг |
+| chest_cm | decimal(10,2), nullable | Обхват груди (ОГ), см |
+| waist_cm | decimal(10,2), nullable | Обхват талии (ОТ), см |
+| hip_cm | decimal(10,2), nullable | Обхват бёдер (ОБ), см |
+| leg_cm | decimal(10,2), nullable | Обхват ноги (ОН), см |
 | filled_at | datetime | Первое заполнение |
 | updated_at | datetime | Последнее обновление |
 
