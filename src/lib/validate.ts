@@ -113,6 +113,28 @@ export const updateUserRoleSchema = z.object({
   role: z.enum(['mentor', 'participant']),
 });
 
+export const createConversationSchema = z
+  .object({
+    type: z.enum(['mentor_pair', 'group']),
+    streamId: z.string().uuid('Неверный id потока').optional(),
+    participantId: z.string().uuid('Неверный id участника').optional(),
+  })
+  .refine((data) => !!data.streamId, {
+    message: 'Необходимо указать streamId',
+    path: ['root'],
+  });
+
+export const sendMessageSchema = z.object({
+  text: z
+    .string()
+    .trim()
+    .min(1, 'Сообщение не может быть пустым')
+    .max(5000, 'Сообщение слишком длинное'),
+});
+
+export type CreateConversationInput = z.infer<typeof createConversationSchema>;
+export type SendMessageInput = z.infer<typeof sendMessageSchema>;
+
 export type CreateStreamInput = z.infer<typeof createStreamSchema>;
 export type UpdateTemplateDaysInput = z.infer<typeof updateTemplateDaysSchema>;
 export type ReportLineInput = z.infer<typeof reportLineSchema>;

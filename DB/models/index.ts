@@ -8,6 +8,9 @@ import { DailyReport } from './DailyReport';
 import { ReportLine } from './ReportLine';
 import { StreamRating } from './StreamRating';
 import { PulseReading } from './PulseReading';
+import { Conversation } from './Conversation';
+import { ConversationMember } from './ConversationMember';
+import { Message } from './Message';
 
 export * from './User';
 export * from './Product';
@@ -19,6 +22,9 @@ export * from './DailyReport';
 export * from './ReportLine';
 export * from './StreamRating';
 export * from './PulseReading';
+export * from './Conversation';
+export * from './ConversationMember';
+export * from './Message';
 
 export const models = {
   User,
@@ -31,6 +37,9 @@ export const models = {
   ReportLine,
   StreamRating,
   PulseReading,
+  Conversation,
+  ConversationMember,
+  Message,
 };
 
 export type AppModels = typeof models;

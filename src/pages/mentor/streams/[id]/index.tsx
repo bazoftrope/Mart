@@ -94,6 +94,13 @@ export default function MentorStreamDetailsPage() {
         <p><strong>Всего участников:</strong> {stream.enrollmentsCount}</p>
       </div>
 
+      <Link
+        href={`/mentor/messages?streamId=${stream.id}&group=1`}
+        className={styles.chatBtn}
+      >
+        Общий чат потока
+      </Link>
+
       <section className={styles.section}>
         <h2>Участники</h2>
         {enrollments.length === 0 && <p>Участников пока нет.</p>}

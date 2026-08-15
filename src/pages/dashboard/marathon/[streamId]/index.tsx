@@ -108,6 +108,15 @@ export default function MarathonCalendarPage() {
         </p>
       </div>
 
+      <div className={styles.actions}>
+        <Link href={`/dashboard/messages?streamId=${stream.id}&group=1`}>
+          <button className={styles.chatBtn}>Общий чат потока</button>
+        </Link>
+        <Link href={`/dashboard/messages?streamId=${stream.id}`}>
+          <button className={styles.chatBtn}>Написать ментору</button>
+        </Link>
+      </div>
+
       <CalendarGrid
         streamId={stream.id}
         durationDays={stream.template.durationDays}

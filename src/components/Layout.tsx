@@ -68,6 +68,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Link href="/mentor/streams" className={styles.link}>
             Мои потоки
           </Link>
+          <Link href="/mentor/messages" className={styles.link}>
+            Сообщения
+          </Link>
           <button onClick={handleLogout} className={styles.button}>
             Выйти
           </button>
@@ -80,6 +83,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <>
         <Link href="/dashboard" className={styles.link}>
           Мои марафоны
+        </Link>
+        <Link href="/dashboard/messages" className={styles.link}>
+          Сообщения
         </Link>
         <button onClick={handleLogout} className={styles.button}>
           Выйти

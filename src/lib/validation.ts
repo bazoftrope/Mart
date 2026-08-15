@@ -19,4 +19,8 @@ export {
   type UpdateTemplateDaysInput,
   type ReportLineInput,
   type SaveReportInput,
+  createConversationSchema,
+  sendMessageSchema,
+  type CreateConversationInput,
+  type SendMessageInput,
 } from './validate';

@@ -10,6 +10,9 @@ import { DailyReport } from './models/DailyReport';
 import { ReportLine } from './models/ReportLine';
 import { StreamRating } from './models/StreamRating';
 import { PulseReading } from './models/PulseReading';
+import { Conversation } from './models/Conversation';
+import { ConversationMember } from './models/ConversationMember';
+import { Message } from './models/Message';
 
 const parseDatabaseUrl = (url?: string) => {
   if (!url) return null;
@@ -50,6 +53,9 @@ export const sequelize = new Sequelize({
     ReportLine,
     StreamRating,
     PulseReading,
+    Conversation,
+    ConversationMember,
+    Message,
   ],
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
   define: {

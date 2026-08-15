@@ -9,6 +9,7 @@ import '@/lib/db';
 const ACCESS_TOKEN_NAME = 'mp_access_token';
 const REFRESH_TOKEN_NAME = 'mp_refresh_token';
 const ROLE_COOKIE_NAME = 'mp_role';
+const USER_ID_COOKIE_NAME = 'mp_user_id';
 
 const ACCESS_TTL_SECONDS = 15 * 60; // 15 minutes
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
@@ -17,6 +18,7 @@ export const COOKIE_NAMES = {
   access: ACCESS_TOKEN_NAME,
   refresh: REFRESH_TOKEN_NAME,
   role: ROLE_COOKIE_NAME,
+  userId: USER_ID_COOKIE_NAME,
 };
 
 function getSecrets() {
@@ -85,6 +87,11 @@ export function setAuthCookies(res: NextApiResponse, payload: TokenPayload): voi
       httpOnly: false,
       maxAge: REFRESH_TTL_SECONDS,
     }),
+    serialize(USER_ID_COOKIE_NAME, payload.userId, {
+      ...baseCookieOptions(),
+      httpOnly: false,
+      maxAge: REFRESH_TTL_SECONDS,
+    }),
   ]);
 }
 
@@ -94,6 +101,7 @@ export function clearAuthCookies(res: NextApiResponse): void {
     serialize(ACCESS_TOKEN_NAME, '', opts),
     serialize(REFRESH_TOKEN_NAME, '', opts),
     serialize(ROLE_COOKIE_NAME, '', { ...opts, httpOnly: false }),
+    serialize(USER_ID_COOKIE_NAME, '', { ...opts, httpOnly: false }),
   ]);
 }
 

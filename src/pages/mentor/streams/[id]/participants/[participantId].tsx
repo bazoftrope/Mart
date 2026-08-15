@@ -159,6 +159,13 @@ export default function ParticipantDetailPage() {
         {data.stream.template.title} · день {filledDays} из {durationDays}
       </p>
 
+      <Link
+        href={`/mentor/messages?streamId=${sid}&participantId=${data.participant.id}`}
+        className={styles.messageBtn}
+      >
+        Написать участнику
+      </Link>
+
       <div className={styles.infoBlock}>
         <p><strong>Заполнено дней:</strong> {filledDays} из {durationDays}</p>
         <p><strong>Средние калории:</strong> {avgCalories} ккал</p>

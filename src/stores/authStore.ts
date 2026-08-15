@@ -25,6 +25,34 @@ function readRoleFromCookie(): UserRole | null {
   return null;
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const [, payload] = token.split('.');
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(
+      normalized.length + ((4 - (normalized.length % 4)) % 4),
+      '='
+    );
+    const decoded = atob(padded);
+    return JSON.parse(decoded) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function readUserId(): string | null {
+  const fromCookie = getCookie('mp_user_id');
+  if (fromCookie) return fromCookie;
+  const accessToken = getCookie('mp_access_token');
+  if (accessToken) {
+    const payload = decodeJwtPayload(accessToken);
+    if (payload && typeof payload.userId === 'string') {
+      return payload.userId;
+    }
+  }
+  return null;
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   role: null,
   userId: null,
@@ -36,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const role = readRoleFromCookie();
     set({
       role,
-      userId: role ? (getCookie('mp_user_id') ?? null) : null,
+      userId: role ? readUserId() : null,
       user: null,
       error: null,
     });
