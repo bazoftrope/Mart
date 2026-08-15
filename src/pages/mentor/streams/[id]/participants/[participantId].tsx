@@ -70,7 +70,7 @@ function formatTime(value: string): string {
 
 export default function ParticipantDetailPage() {
   const router = useRouter();
-  const { streamId, participantId } = router.query;
+  const { id, participantId } = router.query;
 
   const [data, setData] = useState<ParticipantDetailData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,9 +84,9 @@ export default function ParticipantDetailPage() {
       router.push('/login');
       return;
     }
-    if (!streamId || !participantId) return;
+    if (!id || !participantId) return;
 
-    const sid = Array.isArray(streamId) ? streamId[0] : streamId;
+    const sid = Array.isArray(id) ? id[0] : id;
     const pid = Array.isArray(participantId) ? participantId[0] : participantId;
 
     async function load() {
@@ -109,7 +109,7 @@ export default function ParticipantDetailPage() {
     }
 
     load();
-  }, [streamId, participantId, router]);
+  }, [id, participantId, router]);
 
   if (loading) {
     return <main className={styles.main}><p>Загрузка...</p></main>;
@@ -123,7 +123,7 @@ export default function ParticipantDetailPage() {
     );
   }
 
-  const sid = Array.isArray(streamId) ? streamId[0] : (streamId as string);
+  const sid = Array.isArray(id) ? id[0] : (id as string);
   const { durationDays } = data.stream.template;
   const allDays = Array.from({ length: durationDays }, (_, i) => i + 1);
   const reportByDay = new Map(data.reports.map((r) => [r.dayNumber, r]));
