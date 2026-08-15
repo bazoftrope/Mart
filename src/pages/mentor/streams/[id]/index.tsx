@@ -117,6 +117,14 @@ export default function MentorStreamDetailsPage() {
                   <strong>Записан:</strong>{' '}
                   {new Date(enrollment.enrolledAt).toLocaleString()}
                 </p>
+                {enrollment.participant && (
+                  <Link
+                    href={`/mentor/streams/${id}/participants/${enrollment.participant.id}`}
+                    className={styles.reportLink}
+                  >
+                    Отчёт →
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

@@ -1,0 +1,79 @@
+.main {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.error {
+  color: red;
+}
+
+.backLink {
+  color: #1a1a2e;
+}
+
+.title {
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.email {
+  margin: 0;
+  color: #555;
+}
+
+.description {
+  margin-top: 0.5rem;
+  color: #555;
+}
+
+.infoBlock {
+  margin-top: 1.5rem;
+  line-height: 1.8;
+}
+
+.section {
+  margin-top: 2rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  background: #f4f4f4;
+}
+
+.numCol {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.emptyRow td {
+  color: #999;
+}
+
+.foodList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.foodList li {
+  margin: 0.1rem 0;
+}

@@ -46,3 +46,15 @@
 .info {
   margin: 0.25rem 0;
 }
+
+.reportLink {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #1a1a2e;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.reportLink:hover {
+  text-decoration: underline;
+}
