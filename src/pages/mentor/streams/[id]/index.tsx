@@ -2,13 +2,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import ParticipantCard, {
+  type Participant,
+} from '@/components/mentor/ParticipantCard';
 import styles from './MentorStreamDetails.module.css';
-
-type Participant = {
-  id: string;
-  name: string;
-  email: string;
-};
 
 type Enrollment = {
   id: string;
@@ -103,29 +100,12 @@ export default function MentorStreamDetailsPage() {
         {enrollments.length > 0 && (
           <ul className={styles.list}>
             {enrollments.map((enrollment) => (
-              <li
+              <ParticipantCard
                 key={enrollment.id}
-                className={styles.listItem}
-              >
-                <p className={styles.info}>
-                  <strong>Имя:</strong> {enrollment.participant?.name || 'Неизвестно'}
-                </p>
-                <p className={styles.info}>
-                  <strong>Email:</strong> {enrollment.participant?.email || 'Неизвестно'}
-                </p>
-                <p className={styles.info}>
-                  <strong>Записан:</strong>{' '}
-                  {new Date(enrollment.enrolledAt).toLocaleString()}
-                </p>
-                {enrollment.participant && (
-                  <Link
-                    href={`/mentor/streams/${id}/participants/${enrollment.participant.id}`}
-                    className={styles.reportLink}
-                  >
-                    Отчёт →
-                  </Link>
-                )}
-              </li>
+                streamId={id as string}
+                enrolledAt={enrollment.enrolledAt}
+                participant={enrollment.participant}
+              />
             ))}
           </ul>
         )}
