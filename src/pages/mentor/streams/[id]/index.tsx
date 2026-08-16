@@ -4,13 +4,16 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import ParticipantCard, {
   type Participant,
+  type ParticipantRating,
 } from '@/components/mentor/ParticipantCard';
 import styles from './MentorStreamDetails.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type Enrollment = {
   id: string;
   enrolledAt: string;
   participant: Participant | null;
+  rating: ParticipantRating | null;
 };
 
 type StreamDetails = {
@@ -49,8 +52,8 @@ export default function MentorStreamDetailsPage() {
     async function load() {
       try {
         const [streamRes, enrollmentsRes] = await Promise.all([
-          fetch(`/api/streams/${id}`, { credentials: 'include' }),
-          fetch(`/api/streams/${id}/enrollments`, { credentials: 'include' }),
+          apiFetch(`/api/streams/${id}`, { credentials: 'include' }),
+          apiFetch(`/api/streams/${id}/enrollments`, { credentials: 'include' }),
         ]);
 
         const streamJson = await streamRes.json().catch(() => ({}));
@@ -112,6 +115,7 @@ export default function MentorStreamDetailsPage() {
                 streamId={id as string}
                 enrolledAt={enrollment.enrolledAt}
                 participant={enrollment.participant}
+                rating={enrollment.rating}
               />
             ))}
           </ul>

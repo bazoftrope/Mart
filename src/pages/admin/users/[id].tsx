@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './AdminUserDetail.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function AdminUserDetailPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function AdminUserDetailPage() {
 
     async function loadCurrentUser() {
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const res = await apiFetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
           const json = await res.json();
           setCurrentUserId(json.data?.id);
@@ -44,7 +45,7 @@ export default function AdminUserDetailPage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/admin/users/${id}`, {
+        const res = await apiFetch(`/api/admin/users/${id}`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -71,7 +72,7 @@ export default function AdminUserDetailPage() {
     setSaveError(null);
 
     try {
-      const res = await fetch(`/api/admin/users/${user.id}`, {
+      const res = await apiFetch(`/api/admin/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

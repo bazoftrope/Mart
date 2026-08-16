@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './LaunchStream.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type Template = {
   id: string;
@@ -32,7 +33,7 @@ export default function LaunchStreamPage() {
 
     async function loadTemplates() {
       try {
-        const res = await fetch('/api/marathons', { credentials: 'include' });
+        const res = await apiFetch('/api/marathons', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           throw new Error(json.message || json.error || 'Не удалось загрузить шаблоны');
@@ -55,7 +56,7 @@ export default function LaunchStreamPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/streams', {
+      const res = await apiFetch('/api/streams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

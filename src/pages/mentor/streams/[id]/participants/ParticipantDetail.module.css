@@ -52,6 +52,25 @@
   margin-top: 2rem;
 }
 
+.chartCard {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.chartCard h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: #1a1a2e;
+}
+
+.noData {
+  color: #999;
+  margin-top: 0.75rem;
+}
+
 .tableWrap {
   overflow-x: auto;
   margin-top: 0.75rem;

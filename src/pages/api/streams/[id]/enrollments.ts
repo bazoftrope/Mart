@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import '@/lib/db';
 import { apiHandler, success } from '@/lib/apiHandler';
 import { withMentor } from '@/lib/middleware';
-import { Stream, MarathonTemplate, StreamEnrollment, User } from '@db/models';
+import { Stream, MarathonTemplate, StreamEnrollment, StreamRating, User } from '@db/models';
 import { Forbidden, NotFound } from '@/lib/errors';
 import type { AuthenticatedRequest } from '@/types/auth';
 
@@ -26,20 +26,45 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   });
 
   const participantIds = enrollments.map((e) => e.participantId);
-  const participants = participantIds.length
-    ? await User.findAll({ where: { id: participantIds }, attributes: ['id', 'name', 'email'] })
-    : [];
+  const [participants, ratings] = await Promise.all([
+    participantIds.length
+      ? User.findAll({ where: { id: participantIds }, attributes: ['id', 'name', 'email'] })
+      : [],
+    participantIds.length
+      ? StreamRating.findAll({
+          where: { streamId: stream.id, participantId: participantIds },
+        })
+      : [],
+  ]);
   const participantMap = new Map(participants.map((p) => [p.id, p]));
+  const ratingMap = new Map(ratings.map((r) => [r.participantId, r]));
 
   const data = enrollments.map((enrollment) => {
     const participant = participantMap.get(enrollment.participantId);
+    const rating = ratingMap.get(enrollment.participantId);
     return {
       id: enrollment.id,
       enrolledAt: enrollment.enrolledAt,
       participant: participant
         ? { id: participant.id, name: participant.name, email: participant.email }
         : null,
+      rating: rating
+        ? {
+            rank: rating.rank ?? null,
+            weightLossPercent: Number(rating.weightLossPercent),
+            entryWeight:
+              rating.entryWeight !== null ? Number(rating.entryWeight) : null,
+            currentWeight:
+              rating.currentWeight !== null ? Number(rating.currentWeight) : null,
+          }
+        : null,
     };
+  });
+
+  data.sort((a, b) => {
+    const percentA = a.rating?.weightLossPercent ?? 0;
+    const percentB = b.rating?.weightLossPercent ?? 0;
+    return percentB - percentA;
   });
 
   return success(res, data);

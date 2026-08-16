@@ -50,7 +50,10 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       participantId: rating.participantId,
       participantName: participant?.name ?? 'Unknown',
       filledDays: rating.filledDays,
-      disciplinePercent: Number(rating.disciplinePercent),
+      entryWeight: rating.entryWeight !== null ? Number(rating.entryWeight) : null,
+      currentWeight:
+        rating.currentWeight !== null ? Number(rating.currentWeight) : null,
+      weightLossPercent: Number(rating.weightLossPercent),
       calculatedAt: rating.calculatedAt,
     };
   });

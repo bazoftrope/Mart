@@ -7,6 +7,7 @@ import {
   parseCookies,
   verifyRefreshToken,
   setAuthCookies,
+  clearAuthCookies,
   toPublicUser,
 } from '@/lib/auth';
 
@@ -15,6 +16,7 @@ async function post(req: NextApiRequest, res: NextApiResponse) {
   const refreshToken = cookies.mp_refresh_token;
 
   if (!refreshToken) {
+    clearAuthCookies(res);
     throw new Unauthorized('No refresh token');
   }
 
@@ -22,11 +24,13 @@ async function post(req: NextApiRequest, res: NextApiResponse) {
   try {
     payload = verifyRefreshToken(refreshToken);
   } catch {
+    clearAuthCookies(res);
     throw new Unauthorized('Invalid refresh token');
   }
 
   const user = await User.findByPk(payload.userId);
   if (!user || user.role !== payload.role) {
+    clearAuthCookies(res);
     throw new Unauthorized('User not found');
   }
 

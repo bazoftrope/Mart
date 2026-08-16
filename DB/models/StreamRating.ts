@@ -46,6 +46,27 @@ export class StreamRating extends Model {
   disciplinePercent!: number;
 
   @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null,
+  })
+  entryWeight!: number | null;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null,
+  })
+  currentWeight!: number | null;
+
+  @Column({
+    type: DataType.DECIMAL(5, 2),
+    allowNull: false,
+    defaultValue: 0,
+  })
+  weightLossPercent!: number;
+
+  @Column({
     type: DataType.INTEGER,
     allowNull: true,
   })

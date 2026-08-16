@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from '../../TemplateDays.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type Template = {
   id: string;
@@ -52,7 +53,7 @@ export default function TemplateDaysPage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/marathons/${templateId}`, {
+        const res = await apiFetch(`/api/marathons/${templateId}`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -95,7 +96,7 @@ export default function TemplateDaysPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/marathons/${templateId}/days`, {
+      const res = await apiFetch(`/api/marathons/${templateId}/days`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -122,7 +123,7 @@ export default function TemplateDaysPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch(`/api/marathons/${templateId}/submit`, {
+      const res = await apiFetch(`/api/marathons/${templateId}/submit`, {
         method: 'POST',
         credentials: 'include',
       });

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './index.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type StreamDetails = {
   id: string;
@@ -45,7 +46,7 @@ export default function StreamPage() {
 
     async function loadStream() {
       try {
-        const res = await fetch(`/api/streams/${id}`, { credentials: 'include' });
+        const res = await apiFetch(`/api/streams/${id}`, { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           throw new Error(json.message || json.error || 'Не удалось загрузить поток');
@@ -67,7 +68,7 @@ export default function StreamPage() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/streams/${stream.id}/enroll`, {
+      const res = await apiFetch(`/api/streams/${stream.id}/enroll`, {
         method: 'POST',
         credentials: 'include',
       });

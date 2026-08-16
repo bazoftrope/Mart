@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import CalendarGrid from '@/components/CalendarGrid';
 import styles from './MarathonCalendar.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type StreamCalendar = {
   stream: {
@@ -18,6 +19,11 @@ type StreamCalendar = {
     };
   };
   currentDayNumber: number;
+  rating: {
+    rank: number | null;
+    totalParticipants: number;
+    weightLossPercent: number;
+  };
   reports: Array<{ id: string; dayNumber: number; totalCalories: number; filledAt: Date | string }>;
 };
 
@@ -44,7 +50,7 @@ export default function MarathonCalendarPage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/streams/${streamId}/calendar`, {
+        const res = await apiFetch(`/api/streams/${streamId}/calendar`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -78,7 +84,16 @@ export default function MarathonCalendarPage() {
     );
   }
 
-  const { stream, currentDayNumber, reports } = data;
+  const { stream, currentDayNumber, reports, rating } = data;
+
+  const ratingLine =
+    rating && rating.rank !== null && rating.totalParticipants > 0
+      ? `Твоё место: ${rating.rank} из ${rating.totalParticipants} · ${
+          rating.weightLossPercent > 0
+            ? `−${rating.weightLossPercent}%`
+            : `${rating.weightLossPercent}%`
+        }`
+      : null;
 
   return (
     <main className={styles.main}>
@@ -90,6 +105,10 @@ export default function MarathonCalendarPage() {
       <p className={styles.description}>
         {stream.template.description || 'Нет описания'}
       </p>
+
+      {ratingLine && (
+        <div className={styles.ratingLine}>{ratingLine}</div>
+      )}
 
       <div className={styles.infoBlock}>
         <p>

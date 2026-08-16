@@ -9,6 +9,7 @@ import {
   MarathonTemplate,
   StreamEnrollment,
   DailyReport,
+  StreamRating,
   User,
 } from '@db/models';
 import type { AuthenticatedRequest } from '@/types/auth';
@@ -57,6 +58,13 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     order: [['dayNumber', 'ASC']],
   });
 
+  const [myRating, totalParticipants] = await Promise.all([
+    StreamRating.findOne({
+      where: { streamId: stream.id, participantId: user.userId },
+    }),
+    StreamRating.count({ where: { streamId: stream.id } }),
+  ]);
+
   return success(res, {
     stream: {
       id: stream.id,
@@ -70,6 +78,11 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       },
     },
     currentDayNumber,
+    rating: {
+      rank: myRating?.rank ?? null,
+      totalParticipants,
+      weightLossPercent: myRating ? Number(myRating.weightLossPercent) : 0,
+    },
     reports: reports.map((report) => ({
       id: report.id,
       dayNumber: report.dayNumber,

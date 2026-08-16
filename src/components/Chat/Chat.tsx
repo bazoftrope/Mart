@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './Chat.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 export type ChatParticipant = {
   id: string;
@@ -75,7 +76,7 @@ export default function Chat({ myUserId, autoOpen, onCreatedConversation }: Chat
 
   const loadConversations = useCallback(async () => {
     try {
-      const res = await fetch('/api/messages', { credentials: 'include' });
+      const res = await apiFetch('/api/messages', { credentials: 'include' });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(json.message || json.error || 'Не удалось загрузить диалоги');
@@ -96,7 +97,7 @@ export default function Chat({ myUserId, autoOpen, onCreatedConversation }: Chat
       setLoadingMessages(true);
       setError(null);
       try {
-        const res = await fetch(`/api/messages/${conversationId}`, { credentials: 'include' });
+        const res = await apiFetch(`/api/messages/${conversationId}`, { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           throw new Error(json.message || json.error || 'Не удалось загрузить переписку');
@@ -121,7 +122,7 @@ export default function Chat({ myUserId, autoOpen, onCreatedConversation }: Chat
     async (streamId: string, participantId?: string) => {
       setError(null);
       try {
-        const res = await fetch('/api/messages', {
+        const res = await apiFetch('/api/messages', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -216,7 +217,7 @@ export default function Chat({ myUserId, autoOpen, onCreatedConversation }: Chat
     if (!activeId) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/messages/${activeId}`, { credentials: 'include' });
+        const res = await apiFetch(`/api/messages/${activeId}`, { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (res.ok) {
           setMessages(json.data?.messages || []);
@@ -239,7 +240,7 @@ export default function Chat({ myUserId, autoOpen, onCreatedConversation }: Chat
     setSending(true);
     setError(null);
     try {
-      const res = await fetch(`/api/messages/${activeId}`, {
+      const res = await apiFetch(`/api/messages/${activeId}`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

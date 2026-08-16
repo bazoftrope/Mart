@@ -21,6 +21,16 @@
   margin-top: 0.5rem;
 }
 
+.ratingLine {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  background: #eef4ff;
+  border: 1px solid #c7dbff;
+  color: #1a3a6e;
+  font-weight: 600;
+}
+
 .infoBlock {
   margin-top: 1.5rem;
   line-height: 1.8;

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './new.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function NewTemplatePage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function NewTemplatePage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/marathons', {
+      const res = await apiFetch('/api/marathons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

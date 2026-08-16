@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
+import { apiFetch } from '@/lib/apiClient';
 
 type PendingTemplate = {
   id: string;
@@ -32,7 +33,7 @@ export default function AdminPendingPage() {
 
     async function load() {
       try {
-        const res = await fetch('/api/admin/pending', {
+        const res = await apiFetch('/api/admin/pending', {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));

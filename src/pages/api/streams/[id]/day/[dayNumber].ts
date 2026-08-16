@@ -6,6 +6,7 @@ import { withParticipant } from '@/lib/middleware';
 import { BadRequest, Forbidden, NotFound } from '@/lib/errors';
 import { saveReportSchema } from '@/lib/validation';
 import { getCurrentDayNumber, isDayAccessible, buildMeasuredAtUtc } from '@/lib/calendar';
+import { calculateRatingsForStream } from '@/lib/ratingCalculator';
 import {
   Stream,
   MarathonTemplate,
@@ -304,6 +305,8 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       : [];
 
     await transaction.commit();
+
+    await calculateRatingsForStream(stream.id);
 
     const savedLines = lineRecords.map((record) => {
       const product = productMap.get(record.productId)!;

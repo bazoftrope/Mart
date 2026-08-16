@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './index.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type Mentor = {
   id: string;
@@ -35,7 +36,7 @@ export default function Home() {
 
     async function loadStreams() {
       try {
-        const res = await fetch('/api/streams');
+        const res = await apiFetch('/api/streams');
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           throw new Error(json.message || json.error || 'Не удалось загрузить потоки');

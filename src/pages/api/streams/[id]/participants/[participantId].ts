@@ -7,6 +7,7 @@ import {
   Stream,
   MarathonTemplate,
   StreamEnrollment,
+  StreamRating,
   DailyReport,
   ReportLine,
   PulseReading,
@@ -66,7 +67,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
 
   const reportIds = reports.map((r) => r.id);
 
-  const [reportLines, pulseReadings] = await Promise.all([
+  const [reportLines, pulseReadings, rating] = await Promise.all([
     reportIds.length
       ? ReportLine.findAll({ where: { reportId: reportIds } })
       : [],
@@ -76,6 +77,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
           order: [['measured_at', 'ASC']],
         })
       : [],
+    StreamRating.findOne({ where: { streamId, participantId } }),
   ]);
 
   const productIds = reportLines.map((line) => line.productId);
@@ -127,6 +129,16 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
         durationDays: template.durationDays,
       },
     },
+    rating: rating
+      ? {
+          rank: rating.rank ?? null,
+          weightLossPercent: Number(rating.weightLossPercent),
+          entryWeight:
+            rating.entryWeight !== null ? Number(rating.entryWeight) : null,
+          currentWeight:
+            rating.currentWeight !== null ? Number(rating.currentWeight) : null,
+        }
+      : null,
     reports: reports.map((report) => ({
       id: report.id,
       dayNumber: report.dayNumber,

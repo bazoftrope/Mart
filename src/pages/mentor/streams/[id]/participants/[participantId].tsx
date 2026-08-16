@@ -2,7 +2,17 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from 'recharts';
 import styles from './ParticipantDetail.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type ReportLineItem = {
   id: string;
@@ -53,6 +63,12 @@ type ParticipantDetailData = {
       durationDays: number;
     };
   };
+  rating: {
+    rank: number | null;
+    weightLossPercent: number;
+    entryWeight: number | null;
+    currentWeight: number | null;
+  } | null;
   reports: DayReport[];
 };
 
@@ -70,6 +86,35 @@ function formatTime(value: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function buildMeasurementsData(
+  reports: DayReport[]
+): Array<{ day: number; weightKg: number | null; chestCm: number | null; waistCm: number | null; hipCm: number | null; legCm: number | null }> {
+  return reports
+    .filter((r) => r.weightKg !== null || r.chestCm !== null || r.waistCm !== null || r.hipCm !== null || r.legCm !== null)
+    .sort((a, b) => a.dayNumber - b.dayNumber)
+    .map((r) => ({
+      day: r.dayNumber,
+      weightKg: r.weightKg,
+      chestCm: r.chestCm,
+      waistCm: r.waistCm,
+      hipCm: r.hipCm,
+      legCm: r.legCm,
+    }));
+}
+
+function getMaxValue(
+  data: Array<{ day: number; weightKg: number | null; chestCm: number | null; waistCm: number | null; hipCm: number | null; legCm: number | null }>
+): number {
+  let max = 0;
+  for (const d of data) {
+    const values = [d.weightKg, d.chestCm, d.waistCm, d.hipCm, d.legCm];
+    for (const v of values) {
+      if (v !== null && v > max) max = v;
+    }
+  }
+  return max;
 }
 
 export default function ParticipantDetailPage() {
@@ -95,7 +140,7 @@ export default function ParticipantDetailPage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/streams/${sid}/participants/${pid}`, {
+        const res = await apiFetch(`/api/streams/${sid}/participants/${pid}`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -167,6 +212,17 @@ export default function ParticipantDetailPage() {
       </Link>
 
       <div className={styles.infoBlock}>
+        {data.rating && data.rating.rank !== null && (
+          <p>
+            <strong>Рейтинг:</strong> место {data.rating.rank} ·{' '}
+            {data.rating.weightLossPercent > 0
+              ? `−${data.rating.weightLossPercent}%`
+              : `${data.rating.weightLossPercent}%`}
+            {data.rating.entryWeight !== null &&
+              data.rating.currentWeight !== null &&
+              ` (${data.rating.entryWeight} → ${data.rating.currentWeight} кг)`}
+          </p>
+        )}
         <p><strong>Заполнено дней:</strong> {filledDays} из {durationDays}</p>
         <p><strong>Средние калории:</strong> {avgCalories} ккал</p>
         <p>
@@ -224,6 +280,69 @@ export default function ParticipantDetailPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Динамика замеров</h2>
+        {buildMeasurementsData(data.reports).length > 0 ? (
+          <div className={styles.chartCard}>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={buildMeasurementsData(data.reports)}>
+                <XAxis dataKey="day" />
+                <YAxis hide domain={[0, getMaxValue(buildMeasurementsData(data.reports)) + 10]} />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="weightKg"
+                  name="Вес, кг"
+                  stroke="#2563eb"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="chestCm"
+                  name="ОГ, см"
+                  stroke="#2563eb"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="waistCm"
+                  name="ОТ, см"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="hipCm"
+                  name="ОБ, см"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="legCm"
+                  name="ОН, см"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <p className={styles.noData}>Нет данных о замерах.</p>
+        )}
       </section>
 
       <section className={styles.section}>

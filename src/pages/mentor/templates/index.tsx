@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import { apiFetch } from '@/lib/apiClient';
 
 type Template = {
   id: string;
@@ -43,7 +44,7 @@ export default function MentorTemplatesPage() {
 
     async function load() {
       try {
-        const res = await fetch('/api/marathons', { credentials: 'include' });
+        const res = await apiFetch('/api/marathons', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
 
         if (!res.ok) {
@@ -67,7 +68,7 @@ export default function MentorTemplatesPage() {
     }
 
     try {
-      const res = await fetch(`/api/marathons/${id}`, {
+      const res = await apiFetch(`/api/marathons/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -85,7 +86,7 @@ export default function MentorTemplatesPage() {
 
   async function handleSubmit(id: string) {
     try {
-      const res = await fetch(`/api/marathons/${id}/submit`, {
+      const res = await apiFetch(`/api/marathons/${id}/submit`, {
         method: 'POST',
         credentials: 'include',
       });

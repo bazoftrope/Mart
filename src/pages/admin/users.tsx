@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './AdminUsers.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function AdminUsersPage() {
         const params = new URLSearchParams();
         if (filterRole) params.set('role', filterRole);
 
-        const res = await fetch(`/api/admin/users?${params.toString()}`, {
+        const res = await apiFetch(`/api/admin/users?${params.toString()}`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));

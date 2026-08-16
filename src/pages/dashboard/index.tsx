@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
+import { apiFetch } from '@/lib/apiClient';
 
 type Enrollment = {
   id: string;
@@ -40,7 +41,7 @@ export default function DashboardPage() {
 
     async function load() {
       try {
-        const res = await fetch('/api/streams/my', { credentials: 'include' });
+        const res = await apiFetch('/api/streams/my', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           throw new Error(json.message || json.error || 'Не удалось загрузить записи');

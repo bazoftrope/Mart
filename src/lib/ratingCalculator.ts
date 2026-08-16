@@ -13,15 +13,15 @@ import type { StreamStatus } from '@db/models/Stream';
 type EnrollmentStats = {
   enrollment: StreamEnrollment;
   filledDays: number;
+  entryWeight: number | null;
+  currentWeight: number | null;
+  weightLossPercent: number;
 };
 
 export async function calculateRatingsForStream(streamId: string): Promise<void> {
   const stream = await Stream.findByPk(streamId);
   if (!stream) {
     throw new Error(`Stream ${streamId} not found`);
-  }
-  if (stream.status !== 'running' && stream.status !== 'finished') {
-    throw new Error(`Stream ${streamId} is not running or finished`);
   }
 
   const template = await MarathonTemplate.findByPk(stream.templateId);
@@ -42,40 +42,35 @@ export async function calculateRatingsForStream(streamId: string): Promise<void>
   const stats: EnrollmentStats[] = [];
 
   for (const enrollment of enrollments) {
-    const [result] = await DailyReport.findAll({
+    const reports = await DailyReport.findAll({
       where: { enrollmentId: enrollment.id },
-      attributes: [
-        [
-          sequelize.fn(
-            'COUNT',
-            sequelize.fn('DISTINCT', sequelize.col('day_number'))
-          ),
-          'filledDays',
-        ],
-      ],
+      attributes: ['dayNumber', 'weightKg'],
+      order: [['dayNumber', 'ASC']],
       raw: true,
     });
 
-    const filledDays = Number(
-      (result as unknown as { filledDays: string | number }).filledDays
+    const filledDays = reports.length;
+    const weightReports = reports.filter(
+      (r) => r.weightKg !== null && r.weightKg !== undefined && Number(r.weightKg) > 0
     );
-    stats.push({ enrollment, filledDays });
+    const entryWeight = weightReports.length
+      ? Number(weightReports[0].weightKg)
+      : null;
+    const currentWeight = weightReports.length
+      ? Number(weightReports[weightReports.length - 1].weightKg)
+      : null;
+
+    let weightLossPercent = 0;
+    if (entryWeight && entryWeight > 0 && currentWeight !== null) {
+      weightLossPercent = Number(
+        (((entryWeight - currentWeight) / entryWeight) * 100).toFixed(2)
+      );
+    }
+
+    stats.push({ enrollment, filledDays, entryWeight, currentWeight, weightLossPercent });
   }
 
-  stats.sort((a, b) => {
-    const percentA = (a.filledDays / durationDays) * 100;
-    const percentB = (b.filledDays / durationDays) * 100;
-
-    if (percentB !== percentA) {
-      return percentB - percentA;
-    }
-    if (b.filledDays !== a.filledDays) {
-      return b.filledDays - a.filledDays;
-    }
-    return (
-      a.enrollment.enrolledAt.getTime() - b.enrollment.enrolledAt.getTime()
-    );
-  });
+  stats.sort((a, b) => b.weightLossPercent - a.weightLossPercent);
 
   const transaction = await sequelize.transaction();
   try {
@@ -88,11 +83,9 @@ export async function calculateRatingsForStream(streamId: string): Promise<void>
       const participantIds = enrollments.map((e) => e.participantId);
 
       for (let index = 0; index < stats.length; index++) {
-        const { enrollment, filledDays } = stats[index];
+        const { enrollment, filledDays, entryWeight, currentWeight, weightLossPercent } =
+          stats[index];
         const rank = index + 1;
-        const disciplinePercent = Number(
-          ((filledDays / durationDays) * 100).toFixed(2)
-        );
 
         const existing = await StreamRating.findOne({
           where: {
@@ -104,7 +97,9 @@ export async function calculateRatingsForStream(streamId: string): Promise<void>
 
         if (existing) {
           existing.filledDays = filledDays;
-          existing.disciplinePercent = disciplinePercent;
+          existing.entryWeight = entryWeight;
+          existing.currentWeight = currentWeight;
+          existing.weightLossPercent = weightLossPercent;
           existing.rank = rank;
           existing.calculatedAt = calculatedAt;
           await existing.save({ transaction });
@@ -114,7 +109,9 @@ export async function calculateRatingsForStream(streamId: string): Promise<void>
               streamId: stream.id,
               participantId: enrollment.participantId,
               filledDays,
-              disciplinePercent,
+              entryWeight,
+              currentWeight,
+              weightLossPercent,
               rank,
               calculatedAt,
             },

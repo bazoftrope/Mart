@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './ProductSearch.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 export type Product = {
   id: string;
@@ -42,7 +43,7 @@ export default function ProductSearch({ onSelect, disabled }: ProductSearchProps
     const timeout = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(
+        const res = await apiFetch(
           `/api/products?search=${encodeURIComponent(search)}`,
           { credentials: 'include' }
         );

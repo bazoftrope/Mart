@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './MentorStreams.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type StreamItem = {
   id: string;
@@ -33,7 +34,7 @@ export default function MentorStreamsPage() {
 
     async function load() {
       try {
-        const res = await fetch('/api/streams/my', { credentials: 'include' });
+        const res = await apiFetch('/api/streams/my', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           throw new Error(json.message || json.error || 'Не удалось загрузить потоки');

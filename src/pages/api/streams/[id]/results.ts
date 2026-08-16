@@ -110,7 +110,10 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     streamAverage,
     summary: {
       rank: rating?.rank ?? null,
-      disciplinePercent: rating ? Number(rating.disciplinePercent) : 0,
+      weightLossPercent: rating ? Number(rating.weightLossPercent) : 0,
+      entryWeight: rating?.entryWeight !== null ? Number(rating?.entryWeight) : null,
+      currentWeight:
+        rating?.currentWeight !== null ? Number(rating?.currentWeight) : null,
       filledDays: rating?.filledDays ?? 0,
       avgCalories,
       totalParticipants,

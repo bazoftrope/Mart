@@ -18,7 +18,29 @@ export class ApiClientError extends Error {
 
 type RequestBody = Record<string, unknown> | string | undefined;
 
-async function request<T>(method: string, url: string, body?: RequestBody): Promise<T> {
+let refreshPromise: Promise<boolean> | null = null;
+
+function refreshAccessToken(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then((res) => res.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+async function request<T>(
+  method: string,
+  url: string,
+  body?: RequestBody,
+  isRetry = false
+): Promise<T> {
   const headers: Record<string, string> = {};
   const init: RequestInit = {
     method,
@@ -38,6 +60,16 @@ async function request<T>(method: string, url: string, body?: RequestBody): Prom
 
   const res = await fetch(url, init);
   const json = (await res.json().catch(() => ({}))) as ApiResponse<T>;
+
+  if (res.status === 401 && !isRetry && !url.startsWith('/api/auth/')) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      return request<T>(method, url, body, true);
+    }
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  }
 
   if (!res.ok) {
     const error = json as ApiErrorResponse;
@@ -60,3 +92,18 @@ export const apiClient = {
   patch: <T>(url: string, body?: RequestBody) => request<T>('PATCH', url, body),
   delete: <T>(url: string) => request<T>('DELETE', url),
 };
+
+export async function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  let res = await fetch(url, { credentials: 'include', ...init });
+
+  if (res.status === 401 && !url.startsWith('/api/auth/')) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      res = await fetch(url, { credentials: 'include', ...init });
+    } else if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  }
+
+  return res;
+}

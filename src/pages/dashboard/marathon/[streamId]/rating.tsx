@@ -3,13 +3,16 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './Rating.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type RatingEntry = {
   rank: number;
   participantId: string;
   participantName: string;
   filledDays: number;
-  disciplinePercent: number;
+  entryWeight: number | null;
+  currentWeight: number | null;
+  weightLossPercent: number;
   calculatedAt: string;
 };
 
@@ -42,7 +45,7 @@ export default function RatingPage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/streams/${streamId}/rating`, {
+        const res = await apiFetch(`/api/streams/${streamId}/rating`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -94,8 +97,9 @@ export default function RatingPage() {
             <tr className={styles.headerRow}>
               <th className={styles.cell}>#</th>
               <th className={styles.cell}>Участник</th>
-              <th className={styles.cell}>Заполнено дней</th>
-              <th className={styles.cell}>Дисциплина</th>
+              <th className={styles.cell}>Вес на входе</th>
+              <th className={styles.cell}>Текущий вес</th>
+              <th className={styles.cell}>Потеря веса</th>
             </tr>
           </thead>
           <tbody>
@@ -115,8 +119,17 @@ export default function RatingPage() {
                     {entry.participantName}
                     {isMe && ' (вы)'}
                   </td>
-                  <td className={styles.cell}>{entry.filledDays}</td>
-                  <td className={styles.cell}>{entry.disciplinePercent}%</td>
+                  <td className={styles.cell}>
+                    {entry.entryWeight !== null ? `${entry.entryWeight} кг` : '—'}
+                  </td>
+                  <td className={styles.cell}>
+                    {entry.currentWeight !== null ? `${entry.currentWeight} кг` : '—'}
+                  </td>
+                  <td className={styles.cell}>
+                    {entry.weightLossPercent > 0
+                      ? `−${entry.weightLossPercent}%`
+                      : `${entry.weightLossPercent}%`}
+                  </td>
                 </tr>
               );
             })}

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './AdminReviewTemplate.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type TemplateDay = {
   id: string;
@@ -47,7 +48,7 @@ export default function AdminReviewTemplatePage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/admin/pending/${id}`, {
+        const res = await apiFetch(`/api/admin/pending/${id}`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -74,7 +75,7 @@ export default function AdminReviewTemplatePage() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/admin/${id}/approve`, {
+      const res = await apiFetch(`/api/admin/${id}/approve`, {
         method: 'POST',
         credentials: 'include',
       });

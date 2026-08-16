@@ -13,6 +13,7 @@ import {
   Legend,
 } from 'recharts';
 import styles from './Results.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type ResultsData = {
   participant: {
@@ -23,7 +24,9 @@ type ResultsData = {
   streamAverage: Array<{ day: number; avgCalories: number }>;
   summary: {
     rank: number | null;
-    disciplinePercent: number;
+    weightLossPercent: number;
+    entryWeight: number | null;
+    currentWeight: number | null;
     filledDays: number;
     avgCalories: number;
     totalParticipants: number;
@@ -53,7 +56,7 @@ export default function ResultsPage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/streams/${streamId}/results`, {
+        const res = await apiFetch(`/api/streams/${streamId}/results`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -114,8 +117,20 @@ export default function ResultsPage() {
           </div>
         </div>
         <div className={styles.card}>
-          <div className={styles.cardLabel}>Дисциплина</div>
-          <div className={styles.cardValue}>{summary.disciplinePercent}%</div>
+          <div className={styles.cardLabel}>Потеря веса</div>
+          <div className={styles.cardValue}>
+            {summary.weightLossPercent > 0
+              ? `−${summary.weightLossPercent}%`
+              : `${summary.weightLossPercent}%`}
+          </div>
+        </div>
+        <div className={styles.card}>
+          <div className={styles.cardLabel}>Вес: вход → сейчас</div>
+          <div className={styles.cardValue}>
+            {summary.entryWeight !== null && summary.currentWeight !== null
+              ? `${summary.entryWeight} → ${summary.currentWeight} кг`
+              : '—'}
+          </div>
         </div>
         <div className={styles.card}>
           <div className={styles.cardLabel}>Заполнено дней</div>

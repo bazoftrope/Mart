@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './edit.module.css';
+import { apiFetch } from '@/lib/apiClient';
 
 type Template = {
   id: string;
@@ -38,7 +39,7 @@ export default function EditTemplatePage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/marathons/${templateId}`, {
+        const res = await apiFetch(`/api/marathons/${templateId}`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -70,7 +71,7 @@ export default function EditTemplatePage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/marathons/${templateId}`, {
+      const res = await apiFetch(`/api/marathons/${templateId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
