@@ -1,31 +1,29 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
-import CalendarGrid from '@/components/CalendarGrid';
-import styles from './MarathonCalendar.module.css';
 import { apiFetch } from '@/lib/apiClient';
+import MarathonWindow, {
+  type MarathonRating,
+  type MarathonReport,
+  type MarathonStream,
+} from '@/components/marathon/MarathonWindow';
+import styles from './MarathonCalendar.module.css';
 
 type StreamCalendar = {
-  stream: {
-    id: string;
-    startDate: string;
-    status: string;
-    template: {
-      id: string;
-      title: string;
-      description?: string;
-      durationDays: number;
-    };
-  };
+  stream: MarathonStream;
   currentDayNumber: number;
-  rating: {
-    rank: number | null;
-    totalParticipants: number;
-    weightLossPercent: number;
-  };
-  reports: Array<{ id: string; dayNumber: number; totalCalories: number; filledAt: Date | string }>;
+  rating: MarathonRating;
+  reports: MarathonReport[];
 };
+
+function toNumber(value: unknown): number | null {
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
+  if (typeof value !== 'string') return null;
+  const num = parseInt(value, 10);
+  return Number.isNaN(num) ? null : num;
+}
 
 export default function MarathonCalendarPage() {
   const router = useRouter();
@@ -48,9 +46,12 @@ export default function MarathonCalendarPage() {
   useEffect(() => {
     if (!streamId) return;
 
+    const sid = Array.isArray(streamId) ? streamId[0] : streamId;
+    if (!sid) return;
+
     async function load() {
       try {
-        const res = await apiFetch(`/api/streams/${streamId}/calendar`, {
+        const res = await apiFetch(`/api/streams/${sid}/calendar`, {
           credentials: 'include',
         });
         const json = await res.json().catch(() => ({}));
@@ -86,61 +87,35 @@ export default function MarathonCalendarPage() {
 
   const { stream, currentDayNumber, reports, rating } = data;
 
-  const ratingLine =
-    rating && rating.rank !== null && rating.totalParticipants > 0
-      ? `Твоё место: ${rating.rank} из ${rating.totalParticipants} · ${
-          rating.weightLossPercent > 0
-            ? `−${rating.weightLossPercent}%`
-            : `${rating.weightLossPercent}%`
-        }`
-      : null;
+  const requestedDay = toNumber(router.query.day);
+  const activeDay =
+    requestedDay !== null &&
+    requestedDay >= 1 &&
+    requestedDay <= stream.template.durationDays
+      ? requestedDay
+      : currentDayNumber > 0
+        ? currentDayNumber
+        : null;
+
+  const handleDayChange = (day: number) => {
+    const tab = router.query.tab;
+    const tabQuery = typeof tab === 'string' ? `&tab=${tab}` : '';
+    router.replace(
+      `/dashboard/marathon/${stream.id}?day=${day}${tabQuery}`,
+      undefined,
+      { shallow: true, scroll: false }
+    );
+  };
 
   return (
     <main className={styles.main}>
-      <Link href="/dashboard" className={styles.backLink}>
-        ← Назад к моим марафонам
-      </Link>
-
-      <h1 className={styles.title}>{stream.template.title}</h1>
-      <p className={styles.description}>
-        {stream.template.description || 'Нет описания'}
-      </p>
-
-      {ratingLine && (
-        <div className={styles.ratingLine}>{ratingLine}</div>
-      )}
-
-      <div className={styles.infoBlock}>
-        <p>
-          <strong>Длительность:</strong> {stream.template.durationDays} дн.
-        </p>
-        <p>
-          <strong>Дата начала:</strong>{' '}
-          {new Date(stream.startDate).toLocaleDateString()}
-        </p>
-        <p>
-          <strong>Статус:</strong> {stream.status}
-        </p>
-        <p>
-          <strong>Текущий день:</strong>{' '}
-          {currentDayNumber > 0 ? currentDayNumber : 'Ещё не начат'}
-        </p>
-      </div>
-
-      <div className={styles.actions}>
-        <Link href={`/dashboard/messages?streamId=${stream.id}&group=1`}>
-          <button className={styles.chatBtn}>Общий чат потока</button>
-        </Link>
-        <Link href={`/dashboard/messages?streamId=${stream.id}`}>
-          <button className={styles.chatBtn}>Написать ментору</button>
-        </Link>
-      </div>
-
-      <CalendarGrid
-        streamId={stream.id}
-        durationDays={stream.template.durationDays}
+      <MarathonWindow
+        stream={stream}
         currentDayNumber={currentDayNumber}
+        rating={rating}
         reports={reports}
+        activeDay={activeDay}
+        onDayChange={handleDayChange}
       />
     </main>
   );

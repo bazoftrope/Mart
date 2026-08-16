@@ -1,0 +1,127 @@
+.window {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.backLink {
+  color: #1a1a2e;
+}
+
+.title {
+  margin-top: 1rem;
+}
+
+.description {
+  color: #555;
+  margin-top: 0.5rem;
+}
+
+.ratingLine {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  background: #eef4ff;
+  border: 1px solid #c7dbff;
+  color: #1a3a6e;
+  font-weight: 600;
+}
+
+.infoBlock {
+  margin-top: 1.5rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.chatBtn {
+  display: inline-block;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.chatBtn:hover {
+  opacity: 0.9;
+}
+
+.dayNavbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dayItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 56px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.4rem;
+  font-family: inherit;
+}
+
+.dayAccessible {
+  background-color: #f8f9fa;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
+.dayDisabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.dayActive {
+  outline: 2px solid #2563eb;
+}
+
+.dayFilled {
+  background-color: #d4edda;
+}
+
+.dayNumber {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.dayCalories {
+  font-size: 0.75rem;
+  color: #155724;
+}
+
+.day {
+  margin-top: 1rem;
+}
+
+.dayLoading {
+  margin-top: 1rem;
+}
+
+.placeholder {
+  color: #555;
+}
+
+.error {
+  color: red;
+}

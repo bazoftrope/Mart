@@ -16,6 +16,7 @@ import type {
 
 interface ParticipantDayState {
   data: ParticipantDayData | null;
+  daysCache: Record<string, Record<number, ParticipantDayData>>;
   lines: ReportLineItem[];
   metrics: MetricsState;
   pulseReadings: PulseFormItem[];
@@ -26,7 +27,8 @@ interface ParticipantDayState {
 }
 
 interface ParticipantDayActions {
-  loadDay: (streamId: string, dayNumber: number) => Promise<void>;
+  loadAllDays: (streamId: string) => Promise<void>;
+  selectDay: (day: ParticipantDayData) => void;
   saveReport: (streamId: string, dayNumber: number) => Promise<void>;
   addProductLine: (product: Product) => void;
   updateLine: (index: number, weightGrams: number) => void;
@@ -135,6 +137,7 @@ function buildInitialMetrics(
 
 const initialState: ParticipantDayState = {
   data: null,
+  daysCache: {},
   lines: [],
   metrics: emptyMetrics(),
   pulseReadings: [{ time: getCurrentTime(), pulse: '' }],
@@ -144,39 +147,64 @@ const initialState: ParticipantDayState = {
   saveError: null,
 };
 
+function applyDay(day: ParticipantDayData) {
+  return {
+    data: day,
+    lines: day.report?.lines || [],
+    metrics: buildInitialMetrics(day.report),
+    pulseReadings: buildInitialPulseReadings(day.report),
+    loading: false,
+    error: null,
+  };
+}
+
 export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => ({
   ...initialState,
 
-  resetState: () => set({ ...initialState }),
+  resetState: () =>
+    set((state) => ({ ...initialState, daysCache: state.daysCache })),
 
-  loadDay: async (streamId, dayNumber) => {
+  loadAllDays: async (streamId) => {
+    if (get().daysCache[streamId]) {
+      set({ loading: false, error: null });
+      return;
+    }
+
     set({ loading: true, error: null });
 
     try {
-      const res = await fetch(
-        `/api/streams/${streamId}/day/${dayNumber}`,
-        { credentials: 'include' }
-      );
+      const res = await fetch(`/api/streams/${streamId}/days`, {
+        credentials: 'include',
+      });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Не удалось загрузить день');
+        throw new Error(json.message || json.error || 'Не удалось загрузить дни');
       }
 
-      const loaded: ParticipantDayData = json.data;
-      set({
-        data: loaded,
-        lines: loaded.report?.lines || [],
-        metrics: buildInitialMetrics(loaded.report),
-        pulseReadings: buildInitialPulseReadings(loaded.report),
+      const days: ParticipantDayData[] = json.data?.days || [];
+      const byDay: Record<number, ParticipantDayData> = {};
+      for (const day of days) {
+        byDay[day.dayNumber] = day;
+      }
+
+      set((state) => ({
+        daysCache: { ...state.daysCache, [streamId]: byDay },
         loading: false,
         error: null,
-      });
+      }));
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : 'Что-то пошло не так',
         loading: false,
       });
     }
+  },
+
+  selectDay: (day) => {
+    if (!get().daysCache[day.streamId]?.[day.dayNumber]) {
+      return;
+    }
+    set(applyDay(day));
   },
 
   saveReport: async (streamId, dayNumber) => {
@@ -258,10 +286,19 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
         lines: json.data.lines,
       };
 
-      set({
-        data: {
-          ...data,
-          report: updatedReport,
+      const updatedData: ParticipantDayData = {
+        ...data,
+        report: updatedReport,
+      };
+
+      set((state) => ({
+        data: updatedData,
+        daysCache: {
+          ...state.daysCache,
+          [data.streamId]: {
+            ...state.daysCache[data.streamId],
+            [data.dayNumber]: updatedData,
+          },
         },
         lines: json.data.lines,
         metrics: {
@@ -282,7 +319,7 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
             : [{ time: getCurrentTime(), pulse: '' }],
         saving: false,
         saveError: null,
-      });
+      }));
     } catch (err) {
       set({
         saveError: err instanceof Error ? err.message : 'Что-то пошло не так',
