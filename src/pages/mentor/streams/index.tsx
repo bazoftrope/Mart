@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './MentorStreams.module.css';
 import { apiFetch } from '@/lib/apiClient';
+import StreamCard from '@/components/stream/StreamCard';
+import cardStyles from '@/components/stream/StreamCard.module.css';
 
 type StreamItem = {
   id: string;
@@ -65,25 +67,16 @@ export default function MentorStreamsPage() {
         <p className={styles.emptyText}>Вы ещё не запустили ни одного потока.</p>
       )}
       {!loading && !error && streams.length > 0 && (
-        <ul className={styles.list}>
+        <ul className={cardStyles.grid}>
           {streams.map((stream) => (
-            <li
+            <StreamCard
               key={stream.id}
-              className={styles.listItem}
-            >
-              <Link href={`/mentor/streams/${stream.id}`} className={styles.streamLink}>
-                <h2 className={styles.streamTitle}>{stream.template?.title || 'Поток без названия'}</h2>
-              </Link>
-              <p className={styles.info}>
-                <strong>Дата начала:</strong> {new Date(stream.startDate).toLocaleDateString()}
-              </p>
-              <p className={styles.info}>
-                <strong>Длительность:</strong> {stream.template?.durationDays} дн.
-              </p>
-              <p className={styles.info}>
-                <strong>Статус:</strong> {stream.status}
-              </p>
-            </li>
+              title={stream.template?.title || 'Поток без названия'}
+              href={`/mentor/streams/${stream.id}`}
+              startDate={stream.startDate}
+              durationDays={stream.template?.durationDays}
+              status={stream.status}
+            />
           ))}
         </ul>
       )}

@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './index.module.css';
 import { apiFetch } from '@/lib/apiClient';
+import StreamCard from '@/components/stream/StreamCard';
+import cardStyles from '@/components/stream/StreamCard.module.css';
 
 type Mentor = {
   id: string;
@@ -54,23 +57,19 @@ export default function Home() {
 
   return (
     <main className="container">
-      <h1 className="pageTitle">Добро пожаловать на Marathon Platform</h1>
-      <p className={styles.lead}>
-        Платформа для марафонов здорового питания. Менторы создают шаблоны
-        марафонов, администраторы проверяют их, а участники присоединяются к потокам,
-        чтобы отслеживать своё ежедневное питание и прогресс.
-      </p>
-
-      {!role && (
-        <div className={styles.actions}>
-          <Link href="/login">
-            <button className="btn btnPrimary">Войти</button>
-          </Link>
-          <Link href="/register">
-            <button className="btn btnOutline">Регистрация</button>
-          </Link>
+      <div className={styles.hero}>
+        <Image src="/logo.png" alt="Marathon Platform" width={80} height={80} className={styles.logo} />
+        <div>
+          <h1 className="pageTitle">Добро пожаловать на Marathon Platform</h1>
+          <p className={styles.lead}>
+            Платформа для марафонов здорового питания. Менторы создают шаблоны
+            марафонов, администраторы проверяют их, а участники присоединяются к потокам,
+            чтобы отслеживать своё ежедневное питание и прогресс.
+          </p>
         </div>
-      )}
+      </div>
+
+
 
       <section className="mt-2-5">
         <h2 className="pageSubtitle">Открытые потоки</h2>
@@ -80,31 +79,18 @@ export default function Home() {
           <p>Сейчас нет открытых потоков.</p>
         )}
         {!loading && !error && streams.length > 0 && (
-          <ul className="listPlain mt-1">
+          <ul className={cardStyles.grid}>
             {streams.map((stream) => (
-              <li key={stream.id} className="card">
-                <Link href={`/streams/${stream.id}`} className="cardLink">
-                  <h3 className="cardTitle">
-                    {stream.template?.title || 'Поток без названия'}
-                  </h3>
-                </Link>
-                <p className="meta textSecondary">
-                  {stream.template?.description || 'Нет описания'}
-                </p>
-                <p className="meta">
-                  <strong>Длительность:</strong> {stream.template?.durationDays} дн.
-                </p>
-                <p className="meta">
-                  <strong>Дата начала:</strong>{' '}
-                  {new Date(stream.startDate).toLocaleDateString()}
-                </p>
-                <p className="meta">
-                  <strong>Ментор:</strong> {stream.mentor?.name || 'Неизвестно'}
-                </p>
-                <p className="meta">
-                  <strong>Статус:</strong> {stream.status}
-                </p>
-              </li>
+              <StreamCard
+                key={stream.id}
+                title={stream.template?.title || 'Поток без названия'}
+                href={`/streams/${stream.id}`}
+                description={stream.template?.description || 'Нет описания'}
+                durationDays={stream.template?.durationDays}
+                startDate={stream.startDate}
+                mentorName={stream.mentor?.name || 'Неизвестно'}
+                status={stream.status}
+              />
             ))}
           </ul>
         )}

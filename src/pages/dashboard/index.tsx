@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import { apiFetch } from '@/lib/apiClient';
+import StreamCard from '@/components/stream/StreamCard';
+import cardStyles from '@/components/stream/StreamCard.module.css';
 
 type Enrollment = {
   id: string;
@@ -41,6 +43,16 @@ export default function DashboardPage() {
 
     async function load() {
       try {
+        const meRes = await apiFetch('/api/users/me', { credentials: 'include' });
+        const meJson = await meRes.json().catch(() => ({}));
+        if (!meRes.ok) {
+          throw new Error(meJson.message || meJson.error || 'Не удалось загрузить профиль');
+        }
+        if (!meJson.data?.profileCompleted) {
+          router.replace('/onboarding');
+          return;
+        }
+
         const res = await apiFetch('/api/streams/my', { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -74,38 +86,18 @@ export default function DashboardPage() {
         </div>
       )}
       {!loading && !error && enrollments.length > 0 && (
-        <ul className="listPlain mt-1">
+        <ul className={cardStyles.grid}>
           {enrollments.map((enrollment) => (
-            <li key={enrollment.id} className="card">
-              <Link
-                href={`/dashboard/marathon/${enrollment.stream?.id}`}
-                className="cardLink"
-              >
-                <h2 className="cardTitle">
-                  {enrollment.stream?.template?.title || 'Неизвестный марафон'}
-                </h2>
-              </Link>
-              <p className="meta textSecondary">
-                {enrollment.stream?.template?.description || 'Нет описания'}
-              </p>
-              <p className="meta">
-                <strong>Ментор:</strong>{' '}
-                {enrollment.stream?.mentor?.name || 'Неизвестно'}
-              </p>
-              <p className="meta">
-                <strong>Дата начала:</strong>{' '}
-                {enrollment.stream
-                  ? new Date(enrollment.stream.startDate).toLocaleDateString()
-                  : '-'}
-              </p>
-              <p className="meta">
-                <strong>Статус:</strong> {enrollment.stream?.status}
-              </p>
-              <p className="meta">
-                <strong>Записан:</strong>{' '}
-                {new Date(enrollment.enrolledAt).toLocaleString()}
-              </p>
-            </li>
+            <StreamCard
+              key={enrollment.id}
+              title={enrollment.stream?.template?.title || 'Неизвестный марафон'}
+              href={`/dashboard/marathon/${enrollment.stream?.id}`}
+              description={enrollment.stream?.template?.description || 'Нет описания'}
+              mentorName={enrollment.stream?.mentor?.name || 'Неизвестно'}
+              startDate={enrollment.stream?.startDate}
+              status={enrollment.stream?.status}
+              enrolledAt={enrollment.enrolledAt}
+            />
           ))}
         </ul>
       )}
