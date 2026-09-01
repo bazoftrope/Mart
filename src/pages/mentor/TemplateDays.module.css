@@ -1,5 +1,5 @@
 .main {
-  max-width: 900px;
+  max-width: var(--container-width);
   margin: 2rem auto;
   padding: 0 1rem;
 }
@@ -21,6 +21,39 @@
 
 .fullWidth {
   width: 100%;
+}
+
+.hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.videoPreview {
+  margin-top: 0.75rem;
+  max-width: 480px;
+}
+
+.uploadRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.audioPreview {
+  margin-top: 0.75rem;
+}
+
+.removeAudioBtn {
+  margin-top: 0.5rem;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .buttonRow {

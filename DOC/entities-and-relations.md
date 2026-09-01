@@ -1,188 +1,241 @@
 # Сущности и связи
 
-## Список сущностей
+Справочник актуален по состоянию на **31.08.2026** и описывает 14 моделей из `DB/models/` (Sequelize-TS, декораторы, поэтому поля ниже приведены в camelCase — в БД через `underscored: true` они хранятся в snake_case).
 
-### 1. User (Пользователь)
-
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | Уникальный идентификатор |
-| email | string, unique | Email для входа |
-| password_hash | string | Хеш пароля |
-| role | enum | `mentor`, `participant`, `admin` |
-| name | string | Имя для отображения |
-| timezone | string | Часовой пояс (IANA, например `Europe/Moscow`) |
-| created_at | datetime | Дата регистрации |
-| updated_at | datetime | Дата последнего обновления |
-
-**Ограничения:**
-- Один пользователь = одна роль. Для смены роли — новый аккаунт.
-- Роль `admin` зашита в системе, не создаётся через регистрацию.
+Общие соглашения:
+- Первичный ключ всех таблиц — `id` UUID (default `DataTypes.UUIDV4`).
+- `underscored: true` → колонки из camelCase маппятся в snake_case (напр. `dayNumber` → `day_number`).
+- timestamps задаются по ситуации (см. каждую модель).
 
 ---
 
-### 2. Product (Продукт)
+## 1. User (Пользователь) — `users`
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| name | string, unique | Название продукта |
-| calories_per_100g | decimal(8,2) | Калорийность на 100 грамм |
-| created_at | datetime | |
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| email | string | unique, not null | Для входа, хранится в lowercase |
+| passwordHash | string | not null | `password_hash`, хеш bcrypt |
+| role | enum | not null | `mentor` / `participant` / `admin` |
+| name | string | not null | Имя |
+| timezone | string | not null, default `Europe/Moscow` | IANA-таймзона |
+| sex | enum | nullable | `male` / `female` |
+| heightCm | integer | nullable | Рост, см |
+| weightKg | decimal(5,1) | nullable | Вес, кг |
+| age | integer | nullable | Возраст, лет |
+| createdAt | datetime | | `created_at` |
+| updatedAt | datetime | | `updated_at` |
 
 **Ограничения:**
-- Глобальная база, заполняется администратором платформы.
-- В MVP участник не может добавлять продукты.
+- Один пользователь = одна роль (admin не создаётся через регистрацию, см. `ensureAdminUser` в `src/lib/auth.ts`).
+- Поля профиля (`sex`, `heightCm`, `weightKg`, `age`) заполняются на онбординге (`src/pages/onboarding.tsx`) и используются для расчёта калорий.
 
 ---
 
-### 3. MarathonTemplate (Марафон-шаблон)
+## 2. Product (Продукт) — `products`
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| mentor_id | FK → User.id | Создатель (роль mentor) |
-| title | string | Название марафона |
-| description | text | Описание |
-| duration_days | int | Длительность в днях |
-| status | enum | `draft` → `pending_review` → `approved` |
-| created_at | datetime | |
-| updated_at | datetime | |
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| name | string | unique, not null | Название |
+| calories | decimal(8,2) | not null | `calories_per_100g` в старом названии; фактически колонка `calories` |
+| createdAt | datetime | | `created_at`, `updatedAt` отключён |
 
-**Статусы:**
-- `draft` — ментор создаёт и редактирует
-- `pending_review` — отправлен на проверку админу, ментор может редактировать по комментариям
-- `approved` — одобрен, доступен для запуска потоков
+**Ограничения:**
+- Глобальная база, читается админом/сидером. Поиск по `name` (ILIKE) — `GET /api/products?search=`.
+- В MVP участник не добавляет продукты.
+
+---
+
+## 3. MarathonTemplate (Шаблон марафона) — `marathon_templates`
+
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| mentorId | UUID | not null | `mentor_id` → User.id (роль mentor) |
+| title | string | not null | Название |
+| description | text | nullable | Описание |
+| durationDays | integer | not null | `duration_days` |
+| status | enum | not null, default `draft` | `draft` / `pending_review` / `approved` |
+| createdAt | datetime | | |
+| updatedAt | datetime | | |
 
 **Переходы статусов:**
 ```
-draft → pending_review (ментор отправляет на проверку)
-pending_review → approved (админ одобряет)
-pending_review → draft (ментор снимает с проверки для правки)
+draft → pending_review  (ментор отправляет, POST /api/marathons/:id/submit)
+pending_review → approved (админ одобряет, POST /api/admin/:id/approve)
 ```
+- Одобренные шаблоны можно запускать в потоки (`POST /api/streams`).
 
 ---
 
-### 4. TemplateDay (День шаблона)
+## 4. TemplateDay (День шаблона) — `template_days`
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| template_id | FK → MarathonTemplate.id | |
-| day_number | int | Номер дня (1..N) |
-| text_content | text, nullable | Текстовый материал |
-| audio_url | string, nullable | Ссылка на аудио |
-| video_url | string, nullable | Ссылка на видео |
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| templateId | UUID | not null | `template_id` → MarathonTemplate.id |
+| dayNumber | integer | not null | `day_number`, 1..N |
+| textContent | text | nullable | `text_content` |
+| audioUrl | string | nullable | `audio_url` |
+| videoId | string | nullable | `video_id` — ID видео Kinescope (вставляется из ссылки, см. `parseKinescopeVideoId`) |
 
 **Ограничения:**
-- Все поля материалов nullable — день может быть пустым.
-- `day_number` уникален в рамках шаблона.
-- В MVP редактирование шаблона после отправки на проверку — только пока статус `pending_review`.
+- Все материалы nullable.
+- `video_id` добавлен миграцией `20260831000001-add-video-id-to-template-days.js` (вместо старого `video_url`). Вставка ссылки на видео преобразуется в ID через `src/lib/kinescope.ts`.
 
 ---
 
-### 5. Stream (Поток)
+## 5. Stream (Поток) — `streams`
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| template_id | FK → MarathonTemplate.id | Шаблон-основа |
-| start_date | date | Дата начала |
-| status | enum | `open` → `running` → `finished` |
-| created_at | datetime | |
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| templateId | UUID | not null | `template_id` → MarathonTemplate.id |
+| startDate | date | not null | `start_date`, DATEONLY |
+| status | enum | not null, default `open` | `open` / `running` / `finished` |
+| createdAt | datetime | | |
+| updatedAt | datetime | | |
 
-**Статусы:**
-- `open` — набор участников, до start_date
-- `running` — start_date наступила, марафон идёт
-- `finished` — все дни пройдены (start_date + duration_days)
-
-**Автоматические переходы:**
-```
-open → running (по start_date)
-running → finished (по start_date + duration_days)
-```
+**Статусы:** `open` (набор до start_date), `running` (марафон идёт), `finished` (все дни пройдены). Точный день вычисляется по таймзоне пользователя (`src/lib/calendar.ts`).
 
 ---
 
-### 6. StreamEnrollment (Запись на поток)
+## 6. StreamEnrollment (Запись на поток) — `stream_enrollments`
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| stream_id | FK → Stream.id | |
-| participant_id | FK → User.id | Участник (роль participant) |
-| enrolled_at | datetime | Дата записи |
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| streamId | UUID | not null | `stream_id` → Stream.id |
+| participantId | UUID | not null | `participant_id` → User.id |
+| goal | enum | not null, default `maintain` | `lose` / `maintain` / `gain` |
+| targetCalories | integer | nullable | `target_calories`, рассчитанный при записи |
+| enrolledAt | datetime | | `enrolled_at`, маппится из createdAt |
+| updatedAt | datetime | | |
 
 **Ограничения:**
-- Запись только до start_date потока.
-- Один участник — одна запись на поток (уникальность stream_id + participant_id).
+- Запись только до старта потока; уникальность `stream_id + participant_id`.
+- При записи (`POST /api/streams/:id/enroll`) вычисляется `targetCalories` по формулам `src/lib/calorieCalculator.ts`.
 
 ---
 
-### 7. DailyReport (Отчёт за день)
+## 7. DailyReport (Отчёт за день) — `daily_reports`
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| enrollment_id | FK → StreamEnrollment.id | |
-| day_number | int | Номер дня (1..N) |
-| total_calories | decimal(10,2) | Автоматический расчёт |
-| water_liters | int, nullable | Вода в литрах |
-| steps | int, nullable | Шаги |
-| sleep_hours | int, nullable | Сон в часах |
-| activity_minutes | int, nullable | Активность в минутах |
-| weight_kg | int, nullable | Вес в кг |
-| chest_cm | decimal(10,2), nullable | Обхват груди (ОГ), см |
-| waist_cm | decimal(10,2), nullable | Обхват талии (ОТ), см |
-| hip_cm | decimal(10,2), nullable | Обхват бёдер (ОБ), см |
-| leg_cm | decimal(10,2), nullable | Обхват ноги (ОН), см |
-| filled_at | datetime | Первое заполнение |
-| updated_at | datetime | Последнее обновление |
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| enrollmentId | UUID | not null | `enrollment_id` → StreamEnrollment.id |
+| dayNumber | integer | not null | `day_number` |
+| totalCalories | decimal(10,2) | not null, default 0 | Сумма строк отчёта |
+| waterLiters | integer | nullable | Вода, л |
+| steps | integer | nullable | Шаги |
+| sleepHours | integer | nullable | Сон, ч |
+| activityMinutes | integer | nullable | Активность, мин |
+| weightKg | integer | nullable | Вес, кг (наблюдение за день) |
+| chestCm | decimal(10,2) | nullable | ОГ, см |
+| waistCm | decimal(10,2) | nullable | ОТ, см |
+| hipCm | decimal(10,2) | nullable | ОБ, см |
+| legCm | decimal(10,2) | nullable | ОН, см |
+| filledAt | datetime | | `filled_at`, из createdAt |
+| updatedAt | datetime | | |
 
-**Ограничения:**
-- Уникальность enrollment_id + day_number.
-- Отчёт можно редактировать неограниченное количество раз.
-- День доступен для заполнения, если day_number ≤ текущий день потока по таймзоне участника.
-
----
-
-### 8. ReportLine (Строка отчёта)
-
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| report_id | FK → DailyReport.id | |
-| product_id | FK → Product.id | |
-| weight_grams | decimal(8,2) | Вес в граммах |
-| line_calories | decimal(10,2) | Автоматический расчёт: weight_grams × calories_per_100g / 100 |
-
-**Расчёт:**
-```
-line_calories = weight_grams × Product.calories_per_100g / 100
-DailyReport.total_calories = SUM(ReportLine.line_calories)
-```
+**Замечания:**
+- Поля обхватов (ОГ/ОТ/ОБ/ОН) добавлены миграцией `20240815000001-add-body-measurements-to-daily-reports.js`.
+- Уникальность `enrollment_id + day_number`.
+- `totalCalories` считается автоматически из `ReportLine.line_calories`.
 
 ---
 
-### 9. StreamRating (Рейтинг потока)
+## 8. ReportLine (Строка отчёта) — `report_lines`
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | UUID / int PK | |
-| stream_id | FK → Stream.id | |
-| participant_id | FK → User.id | |
-| filled_days | int | Количество заполненных дней |
-| discipline_percent | decimal(5,2) | Процент: filled_days / Stream.duration_days × 100 |
-| rank | int | Место в рейтинге потока |
-| calculated_at | datetime | Дата последнего расчёта |
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| reportId | UUID | not null | `report_id` → DailyReport.id |
+| productId | UUID | not null | `product_id` → Product.id |
+| weightGrams | decimal(8,2) | not null | `weight_grams` |
+| lineCalories | decimal(10,2) | not null | `line_calories` |
 
-**Расчёт:**
+**Расчёт** (`computeLineCalories` в `src/components/ReportTable.tsx`):
 ```
-discipline_percent = filled_days / template.duration_days × 100
-rank = место по убыванию discipline_percent (при равенстве — по filled_days, затем по enrolled_at)
+lineCalories = round(weightGrams × Product.calories / 100)
+DailyReport.totalCalories = SUM(ReportLine.lineCalories)
 ```
 
-**Обновление:** раз в сутки (cron-задача).
+---
+
+## 9. StreamRating (Рейтинг потока) — `stream_ratings`
+
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| streamId | UUID | not null | `stream_id` → Stream.id |
+| participantId | UUID | not null | `participant_id` → User.id |
+| filledDays | integer | not null, default 0 | `filled_days` |
+| disciplinePercent | decimal(5,2) | not null, default 0 | `discipline_percent` — оставлено для совместимости |
+| entryWeight | decimal(10,2) | nullable | `entry_weight`, первый вес в отчётах |
+| currentWeight | decimal(10,2) | nullable | `current_weight`, последний вес |
+| weightLossPercent | decimal(5,2) | not null, default 0 | `weight_loss_percent` — процент потери веса |
+| rank | integer | nullable | Место в рейтинге |
+| calculatedAt | datetime | not null, default NOW | `calculated_at` |
+
+**Расчёт:** в `src/lib/ratingCalculator.ts` — сортировка по убыванию `weightLossPercent`, rank = индекс + 1. Поля веса добавлены миграцией `20240816000001-add-weight-fields-to-stream-ratings.js`.
+
+**Обновление:** cron `npm run cron` (ежедневно 00:05, `src/lib/cron.ts`) + ручной `POST /api/rating/calculate` (admin).
+
+---
+
+## 10. PulseReading (Замер пульса) — `pulse_readings`
+
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| reportId | UUID | not null | `report_id` → DailyReport.id |
+| measuredAt | datetime | not null | `measured_at`, момент замера |
+| pulse | integer | not null | Пульс, уд/мин |
+
+**Замечание:** замеры привязаны к отчёту дня. Время измерения строится как дата дня отчёта (`startDate + dayNumber - 1`) + локальное время в таймзоне участника (`buildMeasuredAtUtc` в `src/lib/calendar.ts`).
+
+---
+
+## 11. Conversation (Беседа) — `conversations`
+
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| type | enum | not null | `mentor_pair` / `group` |
+| streamId | UUID | nullable | `stream_id` → Stream.id |
+| createdAt | datetime | | |
+| updatedAt | datetime | | |
+
+**Типы:** `mentor_pair` — ментор↔участник (создаётся по запросу), `group` — ментор + все участники потока. Логика создания в `src/services/messageService.ts`.
+
+---
+
+## 12. ConversationMember (Участник беседы) — `conversation_members`
+
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| conversationId | UUID | not null | `conversation_id` → Conversation.id |
+| userId | UUID | not null | `user_id` → User.id |
+| role | enum | not null | `participant` / `mentor` |
+| lastReadAt | datetime | nullable | `last_read_at` |
+| unreadCount | integer | not null, default 0 | `unread_count` |
+| createdAt | datetime | | |
+| updatedAt | datetime | | |
+
+---
+
+## 13. Message (Сообщение) — `messages`
+
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| conversationId | UUID | not null | `conversation_id` → Conversation.id |
+| senderId | UUID | not null | `sender_id` → User.id |
+| text | text | not null | Текст |
+| createdAt | datetime | | |
 
 ---
 
@@ -190,34 +243,32 @@ rank = место по убыванию discipline_percent (при равенс�
 
 ```
 User (1) ───< (N) MarathonTemplate
-                │
                 └──< (N) TemplateDay
 
 MarathonTemplate (1) ───< (N) Stream
-                              │
                               └──< (N) StreamEnrollment
-                                        │
-                                        ├── (N) DailyReport
-                                        │         │
-                                        │         └──< (N) ReportLine
-                                        │                   │
-                                        │                   └── (N) Product
-                                        │
-                                        └── (N) StreamRating
+                                        ├──< (N) DailyReport
+                                        │        ├──< (N) ReportLine
+                                        │        │        └── (N) Product
+                                        │        └──< (N) PulseReading
+                                        └──< (N) StreamRating
 
 Stream (1) ───< (N) StreamRating
+Stream (1) ───< (N) Conversation  ──< (N) ConversationMember (N) User
+                                        └──< (N) Message
 ```
 
-## Индексы
+## Индексы и уникальность
 
-| Таблица | Поля | Причина |
-|---------|------|---------|
-| User | email | Уникальность, вход |
-| Product | name | Поиск по первым буквам |
-| MarathonTemplate | mentor_id, status | Фильтр ментором и админом |
-| TemplateDay | template_id, day_number | Уникальность дня в шаблоне |
-| Stream | template_id, status | Фильтр потоков |
-| Stream | start_date, status | Публичный список (только open) |
-| StreamEnrollment | stream_id, participant_id | Уникальность записи |
-| DailyReport | enrollment_id, day_number | Уникальность отчёта за день |
-| StreamRating | stream_id, discipline_percent | Сортировка рейтинга |
+| Таблица | Уникальность / индекс | Причина |
+|---------|----------------------|---------|
+| User | email unique | Вход |
+| Product | name unique | Поиск |
+| MarathonTemplate | mentor_id | Фильтр ментором |
+| TemplateDay | template_id, day_number | День в шаблоне |
+| Stream | template_id | Фильтр потоков |
+| StreamEnrollment | stream_id, participant_id | Одна запись на поток |
+| DailyReport | enrollment_id, day_number | Один отчёт на день |
+| ConversationMember | conversation_id, user_id | Принадлежность к беседе |
+
+> Примечание: фактический список индексов лучше сверять с миграциями в `DB/migrations/` — в коде моделей (Sequelize-TS) индексы описываются не всегда, часть задана прямо в миграциях.

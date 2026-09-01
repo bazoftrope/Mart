@@ -78,6 +78,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       },
     },
     currentDayNumber,
+    targetCalories: enrollment.targetCalories ?? null,
     rating: {
       rank: myRating?.rank ?? null,
       totalParticipants,

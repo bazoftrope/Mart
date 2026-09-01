@@ -47,7 +47,9 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
 
   const [stream, currentUser] = await Promise.all([
     Stream.findByPk(enrollment.streamId),
-    User.findByPk(user.userId, { attributes: ['id', 'timezone'] }),
+    User.findByPk(user.userId, {
+      attributes: ['id', 'timezone', 'weightKg'],
+    }),
   ]);
 
   if (!stream) {
@@ -143,6 +145,11 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
     const createdPulse = pulseRecords.length
       ? await PulseReading.bulkCreate(pulseRecords, { transaction })
       : [];
+
+    if (weightKg !== undefined && weightKg !== null) {
+      currentUser.weightKg = weightKg;
+      await currentUser.save({ transaction });
+    }
 
     await transaction.commit();
 

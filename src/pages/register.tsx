@@ -24,7 +24,7 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       const user = await register({ email, password, name, role });
-      router.push(getDashboardPath(user.role));
+      router.push(user.role === 'participant' ? '/onboarding' : getDashboardPath(user.role));
     } catch {
       // Error is already handled and stored by authStore.
     }

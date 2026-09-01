@@ -6,7 +6,7 @@
 }
 
 .container {
-  max-width: var(--header-inner-width);
+  max-width: var(--container-width);
   margin: 0 auto;
   display: flex;
   align-items: center;

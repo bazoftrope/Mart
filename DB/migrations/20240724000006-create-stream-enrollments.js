@@ -29,6 +29,15 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      goal: {
+        type: Sequelize.ENUM('lose', 'maintain', 'gain'),
+        allowNull: false,
+        defaultValue: 'maintain',
+      },
+      target_calories: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
       enrolled_at: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -48,5 +57,6 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('stream_enrollments');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_stream_enrollments_goal";');
   },
 };

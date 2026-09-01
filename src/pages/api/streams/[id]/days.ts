@@ -15,6 +15,8 @@ import {
   PulseReading,
   User,
 } from '@db/models';
+import type { Goal } from '@db/models/StreamEnrollment';
+import { calculateTargetCalories, isProfileComplete } from '@/lib/calorieCalculator';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 type ReportLineItem = {
@@ -38,7 +40,9 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const [currentUser, stream, enrollment] = await Promise.all([
-    User.findByPk(user.userId, { attributes: ['id', 'timezone'] }),
+    User.findByPk(user.userId, {
+      attributes: ['id', 'timezone', 'sex', 'heightCm', 'weightKg', 'age'],
+    }),
     Stream.findByPk(streamId),
     StreamEnrollment.findOne({
       where: { streamId, participantId: user.userId },
@@ -54,6 +58,37 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   if (!enrollment) {
     throw new Forbidden('You are not enrolled in this stream');
   }
+
+  const profile = {
+    sex: currentUser.sex,
+    heightCm: currentUser.heightCm,
+    weightKg:
+      currentUser.weightKg === null || currentUser.weightKg === undefined
+        ? null
+        : Number(currentUser.weightKg),
+    age: currentUser.age,
+  };
+  const profileCompleted = isProfileComplete(profile);
+
+  // Ленивый backfill для записей, созданных до появления цели/нормы.
+  if (
+    profileCompleted &&
+    (enrollment.targetCalories === null || enrollment.targetCalories === undefined)
+  ) {
+    enrollment.targetCalories = calculateTargetCalories(
+      {
+        sex: profile.sex as 'male' | 'female',
+        heightCm: profile.heightCm as number,
+        weightKg: profile.weightKg as number,
+        age: profile.age as number,
+      },
+      enrollment.goal
+    );
+    await enrollment.save();
+  }
+
+  const targetCalories: number | null = enrollment.targetCalories ?? null;
+  const goal: Goal | null = enrollment.goal ?? null;
 
   const template = await MarathonTemplate.findByPk(stream.templateId);
   if (!template) {
@@ -135,6 +170,9 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       dayNumber,
       currentDayNumber,
       isEditable: isDayAccessible(dayNumber, currentDayNumber),
+      targetCalories,
+      goal,
+      profileCompleted,
       stream: {
         template: {
           title: template.title,
@@ -144,7 +182,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
         ? {
             textContent: templateDay.textContent || null,
             audioUrl: templateDay.audioUrl || null,
-            videoUrl: templateDay.videoUrl || null,
+            videoId: templateDay.videoId || null,
           }
         : null,
       report: report

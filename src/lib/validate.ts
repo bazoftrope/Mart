@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseKinescopeVideoId } from './kinescope';
 
 export const emailSchema = z
   .string()
@@ -17,6 +18,32 @@ export const nameSchema = z
 export const roleSchema = z
   .enum(['participant', 'mentor'])
   .default('participant');
+
+export const sexSchema = z.enum(['male', 'female']);
+
+export const goalSchema = z.enum(['lose', 'maintain', 'gain']);
+
+export const profileSchema = z.object({
+  sex: sexSchema,
+  heightCm: z
+    .number()
+    .int('Рост должен быть целым числом')
+    .min(50, 'Рост должен быть не менее 50 см')
+    .max(250, 'Рост должен быть не более 250 см'),
+  weightKg: z
+    .number()
+    .min(20, 'Вес должен быть не менее 20 кг')
+    .max(300, 'Вес должен быть не более 300 кг'),
+  age: z
+    .number()
+    .int('Возраст должен быть целым числом')
+    .min(10, 'Возраст должен быть не менее 10 лет')
+    .max(120, 'Возраст должен быть не более 120 лет'),
+});
+
+export const enrollSchema = z.object({
+  goal: goalSchema,
+});
 
 export const idSchema = z.coerce.number().int().positive('Неверный id');
 
@@ -44,7 +71,26 @@ export const templateDaySchema = z.object({
   dayNumber: z.number().int().min(1, 'Номер дня должен быть не менее 1'),
   textContent: z.string().max(20000, 'Содержимое слишком длинное').optional(),
   audioUrl: z.string().max(2048, 'Ссылка на аудио слишком длинная').optional(),
-  videoUrl: z.string().max(2048, 'Ссылка на видео слишком длинная').optional(),
+  videoLink: z
+    .string()
+    .max(5000, 'Ссылка на видео слишком длинная')
+    .optional()
+    .transform((value) => {
+      if (!value || value.trim() === '') {
+        return undefined;
+      }
+      const videoId = parseKinescopeVideoId(value);
+      if (!videoId) {
+        throw new z.ZodError([
+          {
+            code: 'custom',
+            message: 'Вставьте корректную ссылку Kinescope (https://kinescope.io/...)',
+            path: ['videoLink'],
+          },
+        ]);
+      }
+      return videoId;
+    }),
 });
 
 export const updateTemplateDaysSchema = z.object({
@@ -53,6 +99,8 @@ export const updateTemplateDaysSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type ProfileInput = z.infer<typeof profileSchema>;
+export type EnrollInput = z.infer<typeof enrollSchema>;
 export type MarathonTemplateInput = z.infer<typeof marathonTemplateSchema>;
 export type TemplateDayInput = z.infer<typeof templateDaySchema>;
 export const createStreamSchema = z.object({

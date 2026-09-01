@@ -15,6 +15,7 @@ type ReportTableProps = {
   onUpdateLine?: (index: number, weightGrams: number) => void;
   onRemoveLine?: (index: number) => void;
   readOnly?: boolean;
+  headerStatus?: 'ok' | 'over';
 };
 
 export function computeLineCalories(
@@ -30,6 +31,7 @@ export default function ReportTable({
   onUpdateLine,
   onRemoveLine,
   readOnly,
+  headerStatus,
 }: ReportTableProps) {
   function updateWeight(index: number, value: string) {
     const weight = parseFloat(value);
@@ -59,7 +61,12 @@ export default function ReportTable({
     onChange?.(lines.filter((_, i) => i !== index));
   }
 
-  const total = lines.reduce((sum, line) => sum + line.lineCalories, 0);
+  const headerClass =
+    headerStatus === 'over'
+      ? styles.headerOver
+      : headerStatus === 'ok'
+        ? styles.headerOk
+        : '';
 
   return (
     <div>
@@ -68,7 +75,7 @@ export default function ReportTable({
       ) : (
         <table className={styles.table}>
           <thead>
-            <tr className={styles.headerRow}>
+            <tr className={`${styles.headerRow} ${headerClass}`}>
               <th className={styles.th}>Продукт</th>
               <th className={styles.th}>ккал/100г</th>
               <th className={styles.th}>Вес (г)</th>
@@ -112,9 +119,6 @@ export default function ReportTable({
           </tbody>
         </table>
       )}
-      <div className={styles.total}>
-        Итого: {total.toFixed(2)} ккал
-      </div>
     </div>
   );
 }

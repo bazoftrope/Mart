@@ -78,6 +78,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     return {
       id: enrollment.id,
       enrolledAt: enrollment.enrolledAt,
+      goal: enrollment.goal,
+      targetCalories: enrollment.targetCalories,
       stream: stream
         ? {
             id: stream.id,

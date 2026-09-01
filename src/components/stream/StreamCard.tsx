@@ -48,14 +48,12 @@ export default function StreamCard({
         )}
         {startDate && (
           <div className={styles.metaItem}>
-            <span className={styles.label}>Начало</span>
-            <span>{new Date(startDate).toLocaleDateString()}</span>
+            <span className={styles.label}>Начало: {new Date(startDate).toLocaleDateString()}</span>
           </div>
         )}
         {mentorName && (
           <div className={styles.metaItem}>
-            <span className={styles.label}>Ментор</span>
-            <span>{mentorName}</span>
+            <span className={styles.label}>Ментор: {mentorName}</span>
           </div>
         )}
         {enrolledAt && (

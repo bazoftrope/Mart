@@ -1,5 +1,5 @@
 .main {
-  max-width: 800px;
+  max-width: var(--container-width);
   margin: 2rem auto;
   padding: 0 1rem;
 }
@@ -29,6 +29,11 @@
 
 .muted {
   color: #666;
+}
+
+.videoBlock {
+  margin-top: 0.75rem;
+  max-width: 480px;
 }
 
 .success {

@@ -31,6 +31,7 @@ export type MarathonReport = {
 type MarathonWindowProps = {
   stream: MarathonStream;
   currentDayNumber: number;
+  targetCalories: number | null;
   rating: MarathonRating;
   reports: MarathonReport[];
   activeDay: number | null;
@@ -40,6 +41,7 @@ type MarathonWindowProps = {
 export default function MarathonWindow({
   stream,
   currentDayNumber,
+  targetCalories,
   rating,
   reports,
   activeDay,
@@ -49,13 +51,13 @@ export default function MarathonWindow({
     <div className={styles.window}>
       <MarathonHeader
         stream={stream}
-        currentDayNumber={currentDayNumber}
         rating={rating}
       />
 
       <DayNavbar
         durationDays={stream.template.durationDays}
         currentDayNumber={currentDayNumber}
+        targetCalories={targetCalories}
         reports={reports}
         activeDay={activeDay}
         onDayChange={onDayChange}

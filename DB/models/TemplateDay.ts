@@ -47,7 +47,7 @@ export class TemplateDay extends Model {
     type: DataType.STRING,
     allowNull: true,
   })
-  videoUrl?: string;
+  videoId?: string;
 
 
 }

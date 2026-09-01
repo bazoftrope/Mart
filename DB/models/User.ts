@@ -11,6 +11,7 @@ import {
 
 
 export type UserRole = 'mentor' | 'participant' | 'admin';
+export type UserSex = 'male' | 'female';
 
 @Table({
   tableName: 'users',
@@ -54,6 +55,30 @@ export class User extends Model {
     defaultValue: 'Europe/Moscow',
   })
   timezone!: string;
+
+  @Column({
+    type: DataType.ENUM('male', 'female'),
+    allowNull: true,
+  })
+  sex!: UserSex | null;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  heightCm!: number | null;
+
+  @Column({
+    type: DataType.DECIMAL(5, 1),
+    allowNull: true,
+  })
+  weightKg!: number | null;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  age!: number | null;
 
   @CreatedAt
   createdAt!: Date;

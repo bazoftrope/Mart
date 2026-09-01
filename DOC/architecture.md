@@ -1,415 +1,247 @@
 # Архитектура и стек технологий
 
+Актуально по состоянию на **31.08.2026**.
+
 ## Общие принципы
 
-- **Минимум зависимостей** — каждая библиотека должна оправдывать своё существование
-- **Один репозиторий** — фронтенд и API в одном проекте Next.js
-- **TypeScript везде** — типизация от моделей до компонентов
-- **PostgreSQL как источник правды** — все данные в одной базе
-- **Timeweb Cloud** — хостинг фронтенда и базы данных
-
----
+- **Минимум зависимостей** — каждая библиотека должна оправдывать своё существование.
+- **Один репозиторий** — фронтенд и API в одном проекте Next.js.
+- **TypeScript везде** — strict-режим, типизация от моделей до компонентов.
+- **PostgreSQL как источник правды** — все данные в одной базе.
+- **Pages Router** — Next.js Pages Router (НЕ App Router).
 
 ## Стек технологий
 
 | Слой | Технология | Версия | Почему |
 |------|-----------|--------|--------|
-| Фреймворк | Next.js | 14.x | Pages Router, API Routes, деплой на Timeweb |
-| Язык | TypeScript | 5.x | Типизация фронта и бэка |
-| ORM | Sequelize + sequelize-typescript | 6.x | Знакомый, декораторы для моделей |
-| База данных | PostgreSQL | 15+ | Надёжность, сложные агрегации |
-| Аутентификация | JWT (jsonwebtoken) | 9.x | Полный контроль, без магии NextAuth |
-| Валидация | Zod | 3.x | Схемы для API и форм |
-| UI | Чистый CSS (CSS Modules + utility-классы в `globals.css`) | — | Минимум зависимостей, собственные design tokens |
-| Иконки | Lucide React | latest | Минималистичные, tree-shakeable |
-| Графики | Recharts | 2.x | Для страницы результатов (калории по дням) |
-| Хостинг | Timeweb Cloud | — | Фронт + БД в одном месте, Россия |
+| Фреймворк | Next.js (Pages Router) | 14.2 | API Routes, SSR |
+| Язык | TypeScript | 5.x | strict |
+| ORM | Sequelize + sequelize-typescript | 6.x | Декораторы для моделей |
+| База данных | PostgreSQL | 15+ | Надёжность, агрегации |
+| Аутентификация | JWT (jsonwebtoken 9.x) в куках | | `mp_access_token`, `mp_refresh_token` |
+| Валидация | Zod | 4.x | Схемы API и форм |
+| UI | CSS Modules + глобальные переменные | — | `src/styles/globals.css`, без Tailwind |
+| Иконки | Lucide React | 1.x | tree-shakeable |
+| Графики | Recharts | 3.x | Страницы результатов |
+| Состояние | zustand | 5.x | `authStore`, `participantDayStore` |
+| Cron | node-cron (dev) | 3.x | `npm run cron` |
 
----
+**Пути импорта** (tsconfig):
+- `@/*` → `src/*`
+- `@db/*` → `DB/*` (напр. `@db/models`, `@db/models/User`, `@db/db`)
 
-## Архитектура приложения
-
-### Структура (Pages Router)
+## Структура проекта
 
 ```
 marathon-platform/
-├── DB/                                 # Всё, что связано с базой данных
-│   ├── config/
-│   │   └── config.js                   # Конфигурация Sequelize CLI (dev/test/prod)
-│   ├── db.ts                           # Подключение Sequelize к PostgreSQL
-│   ├── models/                         # Sequelize модели (sequelize-typescript)
-│   │   ├── index.ts                    # Экспорт всех моделей + инициализация связей
-│   │   ├── User.ts
-│   │   ├── Product.ts
-│   │   ├── MarathonTemplate.ts
-│   │   ├── TemplateDay.ts
-│   │   ├── Stream.ts
-│   │   ├── StreamEnrollment.ts
-│   │   ├── DailyReport.ts
-│   │   ├── ReportLine.ts
-│   │   └── StreamRating.ts
-│   ├── migrations/                     # Sequelize CLI миграции
-│   │   ├── 001-create-users.js
-│   │   ├── 002-create-products.js
-│   │   ├── 003-create-marathon-templates.js
-│   │   ├── 004-create-template-days.js
-│   │   ├── 005-create-streams.js
-│   │   ├── 006-create-stream-enrollments.js
-│   │   ├── 007-create-daily-reports.js
-│   │   ├── 008-create-report-lines.js
-│   │   └── 009-create-stream-ratings.js
-│   └── seeders/                        # Seed-данные
-│       └── 001-products.js             # Базовые продукты (яйца, помидоры, курица и т.д.)
+├── DB/
+│   ├── db.ts                    # Подключение Sequelize (из DATABASE_URL или DB_* env)
+│   ├── config/config.js         # Конфиг Sequelize CLI (dev/test/prod)
+│   ├── models/                  # 14 моделей (index.ts экспортирует все + `models` map + `AppModels`)
+│   ├── migrations/              # Sequelize CLI миграции (14 файлов)
+│   └── seeders/                 # Seed-данные (продукты)
 ├── src/
-│   ├── pages/                          # Next.js Pages Router
-│   │   ├── api/                        # API Routes — весь бэкенд
-│   │   │   ├── auth/
-│   │   │   │   ├── register.ts         # POST /api/auth/register
-│   │   │   │   ├── login.ts            # POST /api/auth/login
-│   │   │   │   ├── logout.ts           # POST /api/auth/logout
-│   │   │   │   └── refresh.ts          # POST /api/auth/refresh
-│   │   │   ├── marathons/
-│   │   │   │   ├── index.ts            # GET/POST — список и создание шаблонов
-│   │   │   │   └── [id]/
-│   │   │   │       ├── index.ts        # GET/PUT/DELETE — шаблон по ID
-│   │   │   │       ├── submit.ts       # POST — отправить на проверку
-│   │   │   │       └── days.ts         # GET/POST — дни шаблона
-│   │   │   ├── streams/
-│   │   │   │   ├── index.ts            # GET — публичный список потоков (open)
-│   │   │   │   ├── my.ts               # GET — мои потоки (ментор/участник)
-│   │   │   │   └── [id]/
-│   │   │   │       ├── index.ts        # GET — поток по ID
-│   │   │   │       ├── enroll.ts       # POST — записаться на поток
-│   │   │   │       ├── rating.ts       # GET — рейтинг потока
-│   │   │   │       └── day/[dayNumber].ts  # GET/POST — день марафона + отчёт
-│   │   │   ├── reports/
-│   │   │   │   └── [reportId].ts       # PUT — редактировать отчёт
-│   │   │   ├── admin/
-│   │   │   │   └── pending.ts          # GET — марафоны на проверке
-│   │   │   │   └── [id]/
-│   │   │   │       └── approve.ts      # POST — одобрить марафон
-│   │   │   ├── rating/
-│   │   │   │   └── calculate.ts        # POST — триггер пересчёта рейтинга (cron)
-│   │   │   └── products/
-│   │   │       └── index.ts            # GET — поиск продуктов (autocomplete)
-│   │   ├── index.tsx                   # Главная — список потоков (open)
-│   │   ├── login.tsx                   # Страница входа
-│   │   ├── register.tsx                # Страница регистрации
-│   │   ├── dashboard/                  # ЛК участника
-│   │   │   ├── index.tsx               # "Мои марафоны"
-│   │   │   ├── marathon/
-│   │   │   │   └── [streamId]/
-│   │   │   │       ├── index.tsx       # Календарь дней
-│   │   │   │       ├── day/
-│   │   │   │       │   └── [dayNumber].tsx  # День марафона + отчёт
-│   │   │   │       ├── rating.tsx      # Рейтинг потока
-│   │   │   │       └── results.tsx     # Результаты (после финиша)
-│   │   ├── mentor/                     # ЛК ментора
-│   │   │   ├── index.tsx               # Дашборд ментора
-│   │   │   ├── templates/
-│   │   │   │   ├── index.tsx           # Мои шаблоны
-│   │   │   │   ├── new.tsx             # Создание шаблона (шаг 1: основная инфо)
-│   │   │   │   └── [id]/
-│   │   │   │       ├── edit.tsx        # Редактирование шаблона (дни, материалы)
-│   │   │   │       └── days.tsx        # Управление днями
-│   │   │   └── streams/
-│   │   │       ├── index.tsx           # Мои потоки
-│   │   │       └── [id]/
-│   │   │           ├── index.tsx       # Страница потока (участники, результаты)
-│   │   │           └── launch.tsx      # Запуск потока из шаблона
-│   │   └── admin/                      # Админ-панель
-│   │       └── index.tsx               # Марафоны на проверке
-│   ├── components/                     # React компоненты
-│   │   ├── ui/                         # Базовые: Button, Input, Select, Card
-│   │   ├── layout/                     # Header, Navigation, Footer
-│   │   ├── forms/                      # ProductSearch, ReportTable, DayEditor
-│   │   ├── marathon/                   # CalendarGrid, DayCard, MaterialViewer
-│   │   └── rating/                     # RatingTable, ResultsChart
-│   ├── lib/                            # Утилиты и конфигурация
-│   │   ├── auth.ts                     # JWT: sign, verify, refresh, куки
-│   │   ├── validate.ts                 # Zod-схемы для валидации
-│   │   ├── errors.ts                   # Классы ошибок API (BadRequest, Unauthorized, etc.)
-│   │   ├── apiHandler.ts               # Обёртка для API Routes (try/catch, auth, CORS)
-│   │   └── ratingCalculator.ts         # Логика пересчёта рейтинга
-│   ├── hooks/                          # React hooks
-│   │   ├── useAuth.ts                  # Проверка авторизации, данные пользователя
-│   │   ├── useApi.ts                   # Fetch-обёртка с авторизацией
-│   │   └── useMarathon.ts              # Данные марафона, дни, отчёты
-│   └── types/                          # TypeScript интерфейсы (дублируют модели для фронта)
-│       ├── api.ts
-│       ├── auth.ts
-│       └── marathon.ts
-├── public/                             # Статика
-├── .env.example                        # Шаблон переменных окружения
-├── .env.local                          # Локальные переменные (не в git)
-├── next.config.js                      # Конфиг Next.js (output: 'standalone' для Timeweb)
-├── docker-compose.yml                  # Локально: PostgreSQL в контейнере
-├── package.json
-└── tsconfig.json
+│   ├── pages/                   # Pages Router
+│   │   ├── _app.tsx             # Layout + globals.css
+│   │   ├── index.tsx            # Главная — список потоков (open)
+│   │   ├── login.tsx, register.tsx, onboarding.tsx
+│   │   ├── api/                 # API Routes (весь бэкенд)
+│   │   ├── dashboard/           # ЛК участника
+│   │   ├── mentor/              # ЛК ментора
+│   │   ├── admin/               # Админ-панель
+│   │   └── streams/[id]/        # Публичная страница потока
+│   ├── components/              # UI-компоненты
+│   ├── lib/                     # Утилиты и серверная логика
+│   ├── services/                # Серверные сервисы
+│   ├── stores/                  # zustand-сторы
+│   ├── styles/globals.css       # Глобальные стили + переменные
+│   ├── types/                   # TS-интерфейсы (@/types)
+│   ├── middleware/              # (зарезервировано)
+│   └── cron-worker.ts           # Точка входа cron (tsx)
+├── .env.example                 # Шаблон env
+└── next.config.mjs              # (ESM), реакт strict mode
 ```
 
----
+## API Routes — полный список (`src/pages/api/`)
 
-## Аутентификация
+**auth/**
+- `POST /api/auth/register` — регистрация (участник/ментор)
+- `POST /api/auth/login` — вход (incl. admin по `ADMIN_EMAIL`)
+- `POST /api/auth/logout` — выход, чистка кук
+- `POST /api/auth/refresh` — обновление access-токена
 
-### Схема JWT в куках
+**users/**
+- `GET /api/users/me` — текущий юзер + `profileCompleted`
+- `PATCH /api/users/me` — заполнение профиля (онбординг)
 
-| Токен | Хранение | Срок | Назначение |
-|-------|----------|------|------------|
-| Access Token | httpOnly cookie | 15 минут | Доступ к API, проверка на каждом запросе |
-| Refresh Token | httpOnly cookie | 7 дней | Обновление access token |
+**marathons/**
+- `GET/POST /api/marathons` — шаблоны ментора (список/создание)
+- `GET/PUT/DELETE /api/marathons/[id]` — шаблон по ID
+- `POST /api/marathons/[id]/submit` — отправить на проверку
+- `GET/POST /api/marathons/[id]/days` — дни шаблона (bulk-обновление)
 
-### Поток
+**admin/**
+- `GET /api/admin/pending` — марафоны на проверке
+- `POST /api/admin/[id]/approve` — одобрить марафон
+- `GET /api/admin/users` — список юзеров (filter `?role=`)
+- `GET/PUT /api/admin/users/[id]` — просмотр/смена роли
 
+**streams/**
+- `GET /api/streams` — публичный список (open)
+- `POST /api/streams` — запустить поток из approved-шаблона (ментор)
+- `GET /api/streams/my` — мои потоки (ментор/участник)
+- `GET /api/streams/[id]` — публичная страница потока (+ isEnrolled)
+- `POST /api/streams/[id]/enroll` — записаться (участник; считает targetCalories)
+- `GET /api/streams/[id]/calendar` — календарь дней (участник)
+- `GET /api/streams/[id]/days` — bulk-данные всех дней (участник)
+- `POST /api/streams/[id]/day/[dayNumber]` — создать отчёт за день
+- `GET /api/streams/[id]/rating` — рейтинг (участник)
+- `GET /api/streams/[id]/results` — результаты (участник)
+- `GET /api/streams/[id]/enrollments` — участники потока (ментор)
+- `GET /api/streams/[id]/participants/[participantId]` — детали участника (ментор)
+
+**reports/**
+- `PUT /api/reports/[reportId]` — редактировать отчёт (участник)
+
+**products/**
+- `GET /api/products?search=` — поиск продуктов (autocomplete, max 20)
+
+**messages/**
+- `GET/POST /api/messages` — список бесед / создать беседу
+- `GET/POST /api/messages/[id]` — сообщения беседы / отправить сообщение
+
+**rating/**
+- `POST /api/rating/calculate` — ручной пересчёт рейтинга (admin)
+
+**health/**
+- `GET /api/health/db` — проверка подключения к БД
+
+## Аутентификация и middleware
+
+### Куки
+| Cookie | HttpOnly | Срок | Назначение |
+|--------|----------|------|------------|
+| `mp_access_token` | да | 15 мин | Доступ к API |
+| `mp_refresh_token` | да | 7 дней | Обновление access |
+| `mp_role` | нет | 7 дней | Роль для фронта |
+| `mp_user_id` | нет | 7 дней | ID пользователя для фронта |
+
+(секции куков и middleware описаны в `src/lib/auth.ts` и `src/lib/middleware.ts`)
+
+### Middleware (`src/lib/middleware.ts`)
+- `withAuth(handler)` — проверка access-токена из куки, кладёт `req.user` (TokenPayload)
+- `withRole(role)(handler)` — проверка роли после `withAuth`
+- готова: `withAdmin`, `withMentor`, `withParticipant`
+
+### Схема API Request/Response
+```typescript
+// src/lib/apiHandler.ts
+{ success: true, data: ... }        // ApiSuccessResponse
+{ success: false, error, message }  // ApiErrorResponse
+{ success: false, error: 'VALIDATION_ERROR', message, issues: {...} }  // Zod-ошибка
 ```
-Регистрация / Вход
-    ↓
-Сервер генерирует access + refresh → ставит в httpOnly куки
-    ↓
-Каждый API запрос → access token из куки → verify → данные пользователя в req.user
-    ↓
-Access протух (15 мин) → 401 → фронт дергает /api/auth/refresh → новый access
-    ↓
-Refresh протух (7 дней) → полный ре-логин
+- `apiHandler(methods)` — единая обёртка: CORS, OPTIONS, 405, обработка `AppError`, `ZodError`, 500.
+- `success(res, data, status=200)`, `error(res, status, code, message)`.
+- Хелпер `@/lib/api.ts` реэкспортирует `apiHandler, success, error` и ошибки; `ApiError` помечен `@deprecated`.
+
+### Ошибки (`src/lib/errors.ts`) — наследуют `AppError`
+| Класс | HTTP | Код |
+|-------|------|-----|
+| `BadRequest` | 400 | `BAD_REQUEST` |
+| `Unauthorized` | 401 | `UNAUTHORIZED` |
+| `Forbidden` | 403 | `FORBIDDEN` |
+| `NotFound` | 404 | `NOT_FOUND` |
+| `Conflict` | 409 | `CONFLICT` |
+
+### Канонический пример API-роута
+```typescript
+import '@/lib/db';
+import { apiHandler, success } from '@/lib/apiHandler';
+import { withMentor } from '@/lib/middleware';
+import { NotFound } from '@/lib/errors';
+import type { AuthenticatedRequest } from '@/types/auth';
+
+async function getHandler(req, res) {
+  const { user } = req as AuthenticatedRequest;
+  // ... логика
+  return success(res, data);
+}
+
+export default apiHandler({ GET: withMentor(getHandler) });
 ```
-
-### Middleware
-
-- `withAuth` — проверка access token, добавление `req.user` в API Route
-- `withRole` — проверка роли после `withAuth` (mentor/participant/admin)
-- `withAdmin` — проверка роли admin
-
----
 
 ## База данных
 
-### Подключение (Sequelize)
+- Подключение `DB/db.ts` (`sequelize`), реэкспорт через `src/lib/db.ts` (`import '@/lib/db'` в роутах).
+- Источник подключения: `DATABASE_URL` (URL) или `DB_HOST/DB_NAME/DB_USER/DB_PASSWORD/DB_PORT` — см. `DB/db.ts` и `DB/config/config.js`.
+- Модели регистрируются явным списком в `DB/db.ts` и `DB/models/index.ts`.
 
-```typescript
-// DB/db.ts
-import 'reflect-metadata';
-import { Sequelize } from 'sequelize-typescript';
-import { User } from './models/User';
-// ... остальные модели
+### Миграции
+| Файл | Назначение |
+|------|-----------|
+| `20240724000001-create-users.js` | users |
+| `20240724000002-create-products.js` | products |
+| `20240724000003-create-marathon-templates.js` | marathon_templates |
+| `20240724000004-create-template-days.js` | template_days |
+| `20240724000005-create-streams.js` | streams |
+| `20240724000006-create-stream-enrollments.js` | stream_enrollments |
+| `20240724000007-create-daily-reports.js` | daily_reports |
+| `20240724000008-create-report-lines.js` | report_lines |
+| `20240724000009-create-stream-ratings.js` | stream_ratings |
+| `20240724000010-create-pulse-readings.js` | pulse_readings |
+| `20240815000001-add-body-measurements-to-daily-reports.js` | ОГ/ОТ/ОБ/ОН |
+| `20240815000002-create-conversations.js` | conversations + members + messages |
+| `20240816000001-add-weight-fields-to-stream-ratings.js` | вес в рейтинге |
+| `20260831000001-add-video-id-to-template-days.js` | `video_id` Kinescope |
 
-export const sequelize = new Sequelize({
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432'),
-  dialect: 'postgres',
-  models: [User, /* ... */],
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  define: {
-    underscored: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  },
-});
+Команды: `npx sequelize-cli db:migrate` / `db:migrate:undo` / `db:seed:all` / `db:seed:undo:all`.
+
+## Расчёт калорий (`src/lib/calorieCalculator.ts`)
+
+Формула Миффлина-Сан Жеора с фиксированным коэффициентом активности **1.2**:
 ```
-
-### Миграции и Seed
-
-| Команда | Назначение |
-|---------|------------|
-| `npx sequelize-cli db:migrate` | Применить миграции |
-| `npx sequelize-cli db:migrate:undo` | Откатить последнюю |
-| `npx sequelize-cli db:seed:all` | Залить seed-данные |
-| `npx sequelize-cli db:seed:undo:all` | Очистить seed |
-
-**Правило:** в dev — `sync({ alter: true })` для скорости, в prod — только миграции.
-
----
-
-## API Convention
-
-### Структура ответа
-
-```typescript
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
+female: База = (6.25×Рост + 10×Вес − 5×Возраст − 161) × 1.2
+male:   База = (6.25×Рост + 10×Вес − 5×Возраст + 5) × 1.2
 ```
+Итог с учётом цели:
+| Цель (`Goal`) | Множитель | Описание |
+|-------------|-----------|----------|
+| `lose` | 0.85 | дефицит 15% |
+| `maintain` | 1.0 | без изменений |
+| `gain` | 1.15 | профицит 15% |
 
-### HTTP статусы
+`calculateTargetCalories` округляет до целого. Заполнение профиля проверяется через `isProfileComplete`.
 
-| Статус | Когда |
-|--------|-------|
-| 200 | Успешный GET/PUT |
-| 201 | Успешный POST (создано) |
-| 400 | Невалидные данные (Zod error) |
-| 401 | Нет токена / токен протух |
-| 403 | Нет прав (не та роль) |
-| 404 | Ресурс не найден |
-| 409 | Конфликт (уже записан, уже существует) |
-| 500 | Серверная ошибка |
+## Расчёт рейтинга (`src/lib/ratingCalculator.ts`)
 
-### Пример API Route
-
-```typescript
-// pages/api/marathons/index.ts
-import { apiHandler } from '@/lib/apiHandler';
-import { withAuth, withRole } from '@/lib/auth';
-import { MarathonTemplate } from '@/models/MarathonTemplate';
-
-export default apiHandler({
-  get: async (req, res) => {
-    // Публичный список одобренных шаблонов (для ментора — свои)
-    const templates = await MarathonTemplate.findAll({ where: { status: 'approved' } });
-    return res.status(200).json({ success: true, data: templates });
-  },
-
-  post: [
-    withAuth,
-    withRole('mentor'),
-    async (req, res) => {
-      const template = await MarathonTemplate.create({
-        ...req.body,
-        mentorId: req.user.id,
-        status: 'draft',
-      });
-      return res.status(201).json({ success: true, data: template });
-    }
-  ]
-});
-```
-
----
-
-## Расчёт рейтинга
-
-### Алгоритм (запускается раз в сутки)
-
-```typescript
-// lib/ratingCalculator.ts
-export async function calculateStreamRating(streamId: string) {
-  const stream = await Stream.findByPk(streamId, { include: [MarathonTemplate] });
-  if (!stream) return;
-
-  const enrollments = await StreamEnrollment.findAll({ where: { streamId } });
-  const duration = stream.template.durationDays;
-
-  const ratings = [];
-
-  for (const enrollment of enrollments) {
-    const filledDays = await DailyReport.count({
-      where: { enrollmentId: enrollment.id },
-    });
-
-    const disciplinePercent = (filledDays / duration) * 100;
-
-    ratings.push({
-      streamId,
-      participantId: enrollment.participantId,
-      filledDays,
-      disciplinePercent,
-      // rank назначается после сортировки
-    });
-  }
-
-  // Сортировка и назначение rank
-  ratings.sort((a, b) => {
-    if (b.disciplinePercent !== a.disciplinePercent) {
-      return b.disciplinePercent - a.disciplinePercent;
-    }
-    return b.filledDays - a.filledDays;
-  });
-
-  ratings.forEach((r, index) => {
-    r.rank = index + 1;
-  });
-
-  // Bulk upsert
-  await StreamRating.bulkCreate(ratings, {
-    updateOnDuplicate: ['filledDays', 'disciplinePercent', 'rank', 'calculatedAt'],
-  });
-}
-```
+- `calculateRatingsForStream(streamId)` — для каждого участника считает `filledDays`, `entryWeight`/`currentWeight` (первый/последний вес в отчётах), `weightLossPercent = (entry − current)/entry × 100`.
+- Сортировка по убыванию `weightLossPercent`, `rank = index + 1`. Всё в транзакции.
+- `calculateAllRatings()` — по всем `running`/`finished` потокам.
 
 ### Запуск
+- Cron: `npm run cron` → `src/cron-worker.ts` → `src/lib/cron.ts` (node-cron, ежедневно 00:05).
+- Ручной: `POST /api/rating/calculate` (admin).
 
-- **Локально:** `node-cron` внутри Next.js процесса (не идеально, но для MVP)
-- **На Timeweb:** внешний cron (если есть) или отдельный скрипт по расписанию
-- **Ручной:** API endpoint `/api/rating/calculate` (POST, admin only) — для тестирования
+## Клиентская сторона
 
----
+- **API-клиент:** `src/lib/apiClient.ts` — `apiClient.get/post/put/patch/delete<T>()` и `apiFetch()`; автоматический refresh access-токена при 401 (единственный refreshPromise), редирект на `/login` при неудаче.
+- **Куки на клиенте:** `src/lib/cookies.ts` — `getCookie`/`deleteCookie`.
+- **Авторизация:** `useAuthStore` (zustand) — `initAuth()` читает `mp_role`/`mp_user_id`; login/register/logout через `authService`.
+- **Роль/ID на фронте:** через `getCookie('mp_role')` / `readUserId()`.
+- **День участника:** `useParticipantDayStore` (zustand) — кэш дней `daysCache`, lines/metrics/pulseReadings, `saveReport`.
 
-## Деплой на Timeweb
+## Типы клиента (`src/types/`)
 
-### Конфигурация next.config.js
+- `auth.ts` — `UserRole`, `TokenPayload`, `AuthenticatedRequest`, `PublicUser`.
+- `participantDay.ts` — данные дня участника (`ParticipantDayData`, `DayReportData`, `MetricsState`, `PulseReadingItem`).
+- `pg.d.ts` — декларация типов для `pg`.
 
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'standalone',        // Самодостаточный билд для Node.js сервера
-  experimental: {
-    // Ничего критичного для Pages Router
-  },
-  env: {
-    DB_HOST: process.env.DB_HOST,
-    DB_NAME: process.env.DB_NAME,
-    DB_USER: process.env.DB_USER,
-    DB_PASSWORD: process.env.DB_PASSWORD,
-    JWT_SECRET: process.env.JWT_SECRET,
-    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
-  },
-};
+## Cron в проде
 
-module.exports = nextConfig;
-```
+Локально — `node-cron` (`npm run cron`). В проде схема может отличаться (внешний cron или отдельный процесс): при добавлении задач учитывать это.
 
-### Переменные окружения (Timeweb)
+## Key design & рефакторинги
 
-```
-NODE_ENV=production
-DB_HOST=xxx.xxx.xxx.xxx       # IP PostgreSQL от Timeweb
-DB_PORT=5432
-DB_NAME=marathon
-DB_USER=marathon_user
-DB_PASSWORD=****************
-JWT_SECRET=*******************
-JWT_REFRESH_SECRET=***********
-```
-
-### Процесс деплоя
-
-1. Пуш в репозиторий
-2. Timeweb билдит (`npm ci && npm run build`)
-3. Стартует standalone сервер (`node .next/standalone/server.js`)
-4. Применяем миграции (`npx sequelize-cli db:migrate`)
-5. Заливаем seed (`npx sequelize-cli db:seed:all`) — первый раз
-
----
-
-## Граничные случаи и решения
-
-| Ситуация | Решение |
-|----------|---------|
-| Таймзона участника | Сохраняем в `User.timezone`. Логика «сегодня» считается на бэкенде через `date-fns-tz` с timezone пользователя. |
-| День открывается в 00:00 | Сравниваем `currentDate >= stream.startDate + dayNumber - 1` в timezone участника. |
-| Два запроса на запись одновременно | Уникальный индекс `streamId + participantId` в `StreamEnrollment` — PostgreSQL выбросит ошибку, обрабатываем 409. |
-| Ментор удаляет шаблон на проверке | CASCADE удаление связанных `TemplateDay`. Админ больше не видит. |
-| Рейтинг считается во время марафона | Ок — промежуточный рейтинг. После финиша — фиксируется (rank не меняется). |
-| Файлы аудио/видео | В MVP — URL (YouTube, облако). Ментор вставляет ссылку при создании дня. Загрузка файлов — v2. |
-| Админ зашит | `ADMIN_EMAIL` и `ADMIN_PASSWORD_HASH` в `.env`. Проверка при логине: если email совпадает — роль admin. |
-
----
-
-## Что НЕ входит в стек (и почему)
-
-| Технология | Почему нет |
-|------------|-----------|
-| NextAuth.js | Лишняя абстракция. JWT в куках — проще и контролируемо. |
-| Prisma | Хороший ORM, но Sequelize уже знаком. Миграция — потеря времени. |
-| tRPC | Не нужен для MVP. REST + Zod достаточно. |
-| Redis | Нет сессий, нет кэша. JWT stateless. |
-| Docker (prod) | Timeweb управляет контейнером. Локально — docker-compose для PostgreSQL. |
-| S3 / облако | Файлы не храним в MVP. URL на внешние ресурсы. |
-| WebSocket / SSE | Нет real-time. Рейтинг обновляется раз в сутки. |
-| Email (SMTP) | Нет уведомлений в MVP. |
-| Swagger / OpenAPI | Документация API — позже, если команда вырастет. |
+- Структура дня участника вынесена в компоненты `src/components/day/*` (`DayHeader`, `DayMaterials`, `DayReport`, `DayTabs`, `KinescopePlayer`) и `src/components/marathon/*` (`MarathonWindow`, `DayView`, `DayNavbar`, `MarathonHeader`).
+- Чат: `src/components/Chat/Chat.tsx` — переиспользуется в `dashboard/messages` и `mentor/messages`.
+- Планы рефакторингов: `DOC/css-refactor-plan.md`, `DOC/participant-day-refactor-plan.md`, `DOC/report-extension-plan.md`.

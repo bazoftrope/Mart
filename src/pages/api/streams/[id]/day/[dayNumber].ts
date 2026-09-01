@@ -7,6 +7,7 @@ import { BadRequest, Forbidden, NotFound } from '@/lib/errors';
 import { saveReportSchema } from '@/lib/validation';
 import { getCurrentDayNumber, isDayAccessible, buildMeasuredAtUtc } from '@/lib/calendar';
 import { calculateRatingsForStream } from '@/lib/ratingCalculator';
+import { calculateTargetCalories, isProfileComplete } from '@/lib/calorieCalculator';
 import {
   Stream,
   MarathonTemplate,
@@ -39,7 +40,9 @@ function parseParams(req: NextApiRequest): { streamId: string; dayNumber: number
 
 async function loadParticipantContext(userId: string, streamId: string) {
   const [user, stream, enrollment] = await Promise.all([
-    User.findByPk(userId, { attributes: ['id', 'timezone'] }),
+    User.findByPk(userId, {
+      attributes: ['id', 'timezone', 'sex', 'heightCm', 'weightKg', 'age'],
+    }),
     Stream.findByPk(streamId),
     StreamEnrollment.findOne({
       where: { streamId, participantId: userId },
@@ -56,12 +59,48 @@ async function loadParticipantContext(userId: string, streamId: string) {
     throw new Forbidden('You are not enrolled in this stream');
   }
 
+  const profile = {
+    sex: user.sex,
+    heightCm: user.heightCm,
+    weightKg:
+      user.weightKg === null || user.weightKg === undefined
+        ? null
+        : Number(user.weightKg),
+    age: user.age,
+  };
+  const profileCompleted = isProfileComplete(profile);
+
+  // Ленивый backfill для записей, созданных до появления цели/нормы.
+  if (
+    profileCompleted &&
+    (enrollment.targetCalories === null || enrollment.targetCalories === undefined)
+  ) {
+    enrollment.targetCalories = calculateTargetCalories(
+      {
+        sex: profile.sex as 'male' | 'female',
+        heightCm: profile.heightCm as number,
+        weightKg: profile.weightKg as number,
+        age: profile.age as number,
+      },
+      enrollment.goal
+    );
+    await enrollment.save();
+  }
+
   const template = await MarathonTemplate.findByPk(stream.templateId);
   if (!template) {
     throw new NotFound('Template not found');
   }
 
-  return { currentUser: user, stream, enrollment, template };
+  return {
+    currentUser: user,
+    stream,
+    enrollment,
+    template,
+    targetCalories: enrollment.targetCalories ?? null,
+    goal: enrollment.goal ?? null,
+    profileCompleted,
+  };
 }
 
 function round2(value: number): number {
@@ -72,10 +111,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   const { user } = req as AuthenticatedRequest;
   const { streamId, dayNumber } = parseParams(req);
 
-  const { currentUser, stream, enrollment, template } = await loadParticipantContext(
-    user.userId,
-    streamId
-  );
+  const { currentUser, stream, enrollment, template, targetCalories, goal, profileCompleted } =
+    await loadParticipantContext(user.userId, streamId);
 
   if (dayNumber < 1 || dayNumber > template.durationDays) {
     throw new BadRequest(
@@ -149,6 +186,9 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     dayNumber,
     currentDayNumber,
     isEditable: isDayAccessible(dayNumber, currentDayNumber),
+    targetCalories,
+    goal,
+    profileCompleted,
     stream: {
       template: {
         title: template.title,
@@ -158,7 +198,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       ? {
           textContent: day.textContent || null,
           audioUrl: day.audioUrl || null,
-          videoUrl: day.videoUrl || null,
+          videoId: day.videoId || null,
         }
       : null,
     report: report
@@ -303,6 +343,11 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     const createdPulse = pulseRecords.length
       ? await PulseReading.bulkCreate(pulseRecords, { transaction })
       : [];
+
+    if (weightKg !== undefined && weightKg !== null) {
+      currentUser.weightKg = weightKg;
+      await currentUser.save({ transaction });
+    }
 
     await transaction.commit();
 

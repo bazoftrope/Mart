@@ -107,9 +107,8 @@ body {
   --container-md: 600px;
   --container-lg: 700px;
   --container-xl: 800px;
-  --container-2xl: 900px;
-  --container-width: 800px;
-  --header-inner-width: 960px;
+  --container-2xl: 1200px;
+  --container-width: 1200px;
   --header-min-height: 56px;
   --calendar-day-min-height: 64px;
 }

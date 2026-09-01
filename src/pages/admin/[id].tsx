@@ -5,13 +5,14 @@ import type { PublicUser } from '@/types/auth';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './AdminReviewTemplate.module.css';
 import { apiFetch } from '@/lib/apiClient';
+import KinescopePlayer from '@/components/day/KinescopePlayer';
 
 type TemplateDay = {
   id: string;
   dayNumber: number;
   textContent?: string;
   audioUrl?: string;
-  videoUrl?: string;
+  videoId?: string;
 };
 
 type TemplateDetail = {
@@ -145,12 +146,10 @@ export default function AdminReviewTemplatePage() {
                     </a>
                   </p>
                 )}
-                {day.videoUrl && (
-                  <p>
-                    <a href={day.videoUrl} target="_blank" rel="noreferrer">
-                      Видео
-                    </a>
-                  </p>
+                {day.videoId && (
+                  <div className={styles.videoBlock}>
+                    <KinescopePlayer videoId={day.videoId} />
+                  </div>
                 )}
               </article>
             ))}

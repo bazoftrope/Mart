@@ -24,3 +24,12 @@
   color: #1a1a2e;
   text-decoration: underline;
 }
+
+.audioWrap {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.audioPlayer {
+  width: 100%;
+  max-width: 480px;
+}

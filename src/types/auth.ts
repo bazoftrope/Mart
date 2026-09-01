@@ -18,4 +18,8 @@ export interface PublicUser {
   name: string;
   role: UserRole;
   timezone: string;
+  sex: 'male' | 'female' | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  age: number | null;
 }

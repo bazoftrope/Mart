@@ -1,10 +1,12 @@
 import type { ReportLineItem } from '@/components/ReportTable';
 import type { PulseFormItem } from '@/components/PulseReadingsForm';
 
+export type Goal = 'lose' | 'maintain' | 'gain';
+
 export type DayMaterialsData = {
   textContent: string | null;
   audioUrl: string | null;
-  videoUrl: string | null;
+  videoId: string | null;
 };
 
 export type PulseReadingItem = {
@@ -49,6 +51,9 @@ export type ParticipantDayData = {
   dayNumber: number;
   currentDayNumber: number;
   isEditable: boolean;
+  targetCalories: number | null;
+  goal: Goal | null;
+  profileCompleted: boolean;
   stream: {
     template: {
       title: string;

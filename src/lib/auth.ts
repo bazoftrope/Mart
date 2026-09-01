@@ -169,5 +169,11 @@ export function toPublicUser(user: User): PublicUser {
     name: user.name,
     role: user.role,
     timezone: user.timezone,
+    sex: user.sex ?? null,
+    heightCm: user.heightCm ?? null,
+    weightKg: user.weightKg === null || user.weightKg === undefined
+      ? null
+      : Number(user.weightKg),
+    age: user.age ?? null,
   };
 }

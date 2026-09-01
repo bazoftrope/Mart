@@ -10,6 +10,8 @@ import {
 } from 'sequelize-typescript';
 
 
+export type Goal = 'lose' | 'maintain' | 'gain';
+
 @Table({
   tableName: 'stream_enrollments',
   underscored: true,
@@ -32,6 +34,19 @@ export class StreamEnrollment extends Model {
     allowNull: false,
   })
   participantId!: string;
+
+  @Column({
+    type: DataType.ENUM('lose', 'maintain', 'gain'),
+    allowNull: false,
+    defaultValue: 'maintain',
+  })
+  goal!: Goal;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  targetCalories!: number | null;
 
   @CreatedAt
   enrolledAt!: Date;

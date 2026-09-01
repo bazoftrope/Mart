@@ -12,6 +12,7 @@ import styles from './MarathonCalendar.module.css';
 type StreamCalendar = {
   stream: MarathonStream;
   currentDayNumber: number;
+  targetCalories: number | null;
   rating: MarathonRating;
   reports: MarathonReport[];
 };
@@ -85,7 +86,7 @@ export default function MarathonCalendarPage() {
     );
   }
 
-  const { stream, currentDayNumber, reports, rating } = data;
+  const { stream, currentDayNumber, targetCalories, reports, rating } = data;
 
   const requestedDay = toNumber(router.query.day);
   const activeDay =
@@ -112,6 +113,7 @@ export default function MarathonCalendarPage() {
       <MarathonWindow
         stream={stream}
         currentDayNumber={currentDayNumber}
+        targetCalories={targetCalories}
         rating={rating}
         reports={reports}
         activeDay={activeDay}

@@ -10,8 +10,6 @@ export default function DayHeader({ data }: DayHeaderProps) {
 
   return (
     <header className={styles.header}>
-      <h1 className={styles.title}>{data.stream.template.title}</h1>
-      <p className={styles.subtitle}>День {data.dayNumber}</p>
 
       {isLocked && (
         <p className={styles.notice}>

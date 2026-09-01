@@ -44,7 +44,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     dayNumber: day.dayNumber,
     textContent: day.textContent,
     audioUrl: day.audioUrl,
-    videoUrl: day.videoUrl,
+    videoId: day.videoId,
   })));
 }
 
@@ -84,7 +84,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
         dayNumber: day.dayNumber,
         textContent: day.textContent,
         audioUrl: day.audioUrl,
-        videoUrl: day.videoUrl,
+        videoId: day.videoLink,
       })),
       { transaction }
     );
@@ -97,7 +97,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     dayNumber: day.dayNumber,
     textContent: day.textContent,
     audioUrl: day.audioUrl,
-    videoUrl: day.videoUrl,
+    videoId: day.videoId,
   })));
 }
 

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
@@ -29,7 +28,6 @@ type Stream = {
 };
 
 export default function Home() {
-  const role = useAuthStore((s) => s.role);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

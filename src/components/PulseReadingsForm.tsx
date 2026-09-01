@@ -14,6 +14,7 @@ type PulseReadingsFormProps = {
   onAddReading?: () => void;
   onRemoveReading?: (index: number) => void;
   readOnly?: boolean;
+  className?: string;
 };
 
 function getCurrentTime(): string {
@@ -66,6 +67,7 @@ export default function PulseReadingsForm({
   onAddReading,
   onRemoveReading,
   readOnly,
+  className,
 }: PulseReadingsFormProps) {
   const updateItem = useCallback(
     (index: number, patch: Partial<PulseFormItem>) => {
@@ -101,7 +103,7 @@ export default function PulseReadingsForm({
   );
 
   return (
-    <div className={styles.section}>
+    <div className={`${styles.section} ${className ?? ''}`}>
       <h3 className={styles.title}>Замеры пульса</h3>
 
       {readings.length === 0 ? (

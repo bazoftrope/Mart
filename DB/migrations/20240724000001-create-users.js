@@ -31,6 +31,22 @@ module.exports = {
         allowNull: false,
         defaultValue: 'Europe/Moscow',
       },
+      sex: {
+        type: Sequelize.ENUM('male', 'female'),
+        allowNull: true,
+      },
+      height_cm: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      weight_kg: {
+        type: Sequelize.DECIMAL(5, 1),
+        allowNull: true,
+      },
+      age: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -49,5 +65,6 @@ module.exports = {
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('users');
     await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_role";');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_sex";');
   },
 };

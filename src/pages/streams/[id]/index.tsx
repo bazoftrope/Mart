@@ -35,6 +35,7 @@ export default function StreamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
+  const [goal, setGoal] = useState<'lose' | 'maintain' | 'gain'>('maintain');
 
   useEffect(() => {
     const initAuth = useAuthStore.getState().initAuth;
@@ -71,11 +72,18 @@ export default function StreamPage() {
       const res = await apiFetch(`/api/streams/${stream.id}/enroll`, {
         method: 'POST',
         credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal }),
       });
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.message || json.error || 'Не удалось записаться');
+        const message = json.message || json.error || 'Не удалось записаться';
+        if (message.includes('анкету')) {
+          router.push(`/onboarding?next=${encodeURIComponent(`/streams/${stream.id}`)}`);
+          return;
+        }
+        throw new Error(message);
       }
 
       setStream({ ...stream, isEnrolled: true, enrollmentsCount: stream.enrollmentsCount + 1 });
@@ -117,13 +125,48 @@ export default function StreamPage() {
               Поток завершён
             </button>
           ) : (
-            <button
-              onClick={handleEnroll}
-              disabled={enrolling}
-              className="btn btnPrimary"
-            >
-              {enrolling ? 'Запись...' : 'Записаться в поток'}
-            </button>
+            <div className={styles.enrollBox}>
+              <div className={styles.enrollTitle}>Цель на этот поток</div>
+              <div className={styles.goalOptions}>
+                <label className={styles.goalOption}>
+                  <input
+                    type="radio"
+                    name="goal"
+                    value="lose"
+                    checked={goal === 'lose'}
+                    onChange={() => setGoal('lose')}
+                  />
+                  <span>Сброс веса</span>
+                </label>
+                <label className={styles.goalOption}>
+                  <input
+                    type="radio"
+                    name="goal"
+                    value="maintain"
+                    checked={goal === 'maintain'}
+                    onChange={() => setGoal('maintain')}
+                  />
+                  <span>Поддержание</span>
+                </label>
+                <label className={styles.goalOption}>
+                  <input
+                    type="radio"
+                    name="goal"
+                    value="gain"
+                    checked={goal === 'gain'}
+                    onChange={() => setGoal('gain')}
+                  />
+                  <span>Набор веса</span>
+                </label>
+              </div>
+              <button
+                onClick={handleEnroll}
+                disabled={enrolling}
+                className="btn btnPrimary"
+              >
+                {enrolling ? 'Запись...' : 'Записаться в поток'}
+              </button>
+            </div>
           )}
         </div>
       )}
