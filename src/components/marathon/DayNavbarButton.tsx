@@ -8,7 +8,7 @@ type DayNavbarButtonProps = {
   isActive: boolean;
   isCurrent: boolean;
   isFilled: boolean;
-  isOverLimit: boolean;
+  isCalorieProblem: boolean;
   calories: number | null;
   onSelect: (dayNumber: number) => void;
 };
@@ -21,7 +21,7 @@ export default function DayNavbarButton({
   isActive,
   isCurrent,
   isFilled,
-  isOverLimit,
+  isCalorieProblem,
   calories,
   onSelect,
 }: DayNavbarButtonProps) {
@@ -30,7 +30,7 @@ export default function DayNavbarButton({
     isAccessible ? styles.dayAccessible : styles.dayDisabled,
     isActive ? styles.dayActive : '',
     isCurrent ? styles.dayCurrent : '',
-    isFilled ? (isOverLimit ? styles.dayOverLimit : styles.dayFilled) : '',
+    isFilled ? (isCalorieProblem ? styles.dayOverLimit : styles.dayFilled) : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -43,7 +43,7 @@ export default function DayNavbarButton({
         {isFilled && calories !== null ? (
           <span
             className={`${styles.dayCalories} ${
-              isOverLimit ? styles.dayCaloriesOver : ''
+              isCalorieProblem ? styles.dayCaloriesOver : ''
             }`}
           >
             {calories.toFixed(0)} ккал

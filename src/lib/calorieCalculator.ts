@@ -43,6 +43,24 @@ export function calculateTargetCalories(
   return Math.round(base * GOAL_FACTOR[goal]);
 }
 
+/**
+ * Проверяет, нарушена ли целевая калорийность за день.
+ *
+ * Для цели `lose`/`maintain` целевая калорийность работает как лимит сверху —
+ * нарушением является перебор.
+ * Для цели `gain` целевая калорийность работает как необходимый минимум —
+ * нарушением является недобор.
+ */
+export function isCalorieTargetMissed(
+  goal: Goal | null | undefined,
+  actualCalories: number,
+  targetCalories: number
+): boolean {
+  return goal === 'gain'
+    ? actualCalories < targetCalories
+    : actualCalories > targetCalories;
+}
+
 export function isProfileComplete(
   user: {
     sex: 'male' | 'female' | null;

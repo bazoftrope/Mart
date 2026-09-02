@@ -58,7 +58,7 @@ body {
   --border-on-dark: #ffffff;
 
   /* Accents */
-  --accent-primary: #2563eb;
+  --accent-primary: orange;
   --accent-success: #27ae60;
   --accent-success-alt: #16a34a;
   --accent-neutral: #9ca3af;

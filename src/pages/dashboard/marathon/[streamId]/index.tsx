@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/stores/authStore';
 import { apiFetch } from '@/lib/apiClient';
+import type { Goal } from '@db/models/StreamEnrollment';
 import MarathonWindow, {
   type MarathonRating,
   type MarathonReport,
@@ -13,6 +14,7 @@ type StreamCalendar = {
   stream: MarathonStream;
   currentDayNumber: number;
   targetCalories: number | null;
+  goal: Goal | null;
   rating: MarathonRating;
   reports: MarathonReport[];
 };
@@ -86,7 +88,7 @@ export default function MarathonCalendarPage() {
     );
   }
 
-  const { stream, currentDayNumber, targetCalories, reports, rating } = data;
+  const { stream, currentDayNumber, targetCalories, goal, reports, rating } = data;
 
   if (stream.status === 'finished') {
     router.replace(`/dashboard/marathon/${stream.id}/results`);
@@ -119,6 +121,7 @@ export default function MarathonCalendarPage() {
         stream={stream}
         currentDayNumber={currentDayNumber}
         targetCalories={targetCalories}
+        goal={goal}
         rating={rating}
         reports={reports}
         activeDay={activeDay}

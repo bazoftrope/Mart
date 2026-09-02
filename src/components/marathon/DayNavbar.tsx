@@ -2,6 +2,8 @@ import DayNavbarButton from './DayNavbarButton';
 import styles from './Marathon.module.css';
 import { addDays, parseISO, format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import type { Goal } from '@db/models/StreamEnrollment';
+import { isCalorieTargetMissed } from '@/lib/calorieCalculator';
 
 type DayNavbarReport = { dayNumber: number; totalCalories: number };
 
@@ -10,6 +12,7 @@ type DayNavbarProps = {
   durationDays: number;
   currentDayNumber: number;
   targetCalories: number | null;
+  goal: Goal | null;
   reports: DayNavbarReport[];
   activeDay: number | null;
   onDayChange: (dayNumber: number) => void;
@@ -20,6 +23,7 @@ export default function DayNavbar({
   durationDays,
   currentDayNumber,
   targetCalories,
+  goal,
   reports,
   activeDay,
   onDayChange,
@@ -38,10 +42,10 @@ export default function DayNavbar({
         const isCurrent = dayNumber === currentDayNumber;
         const calories = reportMap.get(dayNumber);
         const isFilled = calories !== undefined;
-        const isOverLimit =
+        const isCalorieProblem =
           targetCalories !== null &&
           calories !== undefined &&
-          calories > targetCalories;
+          isCalorieTargetMissed(goal, calories, targetCalories);
 
         return (
           <DayNavbarButton
@@ -53,7 +57,7 @@ export default function DayNavbar({
             isActive={isActive}
             isCurrent={isCurrent}
             isFilled={isFilled}
-            isOverLimit={isOverLimit}
+            isCalorieProblem={isCalorieProblem}
             calories={calories ?? null}
             onSelect={onDayChange}
           />

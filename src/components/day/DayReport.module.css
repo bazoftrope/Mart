@@ -11,6 +11,7 @@
   margin-bottom: 1rem;
 }
 
+
 .reportLayout {
   display: flex;
   align-items: stretch;
@@ -22,57 +23,6 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
-}
-
-.calorieSummary {
-  flex: 0 1 280px;
-  align-self: stretch;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #f8f9fa;
-  box-sizing: border-box;
-}
-
-.statusOk {
-  border-color: #2e9e5b;
-  background: #e9f9ef;
-  color: #1c6b3c;
-}
-
-.statusOver {
-  border-color: #d64545;
-  background: #fdecec;
-  color: #a12b2b;
-}
-
-.calorieSummaryHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  margin-bottom: 0.35rem;
-}
-
-.calorieStatusIcon {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.calorieSummaryValues {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-}
-
-.calorieGoal {
-  margin-top: 0.35rem;
-  font-size: 0.85rem;
-  opacity: 0.85;
 }
 
 .metricsSection {
@@ -91,71 +41,8 @@
   flex-wrap: wrap;
 }
 
-.metricsBlock {
-  flex: 1 1 240px;
-  min-width: 0;
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fafafa;
-  box-sizing: border-box;
-}
-
-.metricsBlockFields {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.metricsBlockTitle {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.75rem;
-}
-
-.metricsBlock .pulseBlockContent {
+.pulseBlockContent {
   margin-top: 0;
-}
-
-.metricField {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.metricField > span {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: #333;
-}
-
-.metricInput {
-  flex: 0 0 auto;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.95rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 7rem;
-  box-sizing: border-box;
-}
-
-.metricInput:disabled {
-  background-color: #e9ecef;
-}
-
-.activityInputs {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.activityInputs .metricInput {
-  width: 3.5rem;
-  text-align: center;
 }
 
 .saveBtnDiv {

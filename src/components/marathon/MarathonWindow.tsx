@@ -2,6 +2,7 @@ import MarathonHeader from './MarathonHeader';
 import DayNavbar from './DayNavbar';
 import DayView from './DayView';
 import styles from './Marathon.module.css';
+import type { Goal } from '@db/models/StreamEnrollment';
 
 export type MarathonStream = {
   id: string;
@@ -32,6 +33,7 @@ type MarathonWindowProps = {
   stream: MarathonStream;
   currentDayNumber: number;
   targetCalories: number | null;
+  goal: Goal | null;
   rating: MarathonRating;
   reports: MarathonReport[];
   activeDay: number | null;
@@ -42,6 +44,7 @@ export default function MarathonWindow({
   stream,
   currentDayNumber,
   targetCalories,
+  goal,
   rating,
   reports,
   activeDay,
@@ -59,6 +62,7 @@ export default function MarathonWindow({
         durationDays={stream.template.durationDays}
         currentDayNumber={currentDayNumber}
         targetCalories={targetCalories}
+        goal={goal}
         reports={reports}
         activeDay={activeDay}
         onDayChange={onDayChange}

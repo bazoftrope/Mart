@@ -1,0 +1,50 @@
+.calorieSummary {
+  flex: 0 1 280px;
+  align-self: stretch;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.statusOk {
+  border-color: #2e9e5b;
+  background: #e9f9ef;
+  color: #1c6b3c;
+}
+
+.statusOver {
+  border-color: #d64545;
+  background: #fdecec;
+  color: #a12b2b;
+}
+
+.calorieSummaryHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.calorieStatusIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.calorieSummaryValues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+}
+
+.calorieGoal {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}

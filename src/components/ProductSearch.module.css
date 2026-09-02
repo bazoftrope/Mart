@@ -10,6 +10,10 @@
   border-radius: 4px;
   font-size: 1rem;
 }
+.input:focus {
+     border-color: var(--accent-primary);
+     outline: none;
+   }
 
 .dropdown {
   position: absolute;
