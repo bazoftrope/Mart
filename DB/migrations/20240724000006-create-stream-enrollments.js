@@ -38,6 +38,11 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
+      entry_weight_kg: {
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+        defaultValue: null,
+      },
       enrolled_at: {
         type: Sequelize.DATE,
         allowNull: false,
