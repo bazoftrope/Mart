@@ -12,12 +12,19 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import styles from './Results.module.css';
+import styles from './results.module.css';
 import { apiFetch } from '@/lib/apiClient';
 
 type ResultsData = {
+  stream: {
+    title: string;
+    startDate: string;
+    endDate: string;
+    durationDays: number;
+  };
   participant: {
     dailyCalories: Array<{ day: number; calories: number }>;
+    dailyWeights: Array<{ day: number; weightKg: number }>;
     avgCalories: number;
     totalDays: number;
   };
@@ -28,7 +35,9 @@ type ResultsData = {
     entryWeight: number | null;
     currentWeight: number | null;
     filledDays: number;
+    disciplinePercent: number;
     avgCalories: number;
+    streamAvgCalories: number;
     totalParticipants: number;
   };
 };
@@ -90,7 +99,7 @@ export default function ResultsPage() {
     );
   }
 
-  const { participant, streamAverage, summary } = data;
+  const { stream, participant, streamAverage, summary } = data;
 
   const chartData = participant.dailyCalories.map((d) => {
     const avg = streamAverage.find((a) => a.day === d.day);
@@ -101,13 +110,22 @@ export default function ResultsPage() {
     };
   });
 
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('ru-RU');
+  };
+
   return (
     <main className={styles.main}>
-      <Link href={`/dashboard/marathon/${streamId}`} className={styles.backLink}>
-        &larr; Назад к календарю
+      <Link href="/dashboard" className={styles.backLink}>
+        &larr; К моим марафонам
       </Link>
 
-      <h1 className={styles.title}>Результаты</h1>
+      <h1 className={styles.title}>{stream.title}</h1>
+      <p className={styles.period}>
+        {formatDate(stream.startDate)} — {formatDate(stream.endDate)} · {stream.durationDays} день
+      </p>
 
       <div className={styles.cardGrid}>
         <div className={styles.card}>
@@ -133,19 +151,27 @@ export default function ResultsPage() {
           </div>
         </div>
         <div className={styles.card}>
-          <div className={styles.cardLabel}>Заполнено дней</div>
-          <div className={styles.cardValue}>{summary.filledDays}</div>
+          <div className={styles.cardLabel}>Дисциплина</div>
+          <div className={styles.cardValue}>
+            {summary.disciplinePercent}%
+            <span className={styles.cardSub}>
+              ({summary.filledDays} / {stream.durationDays} дней)
+            </span>
+          </div>
         </div>
         <div className={styles.card}>
-          <div className={styles.cardLabel}>Ср. калории</div>
-          <div className={styles.cardValue}>{summary.avgCalories}</div>
+          <div className={styles.cardLabel}>Ср. калории / по потоку</div>
+          <div className={styles.cardValue}>
+            {summary.avgCalories}
+            <span className={styles.cardSub}> / {summary.streamAvgCalories}</span>
+          </div>
         </div>
       </div>
 
       {chartData.length > 0 ? (
         <div className={styles.chartSection}>
           <h2>Калории по дням</h2>
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" label={{ value: 'День', position: 'bottom', offset: -5 }} />
@@ -155,6 +181,7 @@ export default function ResultsPage() {
               <Line
                 type="monotone"
                 dataKey="My"
+                name="Мои калории"
                 stroke="#2563eb"
                 strokeWidth={2}
                 dot={false}
@@ -162,6 +189,7 @@ export default function ResultsPage() {
               <Line
                 type="monotone"
                 dataKey="Average"
+                name="Среднее по потоку"
                 stroke="#9ca3af"
                 strokeWidth={2}
                 strokeDasharray="5 5"
@@ -173,6 +201,29 @@ export default function ResultsPage() {
       ) : (
         <p className={styles.noData}>Нет данных для отображения.</p>
       )}
+
+      {participant.dailyWeights.length > 0 ? (
+        <div className={styles.chartSection}>
+          <h2>Вес по дням</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={participant.dailyWeights}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" label={{ value: 'День', position: 'bottom', offset: -5 }} />
+              <YAxis domain={['dataMin - 1', 'dataMax + 1']} />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="weightKg"
+                name="Вес"
+                stroke="#16a34a"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : null}
     </main>
   );
 }

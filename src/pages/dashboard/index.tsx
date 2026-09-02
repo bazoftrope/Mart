@@ -87,18 +87,33 @@ export default function DashboardPage() {
       )}
       {!loading && !error && enrollments.length > 0 && (
         <ul className={cardStyles.grid}>
-          {enrollments.map((enrollment) => (
-            <StreamCard
-              key={enrollment.id}
-              title={enrollment.stream?.template?.title || 'Неизвестный марафон'}
-              href={`/dashboard/marathon/${enrollment.stream?.id}`}
-              description={enrollment.stream?.template?.description || 'Нет описания'}
-              mentorName={enrollment.stream?.mentor?.name || 'Неизвестно'}
-              startDate={enrollment.stream?.startDate}
-              status={enrollment.stream?.status}
-              enrolledAt={enrollment.enrolledAt}
-            />
-          ))}
+          {enrollments.map((enrollment) => {
+            const streamId = enrollment.stream?.id;
+            const isFinished = enrollment.stream?.status === 'finished';
+            return (
+              <StreamCard
+                key={enrollment.id}
+                title={enrollment.stream?.template?.title || 'Неизвестный марафон'}
+                href={
+                  streamId
+                    ? isFinished
+                      ? `/dashboard/marathon/${streamId}/results`
+                      : `/dashboard/marathon/${streamId}`
+                    : undefined
+                }
+                resultsHref={
+                  streamId && isFinished
+                    ? `/dashboard/marathon/${streamId}/results`
+                    : undefined
+                }
+                description={enrollment.stream?.template?.description || 'Нет описания'}
+                mentorName={enrollment.stream?.mentor?.name || 'Неизвестно'}
+                startDate={enrollment.stream?.startDate}
+                status={enrollment.stream?.status}
+                enrolledAt={enrollment.enrolledAt}
+              />
+            );
+          })}
         </ul>
       )}
     </main>

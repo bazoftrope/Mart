@@ -27,13 +27,17 @@ export default function MarathonHeader({
         ← Назад к моим марафонам
       </Link>
 
-      <div className={styles.titleRow}>
+      {/*<div className={styles.titleRow}>
         <h1 className={styles.title}>{stream.template.title}</h1>
         <MarathonChatPopup streamId={stream.id} />
-      </div>
+      </div>*/}
 
 
-      {ratingLine && <div className={styles.ratingLine}>{ratingLine}</div>}
+      {ratingLine && <div className={styles.ratingLine}>
+        <h2 className={styles.title}>{stream.template.title}</h2>
+        {ratingLine}
+        <MarathonChatPopup streamId={stream.id} />
+      </div>}
 
 
     </header>

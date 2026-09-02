@@ -53,9 +53,17 @@ export async function calculateRatingsForStream(streamId: string): Promise<void>
     const weightReports = reports.filter(
       (r) => r.weightKg !== null && r.weightKg !== undefined && Number(r.weightKg) > 0
     );
-    const entryWeight = weightReports.length
-      ? Number(weightReports[0].weightKg)
-      : null;
+    const enrollmentEntryWeight =
+      enrollment.entryWeightKg !== null &&
+      enrollment.entryWeightKg !== undefined &&
+      Number(enrollment.entryWeightKg) > 0
+        ? Number(enrollment.entryWeightKg)
+        : null;
+    const entryWeight = enrollmentEntryWeight
+      ? enrollmentEntryWeight
+      : weightReports.length
+        ? Number(weightReports[0].weightKg)
+        : null;
     const currentWeight = weightReports.length
       ? Number(weightReports[weightReports.length - 1].weightKg)
       : null;

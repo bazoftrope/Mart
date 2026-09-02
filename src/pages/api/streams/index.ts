@@ -5,8 +5,8 @@ import { withMentor } from '@/lib/middleware';
 import { Stream, MarathonTemplate, User } from '@db/models';
 import { createStreamSchema } from '@/lib/validate';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { ensureStreamStatus } from '@/lib/streamStatus';
 import type { AuthenticatedRequest } from '@/types/auth';
-import { Op } from 'sequelize';
 
 async function postHandler(req: NextApiRequest, res: NextApiResponse) {
   const user = (req as AuthenticatedRequest).user;
@@ -47,14 +47,17 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 async function getHandler(_req: NextApiRequest, res: NextApiResponse) {
-  const streams = await Stream.findAll({
-    where: {
-      status: {
-        [Op.in]: ['open', 'running'],
-      },
-    },
+  const allStreams = await Stream.findAll({
     order: [['start_date', 'ASC']],
   });
+
+  for (const stream of allStreams) {
+    stream.status = (await ensureStreamStatus(stream.id)) || stream.status;
+  }
+
+  const streams = allStreams.filter((s) =>
+    ['open', 'running'].includes(s.status)
+  );
 
   const templateIds = Array.from(new Set(streams.map((s) => s.templateId)));
   const templates = await MarathonTemplate.findAll({

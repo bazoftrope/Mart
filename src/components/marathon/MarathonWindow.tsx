@@ -55,6 +55,7 @@ export default function MarathonWindow({
       />
 
       <DayNavbar
+        startDate={stream.startDate}
         durationDays={stream.template.durationDays}
         currentDayNumber={currentDayNumber}
         targetCalories={targetCalories}

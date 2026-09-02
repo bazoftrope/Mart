@@ -48,6 +48,12 @@ export class StreamEnrollment extends Model {
   })
   targetCalories!: number | null;
 
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: true,
+  })
+  entryWeightKg!: number | null;
+
   @CreatedAt
   enrolledAt!: Date;
 

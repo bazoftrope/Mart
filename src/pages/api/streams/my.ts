@@ -3,6 +3,7 @@ import '@/lib/db';
 import { apiHandler, success } from '@/lib/apiHandler';
 import { withAuth } from '@/lib/middleware';
 import { Stream, StreamEnrollment, MarathonTemplate, User } from '@db/models';
+import { ensureStreamStatus } from '@/lib/streamStatus';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 async function getHandler(req: NextApiRequest, res: NextApiResponse) {
@@ -57,6 +58,10 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     ? await Stream.findAll({ where: { id: streamIds } })
     : [];
   const streamMap = new Map(streams.map((s) => [s.id, s]));
+
+  for (const stream of streams) {
+    stream.status = (await ensureStreamStatus(stream.id)) || stream.status;
+  }
 
   const templateIds = Array.from(new Set(streams.map((s) => s.templateId)));
   const templates = templateIds.length

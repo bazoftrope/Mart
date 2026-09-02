@@ -43,6 +43,19 @@
   color: #111827;
 }
 
+.cardSub {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.period {
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
 .chartSection {
   margin-top: 2rem;
 }

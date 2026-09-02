@@ -2,6 +2,8 @@ import styles from './Marathon.module.css';
 
 type DayNavbarButtonProps = {
   dayNumber: number;
+  weekday: string;
+  dateLabel: string;
   isAccessible: boolean;
   isActive: boolean;
   isCurrent: boolean;
@@ -13,6 +15,8 @@ type DayNavbarButtonProps = {
 
 export default function DayNavbarButton({
   dayNumber,
+  weekday,
+  dateLabel,
   isAccessible,
   isActive,
   isCurrent,
@@ -33,16 +37,19 @@ export default function DayNavbarButton({
 
   const content = (
     <>
+      <span className={styles.dayDate}>{weekday} · {dateLabel}</span>
       <span className={styles.dayNumber}>{dayNumber}</span>
-      {isFilled && calories !== null && (
-        <span
-          className={`${styles.dayCalories} ${
-            isOverLimit ? styles.dayCaloriesOver : ''
-          }`}
-        >
-          {calories.toFixed(0)} ккал
-        </span>
-      )}
+      <span className={styles.dayCaloriesSlot}>
+        {isFilled && calories !== null ? (
+          <span
+            className={`${styles.dayCalories} ${
+              isOverLimit ? styles.dayCaloriesOver : ''
+            }`}
+          >
+            {calories.toFixed(0)} ккал
+          </span>
+        ) : null}
+      </span>
     </>
   );
 

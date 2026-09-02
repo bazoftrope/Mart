@@ -66,6 +66,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     participantId: user.userId,
     goal: body.goal,
     targetCalories,
+    entryWeightKg: profile.weightKg as number,
   });
 
   return success(res, {
@@ -74,6 +75,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     participantId: enrollment.participantId,
     goal: enrollment.goal,
     targetCalories: enrollment.targetCalories,
+    entryWeightKg: enrollment.entryWeightKg,
     enrolledAt: enrollment.enrolledAt,
   }, 201);
 }

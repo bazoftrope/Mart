@@ -4,6 +4,7 @@ import styles from './StreamCard.module.css';
 type StreamCardProps = {
   title: string;
   href?: string;
+  resultsHref?: string;
   description?: string;
   startDate?: string;
   durationDays?: number;
@@ -12,9 +13,16 @@ type StreamCardProps = {
   enrolledAt?: string;
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Набор',
+  running: 'Идёт',
+  finished: 'Завершён',
+};
+
 export default function StreamCard({
   title,
   href,
+  resultsHref,
   description,
   startDate,
   durationDays,
@@ -34,10 +42,20 @@ export default function StreamCard({
     <li className={styles.card}>
       <header className={styles.header}>
         {titleEl}
-        {status && <span className={styles.status}>{status}</span>}
+        {status && (
+          <span className={styles.status}>
+            {STATUS_LABELS[status] || status}
+          </span>
+        )}
       </header>
 
       {description && <p className={styles.description}>{description}</p>}
+
+      {resultsHref && (
+        <Link href={resultsHref} className={styles.resultsLink}>
+          Результаты
+        </Link>
+      )}
 
       <div className={styles.metaGrid}>
         {durationDays != null && (

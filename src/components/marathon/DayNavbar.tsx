@@ -1,9 +1,12 @@
 import DayNavbarButton from './DayNavbarButton';
 import styles from './Marathon.module.css';
+import { addDays, parseISO, format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 type DayNavbarReport = { dayNumber: number; totalCalories: number };
 
 type DayNavbarProps = {
+  startDate: string;
   durationDays: number;
   currentDayNumber: number;
   targetCalories: number | null;
@@ -13,6 +16,7 @@ type DayNavbarProps = {
 };
 
 export default function DayNavbar({
+  startDate,
   durationDays,
   currentDayNumber,
   targetCalories,
@@ -26,6 +30,9 @@ export default function DayNavbar({
     <nav className={styles.dayNavbar} aria-label="Дни марафона">
       {Array.from({ length: durationDays }, (_, i) => {
         const dayNumber = i + 1;
+        const dayDate = addDays(parseISO(startDate), i);
+        const weekday = format(dayDate, 'EE', { locale: ru });
+        const dateLabel = format(dayDate, 'dd.MM');
         const isAccessible = dayNumber <= currentDayNumber;
         const isActive = dayNumber === activeDay;
         const isCurrent = dayNumber === currentDayNumber;
@@ -40,6 +47,8 @@ export default function DayNavbar({
           <DayNavbarButton
             key={dayNumber}
             dayNumber={dayNumber}
+            weekday={weekday}
+            dateLabel={dateLabel}
             isAccessible={isAccessible}
             isActive={isActive}
             isCurrent={isCurrent}
@@ -52,4 +61,5 @@ export default function DayNavbar({
       })}
     </nav>
   );
+
 }

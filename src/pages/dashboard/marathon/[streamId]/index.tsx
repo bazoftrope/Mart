@@ -88,6 +88,11 @@ export default function MarathonCalendarPage() {
 
   const { stream, currentDayNumber, targetCalories, reports, rating } = data;
 
+  if (stream.status === 'finished') {
+    router.replace(`/dashboard/marathon/${stream.id}/results`);
+    return null;
+  }
+
   const requestedDay = toNumber(router.query.day);
   const activeDay =
     requestedDay !== null &&

@@ -4,6 +4,7 @@ import { apiHandler, success } from '@/lib/apiHandler';
 import { withParticipant } from '@/lib/middleware';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { getCurrentDayNumber } from '@/lib/calendar';
+import { ensureStreamStatus } from '@/lib/streamStatus';
 import {
   Stream,
   MarathonTemplate,
@@ -45,6 +46,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   if (!template) {
     throw new NotFound('Template not found');
   }
+
+  stream.status = (await ensureStreamStatus(stream.id)) || stream.status;
 
   const currentDayNumber = getCurrentDayNumber(
     stream.startDate,

@@ -4,6 +4,7 @@ import { apiHandler, success } from '@/lib/apiHandler';
 import { Stream, MarathonTemplate, User, StreamEnrollment } from '@db/models';
 import { NotFound } from '@/lib/errors';
 import { verifyAccessToken, parseCookies } from '@/lib/auth';
+import { ensureStreamStatus } from '@/lib/streamStatus';
 import type { TokenPayload } from '@/types/auth';
 
 function getCurrentUser(req: NextApiRequest): TokenPayload | null {
@@ -23,6 +24,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   if (!stream) {
     throw new NotFound('Stream not found');
   }
+
+  stream.status = (await ensureStreamStatus(stream.id)) || stream.status;
 
   const template = await MarathonTemplate.findByPk(stream.templateId);
   const mentor = template ? await User.findByPk(template.mentorId, { attributes: ['id', 'name', 'email'] }) : null;
