@@ -15,10 +15,20 @@
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
   color: var(--text-on-dark);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   text-decoration: none;
+  white-space: nowrap;
+}
+
+.logoImage {
+  flex-shrink: 0;
+  width: auto;
+  height: 34px;
 }
 
 .nav {

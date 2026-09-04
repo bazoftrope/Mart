@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/stores/authStore';
@@ -99,7 +100,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className={styles.header}>
         <div className={styles.container}>
           <Link href="/" className={styles.logo}>
-            Marathon Platform
+            <Image
+              src="/logo.png"
+              alt="Marathon Platform"
+              width={33}
+              height={36}
+              className={styles.logoImage}
+            />
+            <span>Marathon Platform</span>
           </Link>
           <nav className={styles.nav}>{renderNav()}</nav>
         </div>

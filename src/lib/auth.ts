@@ -63,7 +63,7 @@ export function verifyRefreshToken(token: string): TokenPayload {
 function baseCookieOptions(): SerializeOptions {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false',
     sameSite: 'lax',
     path: '/',
   };

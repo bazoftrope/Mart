@@ -9,8 +9,11 @@ type StreamCardProps = {
   startDate?: string;
   durationDays?: number;
   mentorName?: string;
+  participantsCount?: number;
   status?: string;
   enrolledAt?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -27,8 +30,11 @@ export default function StreamCard({
   startDate,
   durationDays,
   mentorName,
+  participantsCount,
   status,
   enrolledAt,
+  ctaHref,
+  ctaLabel,
 }: StreamCardProps) {
   const titleEl = href ? (
     <Link href={href} className={styles.cardLink}>
@@ -74,6 +80,12 @@ export default function StreamCard({
             <span className={styles.label}>Ментор: {mentorName}</span>
           </div>
         )}
+        {participantsCount != null && (
+          <div className={styles.metaItem}>
+            <span className={styles.label}>Участников</span>
+            <span>{participantsCount}</span>
+          </div>
+        )}
         {enrolledAt && (
           <div className={styles.metaItem}>
             <span className={styles.label}>Записан</span>
@@ -81,6 +93,12 @@ export default function StreamCard({
           </div>
         )}
       </div>
+
+      {ctaHref && ctaLabel && (
+        <Link href={ctaHref} className={styles.cardCta}>
+          {ctaLabel}
+        </Link>
+      )}
     </li>
   );
 }

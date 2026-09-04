@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import '@/lib/db';
 import { apiHandler, success } from '@/lib/apiHandler';
 import { withMentor } from '@/lib/middleware';
-import { Stream, MarathonTemplate, User } from '@db/models';
+import { Stream, MarathonTemplate, User, StreamEnrollment } from '@db/models';
 import { createStreamSchema } from '@/lib/validate';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { ensureStreamStatus } from '@/lib/streamStatus';
@@ -55,8 +55,19 @@ async function getHandler(_req: NextApiRequest, res: NextApiResponse) {
     stream.status = (await ensureStreamStatus(stream.id)) || stream.status;
   }
 
-  const streams = allStreams.filter((s) =>
-    ['open', 'running'].includes(s.status)
+  const streams = allStreams.filter((s) => s.status === 'open');
+
+  const streamIds = streams.map((s) => s.id);
+  const enrollmentRows = await StreamEnrollment.findAll({
+    attributes: ['streamId'],
+    where: { streamId: streamIds },
+  });
+  const enrollmentCounts = enrollmentRows.reduce<Record<string, number>>(
+    (acc, enrollment) => {
+      acc[enrollment.streamId] = (acc[enrollment.streamId] || 0) + 1;
+      return acc;
+    },
+    {}
   );
 
   const templateIds = Array.from(new Set(streams.map((s) => s.templateId)));
@@ -80,6 +91,7 @@ async function getHandler(_req: NextApiRequest, res: NextApiResponse) {
       id: stream.id,
       startDate: stream.startDate,
       status: stream.status,
+      enrollmentsCount: enrollmentCounts[stream.id] || 0,
       template: template
         ? {
             id: template.id,

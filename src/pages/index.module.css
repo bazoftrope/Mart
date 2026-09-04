@@ -1,23 +1,213 @@
 .hero {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  background: var(--bg-header);
+  color: var(--text-on-dark);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem 2rem;
 }
 
-.logo {
-  width: 80px;
-  height: auto;
-  flex-shrink: 0;
+.heroEyebrow {
+  margin: 0 0 0.75rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffd28f;
 }
 
-.lead {
-  margin-top: 0.5rem;
-  line-height: 1.6;
+.heroTitle {
+  margin: 0 0 1rem;
+  max-width: 42rem;
+  font-size: 2rem;
+  line-height: 1.25;
+  color: var(--text-on-dark);
+}
+
+.heroLead {
+  margin: 0;
+  max-width: 40rem;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-normal);
+  color: #e4e4f0;
+}
+
+.hero .actions {
+  margin-top: 1.75rem;
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 2rem 0 0;
+}
+
+.tags li {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: var(--font-size-sm);
+  color: var(--text-on-dark);
+}
+
+.section {
+  margin-top: 3rem;
+}
+
+.sectionHeader {
+  margin-bottom: 1rem;
+}
+
+.sectionLead {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  max-width: 40rem;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 0.25rem;
+}
+
+.feature {
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  padding: 1.25rem;
+}
+
+.featureTitle {
+  margin: 0 0 0.5rem;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.featureText {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.step {
+  position: relative;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-muted);
+  padding: 1.5rem 1.25rem 1.25rem;
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  margin-bottom: 0.75rem;
+  border-radius: 999px;
+  background: var(--accent-primary);
+  color: var(--text-on-dark);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+}
+
+.stepTitle {
+  margin: 0 0 0.5rem;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.stepText {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.emptyState {
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  text-align: center;
+  background: var(--bg-surface-muted);
+}
+
+.emptyState p {
+  margin: 0 0 0.5rem;
+}
+
+.emptyStateHint {
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.emptyState .btn,
+.emptyState .btnPrimary {
+  display: inline-block;
+}
+
+.ctaSection {
+  margin: 3.5rem 0 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-muted);
+  border: 1px solid var(--border-card);
+  padding: 2rem;
+  text-align: center;
+}
+
+.ctaTitle {
+  margin: 0 0 0.75rem;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.ctaText {
+  margin: 0 auto;
+  max-width: 36rem;
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.ctaSection .actions {
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.ctaSection .actions a {
+  min-width: 160px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 1.75rem 1.25rem 1.5rem;
+  }
+
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
+  .ctaSection {
+    padding: 1.5rem 1rem;
+  }
+
+  .ctaSection .actions a {
+    width: 100%;
+  }
 }

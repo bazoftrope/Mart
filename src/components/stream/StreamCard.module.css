@@ -78,6 +78,24 @@
   background: var(--bg-muted-hover, #e8ebef);
 }
 
+.cardCta {
+  display: block;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  background: var(--accent-primary);
+  color: var(--text-on-dark);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.2;
+}
+
+.cardCta:hover {
+  opacity: 0.9;
+}
+
 .metaGrid {
   margin-top: auto; /* прижимаем мету к низу карточки */
   display: grid;
