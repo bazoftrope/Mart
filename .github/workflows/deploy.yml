@@ -46,12 +46,18 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_HOST: ${{ secrets.SERVER_HOST }}
+          SSH_USER: ${{ secrets.SERVER_USER }}
         run: |
+          if [ -z "$SSH_KEY" ] || [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
+            echo "Missing required GitHub Actions secrets: SERVER_SSH_KEY, SERVER_HOST, SERVER_USER" >&2
+            echo "Add them in: https://github.com/bazoftrope/mart/settings/secrets/actions" >&2
+            exit 1
+          fi
+
           mkdir -p "$HOME/.ssh"
           printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/deploy_key"
           chmod 600 "$HOME/.ssh/deploy_key"
-          ssh-keyscan -H "$SSH_HOST" > "$HOME/.ssh/known_hosts" 2>/dev/null
-          chmod 644 "$HOME/.ssh/known_hosts"
+          chmod 700 "$HOME/.ssh"
 
       - name: Sync source files
         env:
