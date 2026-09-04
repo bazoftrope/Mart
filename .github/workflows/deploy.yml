@@ -1,0 +1,88 @@
+name: Deploy Marathon Platform
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: marathon-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: Lint and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    name: Deploy to production server
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        env:
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          ssh-keyscan -H "$SSH_HOST" > "$HOME/.ssh/known_hosts" 2>/dev/null
+          chmod 644 "$HOME/.ssh/known_hosts"
+
+      - name: Sync source files
+        env:
+          SSH_HOST: ${{ secrets.SERVER_HOST }}
+          SSH_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i $HOME/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+            --exclude '.git/' \
+            --exclude 'node_modules/' \
+            --exclude '.next/' \
+            --exclude 'data/' \
+            --exclude '*.tsbuildinfo' \
+            --exclude '.env' \
+            --exclude '.env.*' \
+            --exclude '.DS_Store' \
+            --exclude '*.pem' \
+            ./ "$SSH_USER@$SSH_HOST:~/marathon-platform/"
+
+      - name: Build and restart containers
+        env:
+          SSH_HOST: ${{ secrets.SERVER_HOST }}
+          SSH_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          ssh -i "$HOME/.ssh/deploy_key" -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" \
+            'cd ~/marathon-platform && docker compose up --build -d'
+
+      - name: Wait for container health
+        env:
+          SSH_HOST: ${{ secrets.SERVER_HOST }}
+          SSH_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          ssh -i "$HOME/.ssh/deploy_key" -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" \
+            'for i in $(seq 1 36); do status=$(docker inspect --format="{{.State.Health.Status}}" marathon-app 2>/dev/null || echo starting); echo "marathon-app health: $status"; if [ "$status" = "healthy" ]; then exit 0; fi; sleep 5; done; echo "marathon-app did not become healthy" >&2; exit 1'
