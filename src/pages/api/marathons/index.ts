@@ -4,6 +4,7 @@ import { apiHandler, success } from '@/lib/apiHandler';
 import { withMentor } from '@/lib/middleware';
 import { MarathonTemplate } from '@db/models/MarathonTemplate';
 import { marathonTemplateSchema } from '@/lib/validate';
+import { sanitizeTemplateText } from '@/lib/attachmentUtils';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 async function getHandler(req: NextApiRequest, res: NextApiResponse) {
@@ -35,13 +36,19 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     throw parsed.error;
   }
 
-  const { title, description, durationDays } = parsed.data;
+  const {
+    title,
+    description,
+    durationDays,
+    introText,
+  } = parsed.data;
 
   const template = await MarathonTemplate.create({
     mentorId: user.userId,
     title,
     description,
     durationDays,
+    introText: introText ? sanitizeTemplateText(introText) ?? null : null,
     status: 'draft',
   });
 
@@ -50,6 +57,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     title: template.title,
     description: template.description,
     durationDays: template.durationDays,
+    introText: template.introText ?? null,
     status: template.status,
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,

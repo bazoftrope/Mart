@@ -15,7 +15,8 @@
 }
 
 .timeInput,
-.pulseInput {
+.pulseInput,
+.pressureInput {
   padding: 0.4rem 0.5rem;
   font-size: 0.95rem;
   border: 1px solid #ccc;
@@ -28,6 +29,10 @@
 
 .pulseInput {
   width: 5rem;
+}
+
+.pressureInput {
+  width: 4.5rem;
 }
 
 .removeButton {

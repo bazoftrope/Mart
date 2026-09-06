@@ -8,6 +8,7 @@ import { ensureStreamStatus } from '@/lib/streamStatus';
 import {
   Stream,
   MarathonTemplate,
+  TemplateDay,
   StreamEnrollment,
   DailyReport,
   StreamRating,
@@ -61,6 +62,11 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     order: [['dayNumber', 'ASC']],
   });
 
+  const measurementDays = await TemplateDay.findAll({
+    where: { templateId: template.id, isMeasurementDay: true },
+    attributes: ['dayNumber'],
+  });
+
   const [myRating, totalParticipants] = await Promise.all([
     StreamRating.findOne({
       where: { streamId: stream.id, participantId: user.userId },
@@ -81,6 +87,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       },
     },
     currentDayNumber,
+    measurementDays: measurementDays.map((d) => d.dayNumber),
     targetCalories: enrollment.targetCalories ?? null,
     goal: enrollment.goal ?? null,
     rating: {

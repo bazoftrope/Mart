@@ -1,5 +1,5 @@
 import type { DayMaterialsData } from '@/types/participantDay';
-import KinescopePlayer from './KinescopePlayer';
+import AttachmentPlayers from '@/components/attachments/AttachmentPlayers';
 import styles from './DayMaterials.module.css';
 
 type DayMaterialsProps = {
@@ -15,8 +15,16 @@ export default function DayMaterials({ materials }: DayMaterialsProps) {
     );
   }
 
-  const hasAnyContent =
-    materials.textContent || materials.audioUrl || materials.videoId;
+  const hasText = Boolean(materials.textContent);
+  const mediaAttachments = materials.attachments.filter(
+    (attachment) => attachment.kind === 'audio' || attachment.kind === 'video',
+  );
+  const fileAttachments = materials.attachments.filter(
+    (attachment) => attachment.kind === 'file',
+  );
+  const hasMedia = mediaAttachments.length > 0;
+  const hasFiles = fileAttachments.length > 0;
+  const hasAnyContent = hasText || hasMedia || hasFiles;
 
   if (!hasAnyContent) {
     return (
@@ -26,42 +34,46 @@ export default function DayMaterials({ materials }: DayMaterialsProps) {
     );
   }
 
-  const hasMedia = Boolean(materials.audioUrl || materials.videoId);
+  const hasSplitLayout = hasMedia && (hasText || hasFiles);
 
   return (
     <section className={styles.section}>
-      <div className={hasMedia ? styles.layout : undefined}>
-        {/* Левая колонка: медиа */}
+      <div className={hasSplitLayout ? styles.splitLayout : styles.stackLayout}>
         {hasMedia && (
           <div className={styles.mediaColumn}>
-            {materials.audioUrl && (
-              <div className={styles.mediaBlock}>
-                <div className={styles.audioWrap}>
-                  {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/media-has-caption */}
-                  <audio
-                    controls
-                    preload="metadata"
-                    className={styles.audioPlayer}
-                    src={materials.audioUrl}
-                  >
-                    Ваш браузер не поддерживает воспроизведение аудио.
-                  </audio>
-                </div>
-              </div>
-            )}
-
-            {materials.videoId && (
-              <div className={styles.mediaBlock}>
-                <KinescopePlayer videoId={materials.videoId} />
-              </div>
-            )}
+            <AttachmentPlayers attachments={mediaAttachments} />
           </div>
         )}
 
-        {/* Правая колонка: текст */}
-        {materials.textContent && (
-          <div className={styles.textContent}>
-            {materials.textContent}
+        {(hasText || hasFiles) && (
+          <div className={styles.contentColumn}>
+            {hasFiles && (
+              <div className={styles.pdfBlock}>
+                <div className={styles.pdfList}>
+                  {fileAttachments.map((attachment) => (
+                    <a
+                      key={attachment.id || attachment.url}
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className={styles.pdfLink}
+                    >
+                      {attachment.fileName || 'PDF'}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {hasText && (
+              <div className={styles.textBlock}>
+                <div
+                  className={`${styles.textContent} ${styles.richText}`}
+                  dangerouslySetInnerHTML={{ __html: materials.textContent || '' }}
+                />
+              </div>
+            )}
+
+
           </div>
         )}
       </div>

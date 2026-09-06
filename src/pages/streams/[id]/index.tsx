@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './index.module.css';
 import { apiFetch } from '@/lib/apiClient';
+import AttachmentPlayers from '@/components/attachments/AttachmentPlayers';
+import type { AttachmentData } from '@/types/attachments';
 
 type StreamDetails = {
   id: string;
@@ -18,6 +20,10 @@ type StreamDetails = {
     description?: string;
     durationDays: number;
     status: string;
+  } | null;
+  intro: {
+    text: string | null;
+    attachments: AttachmentData[];
   } | null;
   mentor: {
     id: string;
@@ -98,6 +104,10 @@ export default function StreamPage() {
   if (error) return <main className="container"><p className="error">{error}</p></main>;
   if (!stream) return <main className="container"><p>Поток не найден</p></main>;
 
+  const hasIntro =
+    stream.intro &&
+    (Boolean(stream.intro.text) || stream.intro.attachments.length > 0);
+
   return (
     <main className="container">
       <Link href="/" className="backLink">← Назад к потокам</Link>
@@ -113,6 +123,21 @@ export default function StreamPage() {
         <p><strong>Ментор:</strong> {stream.mentor?.name || 'Неизвестно'}</p>
         <p><strong>Участников:</strong> {stream.enrollmentsCount}</p>
       </div>
+
+      {hasIntro && (
+        <section className={styles.introSection}>
+          <h2 className={styles.introTitle}>Материалы для подготовки</h2>
+          {stream.intro?.text && (
+            <div
+              className={`${styles.introText} ${styles.richText}`}
+              dangerouslySetInnerHTML={{ __html: stream.intro.text }}
+            />
+          )}
+          {stream.intro && stream.intro.attachments.length > 0 && (
+            <AttachmentPlayers attachments={stream.intro.attachments} />
+          )}
+        </section>
+      )}
 
       {role === 'participant' && (
         <div className="mt-1-5">

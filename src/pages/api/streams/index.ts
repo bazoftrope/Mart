@@ -55,7 +55,11 @@ async function getHandler(_req: NextApiRequest, res: NextApiResponse) {
     stream.status = (await ensureStreamStatus(stream.id)) || stream.status;
   }
 
-  const streams = allStreams.filter((s) => s.status === 'open');
+  // В production на главной показываем только потоки с открытым набором.
+  // В development показываем все статусы, чтобы удобно тестировать карточки
+  // потоков open/running/finished без правки БД вручную.
+  const isDev = process.env.NODE_ENV === 'development';
+  const streams = allStreams.filter((s) => isDev || s.status === 'open');
 
   const streamIds = streams.map((s) => s.id);
   const enrollmentRows = await StreamEnrollment.findAll({

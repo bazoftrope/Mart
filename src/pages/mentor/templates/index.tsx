@@ -139,6 +139,9 @@ export default function MentorTemplatesPage() {
                   <Link href={`/mentor/templates/${template.id}/edit`}>
                     <button className="btn btnOutline">Редакт.</button>
                   </Link>
+                  <Link href={`/mentor/templates/${template.id}/intro`}>
+                    <button className="btn btnOutline">Предстарт.</button>
+                  </Link>
                   <Link href={`/mentor/templates/${template.id}/days`}>
                     <button className="btn btnOutline">Дни</button>
                   </Link>

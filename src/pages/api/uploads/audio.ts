@@ -8,13 +8,14 @@ import type { AuthenticatedRequest } from '@/types/auth';
 import {
   MAX_AUDIO_SIZE_BYTES,
   ALLOWED_AUDIO_MIME,
-  ensureUploadRoot,
-  getTemplateAudioDir,
   parseMultipart,
-  safeAudioFilename,
-  buildAudioUrl,
-  extensionFromFilename,
-} from '@/lib/audioUpload';
+  audioExtensionFromMimeOrFilename,
+  safeFilename,
+  buildUploadUrl,
+  getTemplateUploadDir,
+  ensureUploadRoot,
+  validateUploadedFile,
+} from '@/lib/fileUpload';
 import fs from 'fs';
 import path from 'path';
 
@@ -51,51 +52,44 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
   const parsed = await parseMultipart(body, contentType);
 
   const templateId = parsed.fields.templateId;
-  const dayNumberRaw = parsed.fields.dayNumber;
-  const file = parsed.files[0];
-
-  if (!templateId || !dayNumberRaw) {
-    throw new BadRequest('Укажите templateId и dayNumber');
+  if (!templateId) {
+    throw new BadRequest('Укажите templateId');
   }
 
-  const dayNumber = Number(dayNumberRaw);
-  if (!Number.isInteger(dayNumber) || dayNumber < 1) {
-    throw new BadRequest('Неверный номер дня');
-  }
-
-  if (!file) {
+  if (parsed.files.length === 0) {
     throw new BadRequest('Файл аудио не передан');
   }
 
-  if (file.data.length === 0) {
-    throw new BadRequest('Файл пустой');
-  }
-
-  if (file.data.length > MAX_AUDIO_SIZE_BYTES) {
-    throw new BadRequest(`Файл слишком большой. Максимум ${Math.round(MAX_AUDIO_SIZE_BYTES / 1024 / 1024)} МБ`);
-  }
-
-  const mimeExt = ALLOWED_AUDIO_MIME[file.contentType.toLowerCase()];
-  const nameExt = extensionFromFilename(file.filename);
-  const ext = mimeExt || nameExt;
-
-  if (!ext) {
-    throw new BadRequest('Неподдерживаемый тип аудиофайла');
-  }
-
   const template = await loadOwnedTemplate(user, templateId);
-
-  const dir = getTemplateAudioDir(template.id);
+  const dir = getTemplateUploadDir(template.id);
   ensureUploadRoot();
   fs.mkdirSync(dir, { recursive: true });
-  const filename = safeAudioFilename(template.id, dayNumber, ext);
-  fs.writeFileSync(path.join(dir, filename), file.data);
 
-  return success(res, {
-    url: buildAudioUrl(template.id, filename),
-    templateId: template.id,
-    dayNumber,
-  }, 201);
+  const files = parsed.files.map((file) => {
+    validateUploadedFile(file, {
+      maxBytes: MAX_AUDIO_SIZE_BYTES,
+      allowedMime: ALLOWED_AUDIO_MIME,
+      label: 'аудио',
+    });
+
+    const mimeExt = ALLOWED_AUDIO_MIME[file.contentType.toLowerCase()];
+    const ext = audioExtensionFromMimeOrFilename(file.contentType, file.filename);
+    if (!mimeExt && !ext) {
+      throw new BadRequest('Неподдерживаемый тип аудиофайла');
+    }
+
+    const filename = safeFilename(ext || mimeExt || '.bin');
+    fs.writeFileSync(path.join(dir, filename), file.data);
+
+    return {
+      url: buildUploadUrl('audio', template.id, filename),
+      fileName: file.filename,
+      mimeType: file.contentType,
+      sizeBytes: file.data.length,
+    };
+  });
+
+  return success(res, { files }, 201);
 }
 
 export default apiHandler({

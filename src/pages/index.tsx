@@ -154,9 +154,15 @@ export default function Home() {
 
       <section className={styles.section} id="streams">
         <div className={styles.sectionHeader}>
-          <h2 className="pageSubtitle">Открытые потоки</h2>
+          <h2 className="pageSubtitle">
+            {process.env.NODE_ENV === 'development'
+              ? 'Все потоки (режим разработки)'
+              : 'Открытые потоки'}
+          </h2>
           <p className={styles.sectionLead}>
-            Запись доступна до даты старта. Выберите марафон и присоединяйтесь.
+            {process.env.NODE_ENV === 'development'
+              ? 'Для удобного ручного тестирования показаны все статусы: набор, идёт, завершён.'
+              : 'Запись доступна до даты старта. Выберите марафон и присоединяйтесь.'}
           </p>
         </div>
 

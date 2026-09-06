@@ -21,6 +21,12 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       order: [['created_at', 'DESC']],
     });
 
+    // Чтобы ментор видел тот же актуальный статус, что и на публичной
+    // странице/в публичном списке (ленивый перевод open -> running/finished).
+    for (const stream of streams) {
+      stream.status = (await ensureStreamStatus(stream.id)) || stream.status;
+    }
+
     const allTemplateIds = Array.from(new Set(streams.map((s) => s.templateId)));
     const allTemplates = await MarathonTemplate.findAll({
       where: { id: allTemplateIds },

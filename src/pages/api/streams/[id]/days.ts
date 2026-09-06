@@ -4,10 +4,12 @@ import { apiHandler, success } from '@/lib/apiHandler';
 import { withParticipant } from '@/lib/middleware';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { getCurrentDayNumber, isDayAccessible } from '@/lib/calendar';
+import { ensureStreamStatus } from '@/lib/streamStatus';
 import {
   Stream,
   MarathonTemplate,
   TemplateDay,
+  TemplateAttachment,
   StreamEnrollment,
   DailyReport,
   ReportLine,
@@ -17,6 +19,7 @@ import {
 } from '@db/models';
 import type { Goal } from '@db/models/StreamEnrollment';
 import { calculateTargetCalories, isProfileComplete } from '@/lib/calorieCalculator';
+import { serializeAttachments } from '@/lib/attachmentUtils';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 type ReportLineItem = {
@@ -28,7 +31,7 @@ type ReportLineItem = {
   lineCalories: number;
 };
 
-type PulseReadingItem = { id: string; measuredAt: Date; pulse: number };
+type PulseReadingItem = { id: string; measuredAt: Date; pulse: number; systolic: number | null; diastolic: number | null };
 
 async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   const { user } = req as AuthenticatedRequest;
@@ -101,10 +104,20 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     template.durationDays
   );
 
-  const [templateDays, reports] = await Promise.all([
+  const ensuredStatus = await ensureStreamStatus(stream.id);
+  const isFinished = ensuredStatus === 'finished';
+
+  const [templateDays, attachments, reports] = await Promise.all([
     TemplateDay.findAll({
       where: { templateId: template.id },
       order: [['dayNumber', 'ASC']],
+    }),
+    TemplateAttachment.findAll({
+      where: { templateId: template.id, scope: 'day' },
+      order: [
+        ['template_day_id', 'ASC'],
+        ['position', 'ASC'],
+      ],
     }),
     DailyReport.findAll({
       where: { enrollmentId: enrollment.id },
@@ -114,6 +127,13 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
 
   const templateDayMap = new Map(templateDays.map((d) => [d.dayNumber, d]));
   const reportMap = new Map(reports.map((r) => [r.dayNumber, r]));
+  const attachmentsByDay = new Map<string, TemplateAttachment[]>();
+  for (const attachment of attachments) {
+    if (!attachment.templateDayId) continue;
+    const list = attachmentsByDay.get(attachment.templateDayId) ?? [];
+    list.push(attachment);
+    attachmentsByDay.set(attachment.templateDayId, list);
+  }
 
   const reportIds = reports.map((r) => r.id);
   const [reportLines, reportPulseReadings] = reportIds.length
@@ -154,6 +174,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       id: reading.id,
       measuredAt: reading.measuredAt,
       pulse: reading.pulse,
+      systolic: reading.systolic,
+      diastolic: reading.diastolic,
     });
     pulseByReport.set(reading.reportId, list);
   }
@@ -169,7 +191,9 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       streamId: stream.id,
       dayNumber,
       currentDayNumber,
-      isEditable: isDayAccessible(dayNumber, currentDayNumber),
+      isEditable: isDayAccessible(dayNumber, currentDayNumber) && !isFinished,
+      isFinished,
+      isMeasurementDay: templateDay?.isMeasurementDay ?? false,
       targetCalories,
       goal,
       profileCompleted,
@@ -181,8 +205,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       day: templateDay
         ? {
             textContent: templateDay.textContent || null,
-            audioUrl: templateDay.audioUrl || null,
-            videoId: templateDay.videoId || null,
+            attachments: serializeAttachments(attachmentsByDay.get(templateDay.id) ?? []),
           }
         : null,
       report: report
@@ -195,6 +218,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
             steps: report.steps,
             sleepHours: report.sleepHours,
             activityMinutes: report.activityMinutes,
+            trainingDone: report.trainingDone,
             weightKg: report.weightKg,
             chestCm: report.chestCm,
             waistCm: report.waistCm,

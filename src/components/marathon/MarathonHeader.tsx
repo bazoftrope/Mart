@@ -12,34 +12,26 @@ export default function MarathonHeader({
   stream,
   rating,
 }: MarathonHeaderProps) {
-  const ratingLine =
+  const ratingText =
     rating && rating.rank !== null && rating.totalParticipants > 0
       ? `Вы: ${rating.rank} из ${rating.totalParticipants} · ${
           rating.weightLossPercent > 0
             ? `−${rating.weightLossPercent}%`
             : `${rating.weightLossPercent}%`
         }`
-      : null;
+      : 'Рейтинг пока не рассчитан';
 
   return (
     <header className={styles.header}>
       <Link href="/dashboard" className={styles.backLink}>
-        ← Назад к моим марафонам
+        ←
       </Link>
 
-      {/*<div className={styles.titleRow}>
-        <h1 className={styles.title}>{stream.template.title}</h1>
-        <MarathonChatPopup streamId={stream.id} />
-      </div>*/}
-
-
-      {ratingLine && <div className={styles.ratingLine}>
+      <div className={styles.ratingLine}>
         <h2 className={styles.title}>{stream.template.title}</h2>
-        {ratingLine}
+        <span>{ratingText}</span>
         <MarathonChatPopup streamId={stream.id} />
-      </div>}
-
-
+      </div>
     </header>
   );
 }

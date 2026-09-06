@@ -108,6 +108,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       id: reading.id,
       measuredAt: reading.measuredAt,
       pulse: reading.pulse,
+      systolic: reading.systolic,
+      diastolic: reading.diastolic,
     };
     const list = readingsByReport.get(reading.reportId) || [];
     list.push(item);
@@ -149,6 +151,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       steps: report.steps,
       sleepHours: report.sleepHours,
       activityMinutes: report.activityMinutes,
+      trainingDone: report.trainingDone,
       weightKg: report.weightKg,
       chestCm: report.chestCm,
       waistCm: report.waistCm,

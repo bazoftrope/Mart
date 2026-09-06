@@ -11,6 +11,12 @@ export default function DayHeader({ data }: DayHeaderProps) {
   return (
     <header className={styles.header}>
 
+      {data.isMeasurementDay && (
+        <p className={styles.measurementNotice}>
+          Сегодня день замера — заполните вес и охваты.
+        </p>
+      )}
+
       {isLocked && (
         <p className={styles.notice}>
           Этот день ещё недоступен для редактирования.

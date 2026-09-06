@@ -34,6 +34,7 @@ interface ParticipantDayActions {
   updateLine: (index: number, weightGrams: number) => void;
   removeLine: (index: number) => void;
   updateMetric: (field: keyof MetricsState, value: string) => void;
+  setTrainingDone: (value: boolean | null) => void;
   addPulseReading: () => void;
   updatePulseReading: (index: number, patch: Partial<PulseFormItem>) => void;
   removePulseReading: (index: number) => void;
@@ -55,8 +56,7 @@ export function emptyMetrics(): MetricsState {
     waterLiters: '',
     steps: '',
     sleepHours: '',
-    activityHours: '',
-    activityMinutes: '',
+    trainingDone: null,
     weightKg: '',
     chestCm: '',
     waistCm: '',
@@ -89,8 +89,7 @@ export function hasAnyData(
     metrics.waterLiters !== '' ||
     metrics.steps !== '' ||
     metrics.sleepHours !== '' ||
-    metrics.activityHours !== '' ||
-    metrics.activityMinutes !== '' ||
+    metrics.trainingDone !== null ||
     metrics.weightKg !== '' ||
     metrics.chestCm !== '' ||
     metrics.waistCm !== '' ||
@@ -112,7 +111,7 @@ function buildInitialPulseReadings(
   if (report?.pulseReadings?.length) {
     return apiToPulseFormItems(report.pulseReadings);
   }
-  return [{ time: getCurrentTime(), pulse: '' }];
+  return [{ time: getCurrentTime(), pulse: '', systolic: '', diastolic: '' }];
 }
 
 function buildInitialMetrics(
@@ -120,13 +119,11 @@ function buildInitialMetrics(
 ): MetricsState {
   if (!report) return emptyMetrics();
 
-  const { hours, minutes } = activityToParts(report.activityMinutes);
   return {
     waterLiters: report.waterLiters ?? '',
     steps: report.steps ?? '',
     sleepHours: report.sleepHours ?? '',
-    activityHours: hours,
-    activityMinutes: minutes,
+    trainingDone: report.trainingDone ?? null,
     weightKg: report.weightKg ?? '',
     chestCm: report.chestCm ?? '',
     waistCm: report.waistCm ?? '',
@@ -140,7 +137,7 @@ const initialState: ParticipantDayState = {
   daysCache: {},
   lines: [],
   metrics: emptyMetrics(),
-  pulseReadings: [{ time: getCurrentTime(), pulse: '' }],
+  pulseReadings: [{ time: getCurrentTime(), pulse: '', systolic: '', diastolic: '' }],
   loading: true,
   saving: false,
   error: null,
@@ -221,15 +218,6 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
 
     set({ saving: true, saveError: null });
 
-    const activityHours =
-      metrics.activityHours === '' ? 0 : Number(metrics.activityHours);
-    const activityMinutes =
-      metrics.activityMinutes === '' ? 0 : Number(metrics.activityMinutes);
-    const totalActivityMinutes =
-      activityHours > 0 || activityMinutes > 0
-        ? activityHours * 60 + activityMinutes
-        : undefined;
-
     const payload = {
       lines: lines.map((line) => ({
         productId: line.productId,
@@ -240,7 +228,7 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
       steps: metrics.steps === '' ? undefined : Number(metrics.steps),
       sleepHours:
         metrics.sleepHours === '' ? undefined : Number(metrics.sleepHours),
-      activityMinutes: totalActivityMinutes,
+      trainingDone: metrics.trainingDone,
       weightKg: metrics.weightKg === '' ? undefined : Number(metrics.weightKg),
       chestCm: metrics.chestCm === '' ? undefined : Number(metrics.chestCm),
       waistCm: metrics.waistCm === '' ? undefined : Number(metrics.waistCm),
@@ -267,7 +255,6 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
         throw new Error(json.message || json.error || 'Не удалось сохранить отчёт');
       }
 
-      const { hours, minutes } = activityToParts(json.data.activityMinutes);
       const updatedReport = {
         id: json.data.id,
         totalCalories: json.data.totalCalories,
@@ -277,6 +264,7 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
         steps: json.data.steps ?? null,
         sleepHours: json.data.sleepHours ?? null,
         activityMinutes: json.data.activityMinutes ?? null,
+        trainingDone: json.data.trainingDone ?? null,
         weightKg: json.data.weightKg ?? null,
         chestCm: json.data.chestCm ?? null,
         waistCm: json.data.waistCm ?? null,
@@ -305,8 +293,7 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
           waterLiters: json.data.waterLiters ?? '',
           steps: json.data.steps ?? '',
           sleepHours: json.data.sleepHours ?? '',
-          activityHours: hours,
-          activityMinutes: minutes,
+          trainingDone: json.data.trainingDone ?? null,
           weightKg: json.data.weightKg ?? '',
           chestCm: json.data.chestCm ?? '',
           waistCm: json.data.waistCm ?? '',
@@ -316,7 +303,7 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
         pulseReadings:
           json.data.pulseReadings?.length
             ? apiToPulseFormItems(json.data.pulseReadings)
-            : [{ time: getCurrentTime(), pulse: '' }],
+            : [{ time: getCurrentTime(), pulse: '', systolic: '', diastolic: '' }],
         saving: false,
         saveError: null,
       }));
@@ -376,9 +363,18 @@ export const useParticipantDayStore = create<ParticipantDayStore>((set, get) => 
     }));
   },
 
+  setTrainingDone: (value) => {
+    set((state) => ({
+      metrics: {
+        ...state.metrics,
+        trainingDone: value,
+      },
+    }));
+  },
+
   addPulseReading: () => {
     set((state) => ({
-      pulseReadings: [...state.pulseReadings, { time: getCurrentTime(), pulse: '' }],
+      pulseReadings: [...state.pulseReadings, { time: getCurrentTime(), pulse: '', systolic: '', diastolic: '' }],
     }));
   },
 

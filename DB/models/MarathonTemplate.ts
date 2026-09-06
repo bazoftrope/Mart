@@ -48,6 +48,12 @@ export class MarathonTemplate extends Model {
   durationDays!: number;
 
   @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  introText?: string | null;
+
+  @Column({
     type: DataType.ENUM('draft', 'pending_review', 'approved'),
     allowNull: false,
     defaultValue: 'draft',
@@ -59,6 +65,4 @@ export class MarathonTemplate extends Model {
 
   @UpdatedAt
   updatedAt!: Date;
-
-
 }

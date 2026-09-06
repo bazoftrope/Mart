@@ -26,6 +26,7 @@ export default function DayReport({ streamId, dayNumber, isEditable }: DayReport
     updateLine,
     removeLine,
     updateMetric,
+    setTrainingDone,
     addPulseReading,
     updatePulseReading,
     removePulseReading,
@@ -42,6 +43,7 @@ export default function DayReport({ streamId, dayNumber, isEditable }: DayReport
     isCalorieTargetMissed(goal, actualCalories, targetCalories);
 
   const metricDisabled = !isEditable || saving;
+  const isMeasurementDay = Boolean(data?.isMeasurementDay);
 
   const bodyMetricFields: MetricField[] = [
     {
@@ -135,16 +137,6 @@ export default function DayReport({ streamId, dayNumber, isEditable }: DayReport
       onChange: (value) => updateMetric('sleepHours', value),
       disabled: metricDisabled,
     },
-    {
-      kind: 'activity',
-      key: 'activity',
-      label: 'Активность',
-      hoursValue: metrics.activityHours,
-      minutesValue: metrics.activityMinutes,
-      onHoursChange: (value) => updateMetric('activityHours', value),
-      onMinutesChange: (value) => updateMetric('activityMinutes', value),
-      disabled: metricDisabled,
-    },
   ];
 
   return (
@@ -185,9 +177,47 @@ export default function DayReport({ streamId, dayNumber, isEditable }: DayReport
       <div className={styles.metricsSection}>
         <h3 className={styles.metricsTitle}>Метрики</h3>
         <div className={styles.metricsRow}>
-          <MetricBlock title="Вес и охваты" fields={bodyMetricFields} />
+          {isMeasurementDay && (
+            <MetricBlock title="Вес и охваты" fields={bodyMetricFields} />
+          )}
 
-          <MetricBlock title="Вода, шаги, сон, активность" fields={dailyMetricFields} />
+          <MetricBlock title="Вода, шаги, сон, тренировка" fields={dailyMetricFields}>
+            <label className={styles.trainingField}>
+              <span>Тренировка</span>
+              <div className={styles.trainingOptions}>
+                <button
+                  type="button"
+                  className={`${styles.trainingOption} ${
+                    metrics.trainingDone === null ? styles.trainingActive : ''
+                  }`}
+                  disabled={metricDisabled}
+                  onClick={() => setTrainingDone(null)}
+                >
+                  Не отмечено
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.trainingOption} ${
+                    metrics.trainingDone === true ? styles.trainingActive : ''
+                  }`}
+                  disabled={metricDisabled}
+                  onClick={() => setTrainingDone(true)}
+                >
+                  ✓ Была
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.trainingOption} ${
+                    metrics.trainingDone === false ? styles.trainingActive : ''
+                  }`}
+                  disabled={metricDisabled}
+                  onClick={() => setTrainingDone(false)}
+                >
+                  ✗ Не была
+                </button>
+              </div>
+            </label>
+          </MetricBlock>
 
           <MetricBlock>
             <PulseReadingsForm

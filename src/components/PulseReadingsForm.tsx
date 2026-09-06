@@ -5,6 +5,8 @@ export type PulseFormItem = {
   id?: string;
   time: string;
   pulse: number | '';
+  systolic: number | '';
+  diastolic: number | '';
 };
 
 type PulseReadingsFormProps = {
@@ -37,26 +39,46 @@ function isoToTime(iso: string | Date): string {
 
 export function pulseFormItemsToApi(
   items: PulseFormItem[]
-): { measuredAt: string; pulse: number }[] {
+): { measuredAt: string; pulse: number; systolic?: number; diastolic?: number }[] {
   const today = new Date().toISOString().split('T')[0];
   return items
     .filter((item): item is PulseFormItem & { pulse: number } => {
       const pulse = typeof item.pulse === 'number' ? item.pulse : Number(item.pulse);
       return item.time !== '' && !Number.isNaN(pulse) && pulse > 0;
     })
-    .map((item) => ({
-      measuredAt: new Date(`${today}T${item.time}`).toISOString(),
-      pulse: item.pulse,
-    }));
+    .map((item) => {
+      const systolic =
+        item.systolic === '' ? undefined : Number(item.systolic);
+      const diastolic =
+        item.diastolic === '' ? undefined : Number(item.diastolic);
+      return {
+        measuredAt: new Date(`${today}T${item.time}`).toISOString(),
+        pulse: item.pulse,
+        ...(systolic !== undefined && !Number.isNaN(systolic)
+          ? { systolic }
+          : {}),
+        ...(diastolic !== undefined && !Number.isNaN(diastolic)
+          ? { diastolic }
+          : {}),
+      };
+    });
 }
 
 export function apiToPulseFormItems(
-  readings: { id?: string; measuredAt: string | Date; pulse: number }[]
+  readings: {
+    id?: string;
+    measuredAt: string | Date;
+    pulse: number;
+    systolic?: number | null;
+    diastolic?: number | null;
+  }[]
 ): PulseFormItem[] {
   return readings.map((reading) => ({
     id: reading.id,
     time: isoToTime(reading.measuredAt),
     pulse: reading.pulse,
+    systolic: reading.systolic ?? '',
+    diastolic: reading.diastolic ?? '',
   }));
 }
 
@@ -88,7 +110,7 @@ export default function PulseReadingsForm({
       onAddReading();
       return;
     }
-    onChange?.([...readings, { time: getCurrentTime(), pulse: '' }]);
+    onChange?.([...readings, { time: getCurrentTime(), pulse: '', systolic: '', diastolic: '' }]);
   }, [readings, onChange, onAddReading]);
 
   const removeReading = useCallback(
@@ -133,6 +155,38 @@ export default function PulseReadingsForm({
               disabled={readOnly}
               placeholder="пульс"
               className={styles.pulseInput}
+            />
+            <input
+              type="number"
+              min="60"
+              max="250"
+              step="1"
+              value={item.systolic}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateItem(index, {
+                  systolic: value === '' ? '' : Number(value),
+                });
+              }}
+              disabled={readOnly}
+              placeholder="сист."
+              className={styles.pressureInput}
+            />
+            <input
+              type="number"
+              min="40"
+              max="160"
+              step="1"
+              value={item.diastolic}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateItem(index, {
+                  diastolic: value === '' ? '' : Number(value),
+                });
+              }}
+              disabled={readOnly}
+              placeholder="диаст."
+              className={styles.pressureInput}
             />
             {!readOnly && readings.length > 1 && (
               <button

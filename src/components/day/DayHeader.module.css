@@ -25,3 +25,12 @@
   border-radius: 4px;
   margin-top: 1rem;
 }
+
+.measurementNotice {
+  color: #0b3d91;
+  background-color: #e8f0fe;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  font-weight: 500;
+}

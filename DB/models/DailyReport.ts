@@ -68,6 +68,13 @@ export class DailyReport extends Model {
   activityMinutes!: number | null;
 
   @Column({
+    type: DataType.BOOLEAN,
+    allowNull: true,
+    defaultValue: null,
+  })
+  trainingDone!: boolean | null;
+
+  @Column({
     type: DataType.INTEGER,
     allowNull: true,
     defaultValue: null,

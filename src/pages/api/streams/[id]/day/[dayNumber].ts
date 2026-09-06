@@ -6,12 +6,14 @@ import { withParticipant } from '@/lib/middleware';
 import { BadRequest, Forbidden, NotFound } from '@/lib/errors';
 import { saveReportSchema } from '@/lib/validation';
 import { getCurrentDayNumber, isDayAccessible, buildMeasuredAtUtc } from '@/lib/calendar';
+import { ensureStreamStatus } from '@/lib/streamStatus';
 import { calculateRatingsForStream } from '@/lib/ratingCalculator';
 import { calculateTargetCalories, isProfileComplete } from '@/lib/calorieCalculator';
 import {
   Stream,
   MarathonTemplate,
   TemplateDay,
+  TemplateAttachment,
   StreamEnrollment,
   DailyReport,
   ReportLine,
@@ -19,6 +21,7 @@ import {
   PulseReading,
   User,
 } from '@db/models';
+import { serializeAttachments } from '@/lib/attachmentUtils';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 function parseParams(req: NextApiRequest): { streamId: string; dayNumber: number } {
@@ -126,14 +129,34 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     template.durationDays
   );
 
-  const [day, report] = await Promise.all([
+  const ensuredStatus = await ensureStreamStatus(stream.id);
+  const isFinished = ensuredStatus === 'finished';
+
+  const [day, report, dayAttachments] = await Promise.all([
     TemplateDay.findOne({
       where: { templateId: template.id, dayNumber },
     }),
     DailyReport.findOne({
       where: { enrollmentId: enrollment.id, dayNumber },
     }),
+    dayNumber && template.id
+      ? TemplateAttachment.findAll({
+          where: { templateId: template.id, scope: 'day' },
+          order: [
+            ['template_day_id', 'ASC'],
+            ['position', 'ASC'],
+          ],
+        })
+      : Promise.resolve([]),
   ]);
+
+  const attachmentsByDay = new Map<string, TemplateAttachment[]>();
+  for (const attachment of dayAttachments) {
+    if (!attachment.templateDayId) continue;
+    const list = attachmentsByDay.get(attachment.templateDayId) ?? [];
+    list.push(attachment);
+    attachmentsByDay.set(attachment.templateDayId, list);
+  }
 
   let lines: Array<{
     id: string;
@@ -143,7 +166,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     weightGrams: number;
     lineCalories: number;
   }> = [];
-  let pulseReadings: Array<{ id: string; measuredAt: Date; pulse: number }> = [];
+  let pulseReadings: Array<{ id: string; measuredAt: Date; pulse: number; systolic: number | null; diastolic: number | null }> = [];
 
   if (report) {
     const [reportLines, reportPulseReadings] = await Promise.all([
@@ -178,6 +201,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       id: p.id,
       measuredAt: p.measuredAt,
       pulse: p.pulse,
+      systolic: p.systolic,
+      diastolic: p.diastolic,
     }));
   }
 
@@ -185,7 +210,9 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     streamId: stream.id,
     dayNumber,
     currentDayNumber,
-    isEditable: isDayAccessible(dayNumber, currentDayNumber),
+    isEditable: isDayAccessible(dayNumber, currentDayNumber) && !isFinished,
+    isFinished,
+    isMeasurementDay: day?.isMeasurementDay ?? false,
     targetCalories,
     goal,
     profileCompleted,
@@ -197,8 +224,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     day: day
       ? {
           textContent: day.textContent || null,
-          audioUrl: day.audioUrl || null,
-          videoId: day.videoId || null,
+          attachments: serializeAttachments(attachmentsByDay.get(day.id) ?? []),
         }
       : null,
     report: report
@@ -211,6 +237,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
           steps: report.steps,
           sleepHours: report.sleepHours,
           activityMinutes: report.activityMinutes,
+          trainingDone: report.trainingDone,
           weightKg: report.weightKg,
           chestCm: report.chestCm,
           waistCm: report.waistCm,
@@ -238,6 +265,11 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     );
   }
 
+  const ensuredStatus = await ensureStreamStatus(stream.id);
+  if (ensuredStatus === 'finished') {
+    throw new Forbidden('Марафон завершён, редактировать отчёты нельзя');
+  }
+
   const currentDayNumber = getCurrentDayNumber(
     stream.startDate,
     currentUser.timezone,
@@ -247,6 +279,11 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     throw new Forbidden('This day is not yet available');
   }
 
+  const templateDay = await TemplateDay.findOne({
+    where: { templateId: template.id, dayNumber },
+  });
+  const isMeasurementDay = templateDay?.isMeasurementDay ?? false;
+
   const body = saveReportSchema.parse(req.body);
   const lines = body.lines ?? [];
   const {
@@ -254,6 +291,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     steps,
     sleepHours,
     activityMinutes,
+    trainingDone,
     weightKg,
     chestCm,
     waistCm,
@@ -303,11 +341,12 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     report.steps = steps ?? null;
     report.sleepHours = sleepHours ?? null;
     report.activityMinutes = activityMinutes ?? null;
-    report.weightKg = weightKg ?? null;
-    report.chestCm = chestCm ?? null;
-    report.waistCm = waistCm ?? null;
-    report.hipCm = hipCm ?? null;
-    report.legCm = legCm ?? null;
+    report.trainingDone = trainingDone ?? null;
+    report.weightKg = isMeasurementDay ? (weightKg ?? null) : null;
+    report.chestCm = isMeasurementDay ? (chestCm ?? null) : null;
+    report.waistCm = isMeasurementDay ? (waistCm ?? null) : null;
+    report.hipCm = isMeasurementDay ? (hipCm ?? null) : null;
+    report.legCm = isMeasurementDay ? (legCm ?? null) : null;
     await report.save({ transaction });
 
     await ReportLine.destroy({
@@ -338,13 +377,15 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
           currentUser.timezone
         ),
         pulse: reading.pulse,
+        systolic: reading.systolic ?? null,
+        diastolic: reading.diastolic ?? null,
       })) ?? [];
 
     const createdPulse = pulseRecords.length
       ? await PulseReading.bulkCreate(pulseRecords, { transaction })
       : [];
 
-    if (weightKg !== undefined && weightKg !== null) {
+    if (isMeasurementDay && weightKg !== undefined && weightKg !== null) {
       currentUser.weightKg = weightKg;
       await currentUser.save({ transaction });
     }
@@ -377,6 +418,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       steps: report.steps,
       sleepHours: report.sleepHours,
       activityMinutes: report.activityMinutes,
+      trainingDone: report.trainingDone,
       weightKg: report.weightKg,
       chestCm: report.chestCm,
       waistCm: report.waistCm,
@@ -386,6 +428,8 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
         id: p.id,
         measuredAt: p.measuredAt,
         pulse: p.pulse,
+        systolic: p.systolic,
+        diastolic: p.diastolic,
       })),
       lines: savedLines,
     });

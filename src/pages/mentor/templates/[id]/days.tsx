@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from '../../TemplateDays.module.css';
 import { apiFetch } from '@/lib/apiClient';
-import KinescopePlayer from '@/components/day/KinescopePlayer';
-import { parseKinescopeVideoId } from '@/lib/kinescope';
+import RichTextEditor from '@/components/editor/RichTextEditor';
+import AttachmentManager from '@/components/mentor/AttachmentManager';
+import type { AttachmentData } from '@/types/attachments';
 
 type Template = {
   id: string;
@@ -17,17 +18,35 @@ type Template = {
 type DayInput = {
   dayNumber: number;
   textContent: string;
-  audioUrl: string;
-  videoLink: string;
+  isMeasurementDay: boolean;
+  attachments: AttachmentData[];
+};
+
+type ApiDay = {
+  id: string;
+  dayNumber: number;
+  textContent: string | null;
+  isMeasurementDay: boolean;
+  attachments: AttachmentData[];
 };
 
 function createEmptyDays(count: number): DayInput[] {
   return Array.from({ length: count }, (_, index) => ({
     dayNumber: index + 1,
     textContent: '',
-    audioUrl: '',
-    videoLink: '',
+    isMeasurementDay: false,
+    attachments: [],
   }));
+}
+
+function toPayloadAttachment(attachment: AttachmentData) {
+  return {
+    kind: attachment.kind,
+    url: attachment.url,
+    fileName: attachment.fileName ?? null,
+    mimeType: attachment.mimeType ?? null,
+    sizeBytes: attachment.sizeBytes ?? null,
+  };
 }
 
 export default function TemplateDaysPage() {
@@ -41,7 +60,6 @@ export default function TemplateDaysPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const initAuth = useAuthStore.getState().initAuth;
@@ -65,7 +83,7 @@ export default function TemplateDaysPage() {
           throw new Error(json.message || json.error || 'Не удалось загрузить шаблон');
         }
 
-        const data = json.data as Template & { days: Array<Omit<DayInput, 'videoLink'> & { videoId?: string | null }> };
+        const data = json.data as Template & { days: ApiDay[] };
         setTemplate(data);
 
         if (data.days && data.days.length > 0) {
@@ -73,10 +91,8 @@ export default function TemplateDaysPage() {
             data.days.map((day) => ({
               dayNumber: day.dayNumber,
               textContent: day.textContent || '',
-              audioUrl: day.audioUrl || '',
-              videoLink: day.videoId
-                ? `https://kinescope.io/embed/${day.videoId}`
-                : '',
+              isMeasurementDay: day.isMeasurementDay || false,
+              attachments: day.attachments || [],
             }))
           );
         } else {
@@ -92,7 +108,7 @@ export default function TemplateDaysPage() {
     load();
   }, [router, templateId]);
 
-  function updateDay(index: number, field: keyof DayInput, value: string | number) {
+  function updateDay(index: number, field: keyof DayInput, value: string | number | boolean | AttachmentData[]) {
     setDays((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -100,42 +116,8 @@ export default function TemplateDaysPage() {
     });
   }
 
-  async function handleAudioUpload(index: number, file: File | undefined) {
-    if (!templateId || !file) return;
-
-    setUploadingIndex(index);
-    setError(null);
-
-    try {
-      const form = new FormData();
-      form.append('templateId', templateId);
-      form.append('dayNumber', String(days[index].dayNumber));
-      form.append('file', file);
-
-      const res = await apiFetch('/api/uploads/audio', {
-        method: 'POST',
-        credentials: 'include',
-        body: form,
-      });
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(json.message || json.error || 'Не удалось загрузить аудио');
-      }
-
-      updateDay(index, 'audioUrl', json.data.url);
-      alert('Аудио успешно загружено');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Что-то пошло не так');
-    } finally {
-      setUploadingIndex(null);
-    }
-  }
-
-  function absoluteAudioUrl(url: string): string {
-    if (!url) return '';
-    if (/^https?:\/\//.test(url) || url.startsWith('//')) return url;
-    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+  function updateDayAttachments(index: number, attachments: AttachmentData[]) {
+    updateDay(index, 'attachments', attachments);
   }
 
   async function handleSave(e: FormEvent) {
@@ -150,7 +132,14 @@ export default function TemplateDaysPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ days }),
+        body: JSON.stringify({
+          days: days.map((day) => ({
+            dayNumber: day.dayNumber,
+            textContent: day.textContent,
+            isMeasurementDay: day.isMeasurementDay,
+            attachments: day.attachments.map(toPayloadAttachment),
+          })),
+        }),
       });
       const json = await res.json().catch(() => ({}));
 
@@ -204,7 +193,7 @@ export default function TemplateDaysPage() {
       <main className={styles.main}>
         <p className={styles.error}>{error}</p>
         <Link href="/mentor/templates">
-          <button>Back to Templates</button>
+          <button>Назад к шаблонам</button>
         </Link>
       </main>
     );
@@ -222,100 +211,74 @@ export default function TemplateDaysPage() {
 
   return (
     <main className={styles.main}>
-      <h1>Дни: {template.title}</h1>
+      <h1>Шаг 3 из 3. Дни: {template.title}</h1>
       <p>
-        Длительность: {template.durationDays} дн. Заполните содержимое для каждого дня.
+        Длительность: {template.durationDays} дн. Для каждого дня можно написать текст в
+        редакторе, прикрепить PDF-документы и добавить аудио/видео. День можно оставить пустым.
       </p>
+
+      <Link href={`/mentor/templates/${templateId}/intro`}>
+        <button type="button" className="btn btnOutline">← Назад к предстартовой странице</button>
+      </Link>
 
       {error && <p className={styles.error}>{error}</p>}
 
       <form onSubmit={handleSave}>
         {days.map((day, index) => (
-          <fieldset
-            key={index}
-            className={styles.fieldset}
-          >
+          <fieldset key={index} className={styles.fieldset}>
             <legend>День {day.dayNumber}</legend>
             <div className={styles.formGroup}>
-              <label htmlFor={`text-${index}`}>Текстовое содержимое</label>
-              <textarea
-                id={`text-${index}`}
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={day.isMeasurementDay}
+                  disabled={!isEditable}
+                  onChange={(e) =>
+                    updateDay(index, 'isMeasurementDay', e.target.checked)
+                  }
+                />
+                День замера (вес и охваты)
+              </label>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor={`text-${index}`}>Текстовое содержимое (визуальный редактор)</label>
+              <RichTextEditor
                 value={day.textContent}
-                onChange={(e) => updateDay(index, 'textContent', e.target.value)}
-                rows={6}
+                onChange={(html) => updateDay(index, 'textContent', html)}
                 disabled={!isEditable}
-                className={styles.fullWidth}
+                placeholder="Текст дня..."
               />
             </div>
-            <div className={styles.formGroup}>
-              <label>Аудио для дня</label>
-              {day.audioUrl ? (
-                <div className={styles.audioPreview}>
-                  <audio controls src={absoluteAudioUrl(day.audioUrl)} style={{ width: '100%' }} />
-                  {isEditable && (
-                    <button
-                      type="button"
-                      className={styles.removeAudioBtn}
-                      onClick={() => updateDay(index, 'audioUrl', '')}
-                    >
-                      Удалить аудио
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <p className={styles.hint}>Аудио для этого дня не добавлено.</p>
-              )}
-              {isEditable && (
-                <div className={styles.uploadRow}>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    disabled={uploadingIndex !== null}
-                    onChange={(e) => handleAudioUpload(index, e.target.files?.[0])}
-                  />
-                  {uploadingIndex === index && <span className={styles.hint}>Загрузка...</span>}
-                </div>
-              )}
-              {isEditable && (
-                <div className={styles.formGroup}>
-                  <label htmlFor={`audio-${index}`}>Или вставьте ссылку на аудио</label>
-                  <input
-                    id={`audio-${index}`}
-                    type="text"
-                    value={day.audioUrl}
-                    onChange={(e) => updateDay(index, 'audioUrl', e.target.value)}
-                    placeholder="https://..."
-                    className={styles.fullWidth}
-                  />
-                </div>
-              )}
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor={`video-${index}`}>Ссылка на видео</label>
-              <input
-                id={`video-${index}`}
-                type="url"
-                value={day.videoLink}
-                onChange={(e) => updateDay(index, 'videoLink', e.target.value)}
-                disabled={!isEditable}
-                placeholder="https://kinescope.io/..."
-                className={styles.fullWidth}
-              />
-              <small className={styles.hint}>
-                Скопируйте ссылку на видео из Kinescope (например, https://kinescope.io/5xHZrDYYHwJwfcbKJv2FUr)
-              </small>
-              {day.videoLink &&
-                (() => {
-                  const videoId = parseKinescopeVideoId(day.videoLink);
-                  return videoId ? (
-                    <div className={styles.videoPreview}>
-                      <KinescopePlayer videoId={videoId} />
-                    </div>
-                  ) : (
-                    <p className={styles.error}>Некорректная ссылка Kinescope</p>
-                  );
-                })()}
-            </div>
+
+            {templateId && (
+              <>
+                <AttachmentManager
+                  templateId={templateId}
+                  kind="file"
+                  label="Документы (PDF)"
+                  attachments={day.attachments}
+                  onChange={(attachments) => updateDayAttachments(index, attachments)}
+                  disabled={!isEditable}
+                />
+                <AttachmentManager
+                  templateId={templateId}
+                  kind="audio"
+                  label="Аудио для дня"
+                  attachments={day.attachments}
+                  onChange={(attachments) => updateDayAttachments(index, attachments)}
+                  disabled={!isEditable}
+                />
+                <AttachmentManager
+                  templateId={templateId}
+                  kind="video"
+                  label="Видео для дня"
+                  attachments={day.attachments}
+                  onChange={(attachments) => updateDayAttachments(index, attachments)}
+                  disabled={!isEditable}
+                />
+              </>
+            )}
           </fieldset>
         ))}
 

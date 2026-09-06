@@ -38,8 +38,8 @@
   margin-top: 1rem;
   padding: 0.6rem 1rem;
   border-radius: 8px;
-  background: #fff5eb;
-  border: 1px solid #ffe3c7;
+  background:var(--bg-fon1);
+  border: 1px solid var(--border-default);
   color: #1a3a6e;
   font-weight: 600;
 }
@@ -59,8 +59,21 @@
   max-width: 100%;
   min-height: 100px;
   overflow-x: auto;
-  overflow-y: hidden;
+  /*overflow-y: hidden;*/
   -webkit-overflow-scrolling: touch;
+}
+
+.dayItemBox {
+  position: relative;
+  display: flex;
+  flex: 0 0 70px;
+  width: 70px;
+  justify-content: center;
+}
+
+.dayItemBoxCurrent {
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
 .dayItem {
@@ -68,7 +81,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  flex: 0 0 70px;
   width: 70px;
   height: 70px;
   border: 1px solid #ddd;
@@ -96,9 +108,6 @@
 
 .dayCurrent {
   border: 1px solid orange;
-  margin-left: 8px;
-  margin-right: 8px;
-
 }
 
 .dayFilled {
@@ -114,6 +123,16 @@
   color: #6c757d;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.measurementIcon {
+  position: absolute;
+  top: -1.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #1a3a6e;
 }
 
 .dayNumber {

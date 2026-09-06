@@ -5,9 +5,11 @@ import { apiHandler, success } from '@/lib/apiHandler';
 import { withMentor } from '@/lib/middleware';
 import { MarathonTemplate } from '@db/models/MarathonTemplate';
 import { TemplateDay } from '@db/models/TemplateDay';
+import { TemplateAttachment } from '@db/models/TemplateAttachment';
 import { updateTemplateDaysSchema } from '@/lib/validate';
 import { NotFound, Forbidden, BadRequest } from '@/lib/errors';
 import { sequelize } from '@db/db';
+import { serializeAttachments, sanitizeTemplateText } from '@/lib/attachmentUtils';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 async function loadOwnedTemplate(req: NextApiRequest) {
@@ -39,13 +41,32 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
     order: [['day_number', 'ASC']],
   });
 
-  return success(res, days.map((day) => ({
-    id: day.id,
-    dayNumber: day.dayNumber,
-    textContent: day.textContent,
-    audioUrl: day.audioUrl,
-    videoId: day.videoId,
-  })));
+  const attachments = await TemplateAttachment.findAll({
+    where: { templateId: template.id, scope: 'day' },
+    order: [
+      ['template_day_id', 'ASC'],
+      ['position', 'ASC'],
+    ],
+  });
+
+  const attachmentsByDay = new Map<string, TemplateAttachment[]>();
+  for (const attachment of attachments) {
+    if (!attachment.templateDayId) continue;
+    const list = attachmentsByDay.get(attachment.templateDayId) ?? [];
+    list.push(attachment);
+    attachmentsByDay.set(attachment.templateDayId, list);
+  }
+
+  return success(
+    res,
+    days.map((day) => ({
+      id: day.id,
+      dayNumber: day.dayNumber,
+      textContent: day.textContent,
+      isMeasurementDay: day.isMeasurementDay,
+      attachments: serializeAttachments(attachmentsByDay.get(day.id) ?? []),
+    }))
+  );
 }
 
 async function postHandler(req: NextApiRequest, res: NextApiResponse) {
@@ -78,27 +99,74 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       transaction,
     });
 
-    const createdDays = await TemplateDay.bulkCreate(
-      days.map((day) => ({
-        templateId: template.id,
-        dayNumber: day.dayNumber,
-        textContent: day.textContent,
-        audioUrl: day.audioUrl,
-        videoId: day.videoLink,
-      })),
-      { transaction }
-    );
+    const createdDays: TemplateDay[] = [];
+    for (const day of days) {
+      const created = await TemplateDay.create(
+        {
+          templateId: template.id,
+          dayNumber: day.dayNumber,
+          textContent: sanitizeTemplateText(day.textContent) ?? null,
+          isMeasurementDay: day.isMeasurementDay,
+        },
+        { transaction }
+      );
+      createdDays.push(created);
+    }
 
-    return createdDays;
+    const attachmentRows: Array<{
+      templateId: string;
+      templateDayId: string;
+      scope: 'day';
+      kind: 'audio' | 'video' | 'file';
+      url: string;
+      fileName: string | null;
+      mimeType: string | null;
+      sizeBytes: number | null;
+      position: number;
+    }> = [];
+    for (let i = 0; i < createdDays.length; i++) {
+      const createdDay = createdDays[i];
+      const dayInput = days[i];
+      const dayAttachments = dayInput.attachments ?? [];
+
+      dayAttachments.forEach((attachment, index) => {
+        attachmentRows.push({
+          templateId: template.id,
+          templateDayId: createdDay.id,
+          scope: 'day',
+          kind: attachment.kind,
+          url: attachment.url,
+          fileName: attachment.fileName ?? null,
+          mimeType: attachment.mimeType ?? null,
+          sizeBytes: attachment.sizeBytes ?? null,
+          position: attachment.position ?? index,
+        });
+      });
+    }
+
+    const createdAttachments =
+      attachmentRows.length > 0
+        ? await TemplateAttachment.bulkCreate(attachmentRows, { transaction })
+        : [];
+
+    const attachmentsByDay = new Map<string, TemplateAttachment[]>();
+    for (const attachment of createdAttachments) {
+      if (!attachment.templateDayId) continue;
+      const list = attachmentsByDay.get(attachment.templateDayId) ?? [];
+      list.push(attachment);
+      attachmentsByDay.set(attachment.templateDayId, list);
+    }
+
+    return createdDays.map((day) => ({
+      id: day.id,
+      dayNumber: day.dayNumber,
+      textContent: day.textContent,
+      isMeasurementDay: day.isMeasurementDay,
+      attachments: serializeAttachments(attachmentsByDay.get(day.id) ?? []),
+    }));
   });
 
-  return success(res, result.map((day) => ({
-    id: day.id,
-    dayNumber: day.dayNumber,
-    textContent: day.textContent,
-    audioUrl: day.audioUrl,
-    videoId: day.videoId,
-  })));
+  return success(res, result);
 }
 
 export default apiHandler({

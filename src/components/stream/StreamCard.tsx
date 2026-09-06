@@ -5,6 +5,7 @@ type StreamCardProps = {
   title: string;
   href?: string;
   resultsHref?: string;
+  materialsHref?: string;
   description?: string;
   startDate?: string;
   durationDays?: number;
@@ -26,6 +27,7 @@ export default function StreamCard({
   title,
   href,
   resultsHref,
+  materialsHref,
   description,
   startDate,
   durationDays,
@@ -57,10 +59,19 @@ export default function StreamCard({
 
       {description && <p className={styles.description}>{description}</p>}
 
-      {resultsHref && (
-        <Link href={resultsHref} className={styles.resultsLink}>
-          Результаты
-        </Link>
+      {(resultsHref || materialsHref) && (
+        <div className={styles.cardActions}>
+          {resultsHref && (
+            <Link href={resultsHref} className={styles.resultsLink}>
+              Результаты
+            </Link>
+          )}
+          {materialsHref && (
+            <Link href={materialsHref} className={styles.resultsLink}>
+              Материалы
+            </Link>
+          )}
+        </div>
       )}
 
       <div className={styles.metaGrid}>

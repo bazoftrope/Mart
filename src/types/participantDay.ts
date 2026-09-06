@@ -1,18 +1,20 @@
 import type { ReportLineItem } from '@/components/ReportTable';
 import type { PulseFormItem } from '@/components/PulseReadingsForm';
+import type { AttachmentData } from '@/types/attachments';
 
 export type Goal = 'lose' | 'maintain' | 'gain';
 
 export type DayMaterialsData = {
   textContent: string | null;
-  audioUrl: string | null;
-  videoId: string | null;
+  attachments: AttachmentData[];
 };
 
 export type PulseReadingItem = {
   id?: string;
   measuredAt: string;
   pulse: number;
+  systolic?: number | null;
+  diastolic?: number | null;
 };
 
 export type DayReportData = {
@@ -24,6 +26,7 @@ export type DayReportData = {
   steps: number | null;
   sleepHours: number | null;
   activityMinutes: number | null;
+  trainingDone: boolean | null;
   weightKg: number | null;
   chestCm: number | null;
   waistCm: number | null;
@@ -37,8 +40,7 @@ export type MetricsState = {
   waterLiters: number | '';
   steps: number | '';
   sleepHours: number | '';
-  activityHours: number | '';
-  activityMinutes: number | '';
+  trainingDone: boolean | null;
   weightKg: number | '';
   chestCm: number | '';
   waistCm: number | '';
@@ -51,6 +53,8 @@ export type ParticipantDayData = {
   dayNumber: number;
   currentDayNumber: number;
   isEditable: boolean;
+  isFinished: boolean;
+  isMeasurementDay: boolean;
   targetCalories: number | null;
   goal: Goal | null;
   profileCompleted: boolean;

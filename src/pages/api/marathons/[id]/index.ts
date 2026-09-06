@@ -4,8 +4,11 @@ import { apiHandler, success } from '@/lib/apiHandler';
 import { withMentor } from '@/lib/middleware';
 import { MarathonTemplate } from '@db/models/MarathonTemplate';
 import { TemplateDay } from '@db/models/TemplateDay';
+import { TemplateAttachment } from '@db/models/TemplateAttachment';
 import { marathonTemplateSchema } from '@/lib/validate';
 import { NotFound, Forbidden, BadRequest } from '@/lib/errors';
+import { sequelize } from '@db/db';
+import { serializeAttachments, sanitizeTemplateText } from '@/lib/attachmentUtils';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 function getTemplateId(req: NextApiRequest): string {
@@ -33,30 +36,66 @@ async function loadOwnedTemplate(req: NextApiRequest) {
   return template;
 }
 
-async function getHandler(req: NextApiRequest, res: NextApiResponse) {
-  const template = await loadOwnedTemplate(req);
-
-  const days = await TemplateDay.findAll({
-    where: { templateId: template.id },
-    order: [['day_number', 'ASC']],
-  });
-
-  return success(res, {
+function serializeTemplate(template: MarathonTemplate, extra: Record<string, unknown> = {}) {
+  return {
     id: template.id,
     title: template.title,
     description: template.description,
     durationDays: template.durationDays,
+    introText: template.introText ?? null,
     status: template.status,
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,
-    days: days.map((day) => ({
-      id: day.id,
-      dayNumber: day.dayNumber,
-      textContent: day.textContent,
-      audioUrl: day.audioUrl,
-      videoId: day.videoId,
-    })),
-  });
+    ...extra,
+  };
+}
+
+async function getHandler(req: NextApiRequest, res: NextApiResponse) {
+  const template = await loadOwnedTemplate(req);
+
+  const [days, introAttachments] = await Promise.all([
+    TemplateDay.findAll({
+      where: { templateId: template.id },
+      order: [['day_number', 'ASC']],
+    }),
+    TemplateAttachment.findAll({
+      where: { templateId: template.id, scope: 'intro' },
+      order: [['position', 'ASC']],
+    }),
+  ]);
+
+  const dayIds = days.map((day) => day.id);
+  const dayAttachments = dayIds.length
+    ? await TemplateAttachment.findAll({
+        where: { templateId: template.id, scope: 'day', templateDayId: dayIds },
+        order: [
+          ['template_day_id', 'ASC'],
+          ['position', 'ASC'],
+        ],
+      })
+    : [];
+
+  const attachmentsByDay = new Map<string, TemplateAttachment[]>();
+  for (const attachment of dayAttachments) {
+    if (!attachment.templateDayId) continue;
+    const list = attachmentsByDay.get(attachment.templateDayId) ?? [];
+    list.push(attachment);
+    attachmentsByDay.set(attachment.templateDayId, list);
+  }
+
+  return success(
+    res,
+    serializeTemplate(template, {
+      introAttachments: serializeAttachments(introAttachments),
+      days: days.map((day) => ({
+        id: day.id,
+        dayNumber: day.dayNumber,
+        textContent: day.textContent,
+        isMeasurementDay: day.isMeasurementDay,
+        attachments: serializeAttachments(attachmentsByDay.get(day.id) ?? []),
+      })),
+    })
+  );
 }
 
 async function putHandler(req: NextApiRequest, res: NextApiResponse) {
@@ -71,22 +110,64 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
     throw parsed.error;
   }
 
-  const { title, description, durationDays } = parsed.data;
+  const {
+    title,
+    description,
+    durationDays,
+    introText,
+    introAttachments,
+  } = parsed.data;
 
-  template.title = title;
-  template.description = description;
-  template.durationDays = durationDays;
-  await template.save();
+  const updatedTemplate = await sequelize.transaction(async (transaction) => {
+    template.title = title;
+    template.description = description;
+    template.durationDays = durationDays;
 
-  return success(res, {
-    id: template.id,
-    title: template.title,
-    description: template.description,
-    durationDays: template.durationDays,
-    status: template.status,
-    createdAt: template.createdAt,
-    updatedAt: template.updatedAt,
+    // Предстартовые материалы обновляются только когда страница intro явно
+    // передаёт introText/introAttachments; основная форма шаблона их не стирает.
+    if (introText !== undefined) {
+      template.introText = sanitizeTemplateText(introText) ?? null;
+    }
+    await template.save({ transaction });
+
+    if (introAttachments !== undefined) {
+      await TemplateAttachment.destroy({
+        where: { templateId: template.id, scope: 'intro' },
+        transaction,
+      });
+
+      if (introAttachments.length) {
+        return TemplateAttachment.bulkCreate(
+          introAttachments.map((attachment, index) => ({
+            templateId: template.id,
+            templateDayId: null,
+            scope: 'intro',
+            kind: attachment.kind,
+            url: attachment.url,
+            fileName: attachment.fileName ?? null,
+            mimeType: attachment.mimeType ?? null,
+            sizeBytes: attachment.sizeBytes ?? null,
+            position: attachment.position ?? index,
+          })),
+          { transaction }
+        ).then(() => template);
+      }
+    }
+
+    return template;
   });
+
+  const introAttachmentsSaved = await TemplateAttachment.findAll({
+    where: { templateId: template.id, scope: 'intro' },
+    order: [['position', 'ASC']],
+  });
+
+  return success(
+    res,
+    serializeTemplate(updatedTemplate, {
+      introAttachments: serializeAttachments(introAttachmentsSaved),
+    })
+  );
 }
 
 async function deleteHandler(req: NextApiRequest, res: NextApiResponse) {

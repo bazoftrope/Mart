@@ -1,0 +1,7 @@
+.editor {
+  min-height: 180px;
+}
+
+.editor :global(.ql-editor) {
+  min-height: 180px;
+}

@@ -2,6 +2,7 @@ import { User } from './User';
 import { Product } from './Product';
 import { MarathonTemplate } from './MarathonTemplate';
 import { TemplateDay } from './TemplateDay';
+import { TemplateAttachment } from './TemplateAttachment';
 import { Stream } from './Stream';
 import { StreamEnrollment } from './StreamEnrollment';
 import { DailyReport } from './DailyReport';
@@ -16,6 +17,7 @@ export * from './User';
 export * from './Product';
 export * from './MarathonTemplate';
 export * from './TemplateDay';
+export * from './TemplateAttachment';
 export * from './Stream';
 export * from './StreamEnrollment';
 export * from './DailyReport';
@@ -31,6 +33,7 @@ export const models = {
   Product,
   MarathonTemplate,
   TemplateDay,
+  TemplateAttachment,
   Stream,
   StreamEnrollment,
   DailyReport,

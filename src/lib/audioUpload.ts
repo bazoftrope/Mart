@@ -101,7 +101,10 @@ export async function parseMultipart(
     const headerRaw = part.slice(0, sepIndex);
     const body = part.slice(sepIndex + 4);
 
-    const headers = parseHeaderBlock(headerRaw);
+    // Multipart headers передаются как «сырые» байты. Мы читали их через latin1,
+    // поэтому кириллические filename были вида «ÐÐºÑ...». Декодируем шапку обратно в UTF-8.
+    const headerBlock = Buffer.from(headerRaw, 'latin1').toString('utf8');
+    const headers = parseHeaderBlock(headerBlock);
     const disposition = headers['content-disposition'] || '';
     const nameMatch = /name="([^"]*)"/.exec(disposition);
     const filenameMatch = /filename="([^"]*)"/.exec(disposition);

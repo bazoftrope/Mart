@@ -27,6 +27,16 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
+      systolic: {
+        type: Sequelize.SMALLINT,
+        allowNull: true,
+        defaultValue: null,
+      },
+      diastolic: {
+        type: Sequelize.SMALLINT,
+        allowNull: true,
+        defaultValue: null,
+      },
     });
 
     await queryInterface.addIndex('pulse_readings', ['report_id']);

@@ -62,6 +62,13 @@
   line-height: 1.45;
 }
 
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-self: flex-start;
+}
+
 .resultsLink {
   align-self: flex-start;
   font-size: var(--font-size-sm, 0.875rem);

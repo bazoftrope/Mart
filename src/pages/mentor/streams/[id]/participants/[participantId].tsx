@@ -27,6 +27,8 @@ type PulseReadingItem = {
   id: string;
   measuredAt: string;
   pulse: number;
+  systolic?: number | null;
+  diastolic?: number | null;
 };
 
 type DayReport = {
@@ -39,6 +41,7 @@ type DayReport = {
   steps: number | null;
   sleepHours: number | null;
   activityMinutes: number | null;
+  trainingDone: boolean | null;
   weightKg: number | null;
   chestCm: number | null;
   waistCm: number | null;
@@ -72,13 +75,9 @@ type ParticipantDetailData = {
   reports: DayReport[];
 };
 
-function formatActivity(totalMinutes: number | null): string {
-  if (totalMinutes === null || totalMinutes === undefined) return '—';
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0 && minutes > 0) return `${hours} ч ${minutes} мин`;
-  if (hours > 0) return `${hours} ч`;
-  return `${minutes} мин`;
+function formatTrainingDone(value: boolean | null): string {
+  if (value === null || value === undefined) return '—';
+  return value ? '✓ была' : '✗ не была';
 }
 
 function formatTime(value: string): string {
@@ -355,7 +354,7 @@ export default function ParticipantDetailPage() {
                 <th className={styles.numCol}>Вода (л)</th>
                 <th className={styles.numCol}>Шаги</th>
                 <th className={styles.numCol}>Сон (ч)</th>
-                <th>Активность</th>
+                <th>Тренировка</th>
                 <th className={styles.numCol}>Вес (кг)</th>
                 <th className={styles.numCol}>ОГ (см)</th>
                 <th className={styles.numCol}>ОТ (см)</th>
@@ -370,7 +369,7 @@ export default function ParticipantDetailPage() {
                   report.waterLiters !== null ||
                   report.steps !== null ||
                   report.sleepHours !== null ||
-                  report.activityMinutes !== null ||
+                  report.trainingDone !== null ||
                   report.weightKg !== null ||
                   report.chestCm !== null ||
                   report.waistCm !== null ||
@@ -383,7 +382,7 @@ export default function ParticipantDetailPage() {
                     <td className={styles.numCol}>{report?.waterLiters ?? '—'}</td>
                     <td className={styles.numCol}>{report?.steps ?? '—'}</td>
                     <td className={styles.numCol}>{report?.sleepHours ?? '—'}</td>
-                    <td>{formatActivity(report?.activityMinutes ?? null)}</td>
+                    <td>{formatTrainingDone(report?.trainingDone ?? null)}</td>
                     <td className={styles.numCol}>{report?.weightKg ?? '—'}</td>
                     <td className={styles.numCol}>{report?.chestCm ?? '—'}</td>
                     <td className={styles.numCol}>{report?.waistCm ?? '—'}</td>
@@ -406,6 +405,7 @@ export default function ParticipantDetailPage() {
                 <th>День</th>
                 <th>Время</th>
                 <th className={styles.numCol}>Пульс (уд/мин)</th>
+                <th className={styles.numCol}>Давление (сист/диаст)</th>
               </tr>
             </thead>
             <tbody>
@@ -418,6 +418,7 @@ export default function ParticipantDetailPage() {
                       <td>{day}</td>
                       <td>—</td>
                       <td className={styles.numCol}>—</td>
+                      <td className={styles.numCol}>—</td>
                     </tr>
                   );
                 }
@@ -428,6 +429,11 @@ export default function ParticipantDetailPage() {
                     ) : null}
                     <td>{formatTime(reading.measuredAt)}</td>
                     <td className={styles.numCol}>{reading.pulse}</td>
+                    <td className={styles.numCol}>
+                      {reading.systolic && reading.diastolic
+                        ? `${reading.systolic}/${reading.diastolic}`
+                        : '—'}
+                    </td>
                   </tr>
                 ));
               })}

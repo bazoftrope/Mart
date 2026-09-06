@@ -40,7 +40,7 @@ export default function NewTemplatePage() {
         throw new Error(json.message || json.error || 'Не удалось создать шаблон');
       }
 
-      router.push(`/mentor/templates/${json.data.id}/days`);
+      router.push(`/mentor/templates/${json.data.id}/intro`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Что-то пошло не так');
     } finally {
@@ -50,7 +50,7 @@ export default function NewTemplatePage() {
 
   return (
     <main className="containerMd">
-      <h1 className="pageTitle">Создать шаблон марафона</h1>
+      <h1 className="pageTitle">Шаг 1 из 3. Основная информация</h1>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="formGroup">
@@ -90,7 +90,7 @@ export default function NewTemplatePage() {
         </div>
         <div className={styles.actions}>
           <button type="submit" disabled={loading} className="btn btnPrimary">
-            {loading ? 'Создание...' : 'Создать шаблон'}
+            {loading ? 'Создание...' : 'Далее — предстартовая страница'}
           </button>
           <Link href="/mentor/templates">
             <button type="button" className="btn btnOutline">Отмена</button>

@@ -6,6 +6,7 @@ import { withParticipant } from '@/lib/middleware';
 import { BadRequest, Forbidden, NotFound } from '@/lib/errors';
 import { saveReportSchema } from '@/lib/validation';
 import { buildMeasuredAtUtc } from '@/lib/calendar';
+import { ensureStreamStatus } from '@/lib/streamStatus';
 import { calculateRatingsForStream } from '@/lib/ratingCalculator';
 import {
   DailyReport,
@@ -14,6 +15,7 @@ import {
   PulseReading,
   StreamEnrollment,
   Stream,
+  TemplateDay,
   User,
 } from '@db/models';
 import type { AuthenticatedRequest } from '@/types/auth';
@@ -59,6 +61,16 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
     throw new NotFound('User not found');
   }
 
+  const ensuredStatus = await ensureStreamStatus(stream.id);
+  if (ensuredStatus === 'finished') {
+    throw new Forbidden('Марафон завершён, редактировать отчёты нельзя');
+  }
+
+  const templateDay = await TemplateDay.findOne({
+    where: { templateId: stream.templateId, dayNumber: report.dayNumber },
+  });
+  const isMeasurementDay = templateDay?.isMeasurementDay ?? false;
+
   const body = saveReportSchema.parse(req.body);
   const lines = body.lines ?? [];
   const {
@@ -66,6 +78,7 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
     steps,
     sleepHours,
     activityMinutes,
+    trainingDone,
     weightKg,
     chestCm,
     waistCm,
@@ -105,11 +118,12 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
     report.steps = steps ?? null;
     report.sleepHours = sleepHours ?? null;
     report.activityMinutes = activityMinutes ?? null;
-    report.weightKg = weightKg ?? null;
-    report.chestCm = chestCm ?? null;
-    report.waistCm = waistCm ?? null;
-    report.hipCm = hipCm ?? null;
-    report.legCm = legCm ?? null;
+    report.trainingDone = trainingDone ?? null;
+    report.weightKg = isMeasurementDay ? (weightKg ?? null) : null;
+    report.chestCm = isMeasurementDay ? (chestCm ?? null) : null;
+    report.waistCm = isMeasurementDay ? (waistCm ?? null) : null;
+    report.hipCm = isMeasurementDay ? (hipCm ?? null) : null;
+    report.legCm = isMeasurementDay ? (legCm ?? null) : null;
     await report.save({ transaction });
 
     await ReportLine.destroy({
@@ -140,13 +154,15 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
           currentUser.timezone
         ),
         pulse: reading.pulse,
+        systolic: reading.systolic ?? null,
+        diastolic: reading.diastolic ?? null,
       })) ?? [];
 
     const createdPulse = pulseRecords.length
       ? await PulseReading.bulkCreate(pulseRecords, { transaction })
       : [];
 
-    if (weightKg !== undefined && weightKg !== null) {
+    if (isMeasurementDay && weightKg !== undefined && weightKg !== null) {
       currentUser.weightKg = weightKg;
       await currentUser.save({ transaction });
     }
@@ -179,6 +195,7 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
       steps: report.steps,
       sleepHours: report.sleepHours,
       activityMinutes: report.activityMinutes,
+      trainingDone: report.trainingDone,
       weightKg: report.weightKg,
       chestCm: report.chestCm,
       waistCm: report.waistCm,
@@ -188,6 +205,8 @@ async function putHandler(req: NextApiRequest, res: NextApiResponse) {
         id: p.id,
         measuredAt: p.measuredAt,
         pulse: p.pulse,
+        systolic: p.systolic,
+        diastolic: p.diastolic,
       })),
       lines: savedLines,
     });

@@ -56,6 +56,7 @@
 | title | string | not null | Название |
 | description | text | nullable | Описание |
 | durationDays | integer | not null | `duration_days` |
+| introText | text | nullable | `intro_text` — текст предстартовой страницы (HTML от Quill) |
 | status | enum | not null, default `draft` | `draft` / `pending_review` / `approved` |
 | createdAt | datetime | | |
 | updatedAt | datetime | | |
@@ -76,13 +77,36 @@ pending_review → approved (админ одобряет, POST /api/admin/:id/ap
 | id | UUID | PK | |
 | templateId | UUID | not null | `template_id` → MarathonTemplate.id |
 | dayNumber | integer | not null | `day_number`, 1..N |
-| textContent | text | nullable | `text_content` |
-| audioUrl | string | nullable | `audio_url` |
-| videoId | string | nullable | `video_id` — ID видео Kinescope (вставляется из ссылки, см. `parseKinescopeVideoId`) |
+| textContent | text | nullable | `text_content` — HTML от Quill (всегда) |
+| isMeasurementDay | boolean | not null, default false | `is_measurement_day` — день замера веса и охватов |
 
 **Ограничения:**
-- Все материалы nullable.
-- `video_id` добавлен миграцией `20260831000001-add-video-id-to-template-days.js` (вместо старого `video_url`). Вставка ссылки на видео преобразуется в ID через `src/lib/kinescope.ts`.
+- Материалы дня (аудио, видео, PDF) хранятся не в этой таблице, а в `template_attachments` со `scope = 'day'`.
+- Вложений может быть несколько на день.
+- У дня могут одновременно быть `textContent` (HTML) и PDF-вложения (`kind = 'file'`); текст и PDF независимы.
+
+---
+
+## 4.1 TemplateAttachment (Вложение шаблона) — `template_attachments`
+
+| Поле | Тип | Ограничение | Описание |
+|------|-----|-------------|----------|
+| id | UUID | PK | |
+| templateId | UUID | not null | `template_id` → MarathonTemplate.id |
+| templateDayId | UUID | nullable | `template_day_id` → TemplateDay.id; NULL = предстартовое вложение |
+| scope | enum | not null | `intro` / `day` |
+| kind | enum | not null | `audio` / `video` / `file` |
+| url | string | not null | Путь `/api/uploads/audio/...`, `/api/uploads/file/...` или `videoId` Kinescope |
+| fileName | string | nullable | Исходное имя файла |
+| mimeType | string | nullable | MIME |
+| sizeBytes | integer | nullable | Размер |
+| position | integer | not null, default 0 | Порядок вывода |
+| createdAt | datetime | | `created_at` |
+
+**Ограничения:**
+- `templateDayId = NULL` + `scope = 'intro'` — материалы предстартовой страницы шаблона (общие для всех потоков).
+- Аудио/видео/PDF у дня — строки со `scope = 'day'`.
+- При сохранении дней шаблона вложения пересоздаются вместе с днями (текущее поведение `POST /days`).
 
 ---
 
@@ -130,7 +154,8 @@ pending_review → approved (админ одобряет, POST /api/admin/:id/ap
 | waterLiters | integer | nullable | Вода, л |
 | steps | integer | nullable | Шаги |
 | sleepHours | integer | nullable | Сон, ч |
-| activityMinutes | integer | nullable | Активность, мин |
+| activityMinutes | integer | nullable | Активность, мин (зарезервировано) |
+| trainingDone | boolean | nullable | `training_done` — тренировка была ✓/✗ |
 | weightKg | integer | nullable | Вес, кг (наблюдение за день) |
 | chestCm | decimal(10,2) | nullable | ОГ, см |
 | waistCm | decimal(10,2) | nullable | ОТ, см |
@@ -193,6 +218,8 @@ DailyReport.totalCalories = SUM(ReportLine.lineCalories)
 | reportId | UUID | not null | `report_id` → DailyReport.id |
 | measuredAt | datetime | not null | `measured_at`, момент замера |
 | pulse | integer | not null | Пульс, уд/мин |
+| systolic | smallint | nullable | Систолическое давление, мм рт. ст. |
+| diastolic | smallint | nullable | Диастолическое давление, мм рт. ст. |
 
 **Замечание:** замеры привязаны к отчёту дня. Время измерения строится как дата дня отчёта (`startDate + dayNumber - 1`) + локальное время в таймзоне участника (`buildMeasuredAtUtc` в `src/lib/calendar.ts`).
 

@@ -1,3 +1,4 @@
+import { Scale } from 'lucide-react';
 import styles from './Marathon.module.css';
 
 type DayNavbarButtonProps = {
@@ -9,6 +10,7 @@ type DayNavbarButtonProps = {
   isCurrent: boolean;
   isFilled: boolean;
   isCalorieProblem: boolean;
+  isMeasurementDay: boolean;
   calories: number | null;
   onSelect: (dayNumber: number) => void;
 };
@@ -22,6 +24,7 @@ export default function DayNavbarButton({
   isCurrent,
   isFilled,
   isCalorieProblem,
+  isMeasurementDay,
   calories,
   onSelect,
 }: DayNavbarButtonProps) {
@@ -31,6 +34,13 @@ export default function DayNavbarButton({
     isActive ? styles.dayActive : '',
     isCurrent ? styles.dayCurrent : '',
     isFilled ? (isCalorieProblem ? styles.dayOverLimit : styles.dayFilled) : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const wrapperClassName = [
+    styles.dayItemBox,
+    isCurrent ? styles.dayItemBoxCurrent : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -53,11 +63,9 @@ export default function DayNavbarButton({
     </>
   );
 
-  if (!isAccessible) {
-    return <div className={className}>{content}</div>;
-  }
-
-  return (
+  const control = !isAccessible ? (
+    <div className={className}>{content}</div>
+  ) : (
     <button
       type="button"
       className={className}
@@ -66,5 +74,17 @@ export default function DayNavbarButton({
     >
       {content}
     </button>
+  );
+
+  return (
+    <div className={wrapperClassName}>
+      {isMeasurementDay && (
+        <Scale
+          className={styles.measurementIcon}
+          aria-label="День замера"
+        />
+      )}
+      {control}
+    </div>
   );
 }

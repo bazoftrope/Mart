@@ -14,6 +14,7 @@ type DayNavbarProps = {
   targetCalories: number | null;
   goal: Goal | null;
   reports: DayNavbarReport[];
+  measurementDays: number[];
   activeDay: number | null;
   onDayChange: (dayNumber: number) => void;
 };
@@ -25,10 +26,12 @@ export default function DayNavbar({
   targetCalories,
   goal,
   reports,
+  measurementDays,
   activeDay,
   onDayChange,
 }: DayNavbarProps) {
   const reportMap = new Map(reports.map((r) => [r.dayNumber, r.totalCalories]));
+  const measurementDaySet = new Set(measurementDays);
 
   return (
     <nav className={styles.dayNavbar} aria-label="Дни марафона">
@@ -58,6 +61,7 @@ export default function DayNavbar({
             isCurrent={isCurrent}
             isFilled={isFilled}
             isCalorieProblem={isCalorieProblem}
+            isMeasurementDay={measurementDaySet.has(dayNumber)}
             calories={calories ?? null}
             onSelect={onDayChange}
           />

@@ -48,6 +48,11 @@ module.exports = {
         allowNull: true,
         defaultValue: null,
       },
+      training_done: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null,
+      },
       weight_kg: {
         type: Sequelize.INTEGER,
         allowNull: true,

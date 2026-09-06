@@ -36,6 +36,7 @@ type MarathonWindowProps = {
   goal: Goal | null;
   rating: MarathonRating;
   reports: MarathonReport[];
+  measurementDays: number[];
   activeDay: number | null;
   onDayChange: (dayNumber: number) => void;
 };
@@ -47,6 +48,7 @@ export default function MarathonWindow({
   goal,
   rating,
   reports,
+  measurementDays,
   activeDay,
   onDayChange,
 }: MarathonWindowProps) {
@@ -64,6 +66,7 @@ export default function MarathonWindow({
         targetCalories={targetCalories}
         goal={goal}
         reports={reports}
+        measurementDays={measurementDays}
         activeDay={activeDay}
         onDayChange={onDayChange}
       />

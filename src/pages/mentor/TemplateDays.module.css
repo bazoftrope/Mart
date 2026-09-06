@@ -19,6 +19,18 @@
   margin-bottom: 0.75rem;
 }
 
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.checkboxLabel input:disabled {
+  cursor: not-allowed;
+}
+
 .fullWidth {
   width: 100%;
 }

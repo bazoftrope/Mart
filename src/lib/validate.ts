@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { parseKinescopeVideoId } from './kinescope';
+import { normalizeKinescopeVideoId } from './kinescope';
 
 export const emailSchema = z
   .string()
@@ -61,36 +61,45 @@ export const registerSchema = z.object({
   role: roleSchema,
 });
 
+export const templateAttachmentSchema = z
+  .object({
+    kind: z.enum(['audio', 'video', 'file']),
+    url: z.string().trim().min(1, 'Ссылка вложения обязательна').max(2048, 'Ссылка вложения слишком длинная'),
+    fileName: z.string().max(512, 'Имя файла слишком длинное').nullable().optional(),
+    mimeType: z.string().max(255, 'MIME-тип слишком длинный').nullable().optional(),
+    sizeBytes: z.number().int().nonnegative('Некорректный размер файла').nullable().optional(),
+    position: z.number().int().nonnegative('Некорректная позиция').optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.kind !== 'video') return true;
+      return Boolean(normalizeKinescopeVideoId(data.url));
+    },
+    {
+      message: 'Вставьте корректную ссылку Kinescope (https://kinescope.io/...)',
+      path: ['url'],
+    }
+  )
+  .transform((data) => {
+    if (data.kind === 'video') {
+      return { ...data, url: normalizeKinescopeVideoId(data.url)! };
+    }
+    return data;
+  });
+
 export const marathonTemplateSchema = z.object({
   title: z.string().min(1, 'Название обязательно').max(255, 'Название слишком длинное'),
   description: z.string().max(5000, 'Описание слишком длинное').optional(),
   durationDays: z.number().int().min(1, 'Длительность должна быть не менее 1 дня').max(365, 'Длительность слишком большая'),
+  introText: z.string().max(50000, 'Приветственный текст слишком длинный').optional(),
+  introAttachments: z.array(templateAttachmentSchema).optional(),
 });
 
 export const templateDaySchema = z.object({
   dayNumber: z.number().int().min(1, 'Номер дня должен быть не менее 1'),
-  textContent: z.string().max(20000, 'Содержимое слишком длинное').optional(),
-  audioUrl: z.string().max(2048, 'Ссылка на аудио слишком длинная').optional(),
-  videoLink: z
-    .string()
-    .max(5000, 'Ссылка на видео слишком длинная')
-    .optional()
-    .transform((value) => {
-      if (!value || value.trim() === '') {
-        return undefined;
-      }
-      const videoId = parseKinescopeVideoId(value);
-      if (!videoId) {
-        throw new z.ZodError([
-          {
-            code: 'custom',
-            message: 'Вставьте корректную ссылку Kinescope (https://kinescope.io/...)',
-            path: ['videoLink'],
-          },
-        ]);
-      }
-      return videoId;
-    }),
+  textContent: z.string().max(50000, 'Содержимое слишком длинное').optional(),
+  isMeasurementDay: z.boolean().optional().default(false),
+  attachments: z.array(templateAttachmentSchema).optional(),
 });
 
 export const updateTemplateDaysSchema = z.object({
@@ -103,6 +112,7 @@ export type ProfileInput = z.infer<typeof profileSchema>;
 export type EnrollInput = z.infer<typeof enrollSchema>;
 export type MarathonTemplateInput = z.infer<typeof marathonTemplateSchema>;
 export type TemplateDayInput = z.infer<typeof templateDaySchema>;
+export type TemplateAttachmentInput = z.infer<typeof templateAttachmentSchema>;
 export const createStreamSchema = z.object({
   templateId: z.string().uuid('Неверный id шаблона'),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Дата начала должна быть в формате ГГГГ-ММ-ДД'),
@@ -116,10 +126,35 @@ export const reportLineSchema = z.object({
     .max(999999, 'Вес слишком большой'),
 });
 
-export const pulseReadingSchema = z.object({
-  measuredAt: z.string().datetime('Неверный формат даты измерения'),
-  pulse: z.number().int().min(30, 'Пульс должен быть не менее 30').max(250, 'Пульс должен быть не более 250'),
-});
+export const pulseReadingSchema = z
+  .object({
+    measuredAt: z.string().datetime('Неверный формат даты измерения'),
+    pulse: z.number().int().min(30, 'Пульс должен быть не менее 30').max(250, 'Пульс должен быть не более 250'),
+    systolic: z
+      .number()
+      .int('Систолическое давление должно быть целым')
+      .min(60, 'Систолическое давление должно быть не менее 60')
+      .max(250, 'Систолическое давление должно быть не более 250')
+      .optional(),
+    diastolic: z
+      .number()
+      .int('Диастолическое давление должно быть целым')
+      .min(40, 'Диастолическое давление должно быть не менее 40')
+      .max(160, 'Диастолическое давление должно быть не более 160')
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.systolic === undefined || data.diastolic === undefined) {
+        return true;
+      }
+      return data.systolic > data.diastolic;
+    },
+    {
+      message: 'Систолическое давление должно быть больше диастолического',
+      path: ['systolic'],
+    }
+  );
 
 export const saveReportSchema = z
   .object({
@@ -128,6 +163,7 @@ export const saveReportSchema = z
     steps: z.number().int().min(0).max(100000, 'Количество шагов не может превышать 100000').optional(),
     sleepHours: z.number().int().min(0).max(24, 'Сон не может превышать 24 часа').optional(),
     activityMinutes: z.number().int().min(0).max(1440, 'Активность не может превышать 1440 минут').optional(),
+    trainingDone: z.boolean().nullable().optional(),
     weightKg: z.number().int().min(20, 'Вес должен быть не менее 20 кг').max(300, 'Вес должен быть не более 300 кг').optional(),
     chestCm: z.number().min(30, 'ОГ должен быть не менее 30 см').max(300, 'ОГ должен быть не более 300 см').optional(),
     waistCm: z.number().min(30, 'ОТ должен быть не менее 30 см').max(300, 'ОТ должен быть не более 300 см').optional(),
@@ -143,6 +179,7 @@ export const saveReportSchema = z
         data.steps !== undefined ||
         data.sleepHours !== undefined ||
         data.activityMinutes !== undefined ||
+        (data.trainingDone !== undefined && data.trainingDone !== null) ||
         data.weightKg !== undefined ||
         data.chestCm !== undefined ||
         data.waistCm !== undefined ||

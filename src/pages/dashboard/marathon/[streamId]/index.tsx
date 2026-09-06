@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import { apiFetch } from '@/lib/apiClient';
 import type { Goal } from '@db/models/StreamEnrollment';
@@ -13,6 +14,7 @@ import styles from './MarathonCalendar.module.css';
 type StreamCalendar = {
   stream: MarathonStream;
   currentDayNumber: number;
+  measurementDays: number[];
   targetCalories: number | null;
   goal: Goal | null;
   rating: MarathonRating;
@@ -88,9 +90,11 @@ export default function MarathonCalendarPage() {
     );
   }
 
-  const { stream, currentDayNumber, targetCalories, goal, reports, rating } = data;
+  const { stream, currentDayNumber, measurementDays, targetCalories, goal, reports, rating } = data;
+  const view = typeof router.query.view === 'string' ? router.query.view : undefined;
+  const isMaterialsView = view === 'materials';
 
-  if (stream.status === 'finished') {
+  if (stream.status === 'finished' && !isMaterialsView) {
     router.replace(`/dashboard/marathon/${stream.id}/results`);
     return null;
   }
@@ -108,8 +112,9 @@ export default function MarathonCalendarPage() {
   const handleDayChange = (day: number) => {
     const tab = router.query.tab;
     const tabQuery = typeof tab === 'string' ? `&tab=${tab}` : '';
+    const viewQuery = isMaterialsView ? '&view=materials' : '';
     router.replace(
-      `/dashboard/marathon/${stream.id}?day=${day}${tabQuery}`,
+      `/dashboard/marathon/${stream.id}?day=${day}${tabQuery}${viewQuery}`,
       undefined,
       { shallow: true, scroll: false }
     );
@@ -117,6 +122,19 @@ export default function MarathonCalendarPage() {
 
   return (
     <main className={styles.main}>
+      {stream.status === 'finished' && isMaterialsView && (
+        <nav className={styles.finishedTabs} aria-label="Завершённый марафон">
+          <Link
+            href={`/dashboard/marathon/${stream.id}/results`}
+            className={styles.finishedTab}
+          >
+            Результаты
+          </Link>
+          <span className={`${styles.finishedTab} ${styles.finishedTabActive}`}>
+            Материалы
+          </span>
+        </nav>
+      )}
       <MarathonWindow
         stream={stream}
         currentDayNumber={currentDayNumber}
@@ -124,6 +142,7 @@ export default function MarathonCalendarPage() {
         goal={goal}
         rating={rating}
         reports={reports}
+        measurementDays={measurementDays}
         activeDay={activeDay}
         onDayChange={handleDayChange}
       />

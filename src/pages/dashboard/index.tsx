@@ -106,6 +106,11 @@ export default function DashboardPage() {
                     ? `/dashboard/marathon/${streamId}/results`
                     : undefined
                 }
+                materialsHref={
+                  streamId && isFinished
+                    ? `/dashboard/marathon/${streamId}?view=materials`
+                    : undefined
+                }
                 description={enrollment.stream?.template?.description || 'Нет описания'}
                 mentorName={enrollment.stream?.mentor?.name || 'Неизвестно'}
                 startDate={enrollment.stream?.startDate}

@@ -8,6 +8,51 @@
   line-height: 1.8;
 }
 
+.introSection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-muted);
+}
+
+.introTitle {
+  font-size: var(--font-size-lg);
+  margin-bottom: 0.75rem;
+}
+
+.introText {
+  line-height: var(--line-height-relaxed);
+  margin-bottom: 1rem;
+}
+
+.richText {
+  overflow-wrap: break-word;
+}
+
+.richText h1,
+.richText h2,
+.richText h3,
+.richText h4 {
+  margin: 0.75rem 0 0.4rem;
+}
+
+.richText p {
+  margin: 0.4rem 0;
+}
+
+.richText ul,
+.richText ol {
+  margin: 0.4rem 0;
+  padding-left: 1.5rem;
+}
+
+.richText blockquote {
+  border-left: 3px solid var(--border-default);
+  padding-left: 0.75rem;
+  color: var(--text-secondary);
+}
+
 .enrollBox {
   margin-top: 0.5rem;
   padding: 1rem;

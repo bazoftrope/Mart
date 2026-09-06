@@ -36,4 +36,18 @@ export class PulseReading extends Model {
   })
   pulse!: number;
 
+  @Column({
+    type: DataType.SMALLINT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  systolic!: number | null;
+
+  @Column({
+    type: DataType.SMALLINT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  diastolic!: number | null;
+
 }

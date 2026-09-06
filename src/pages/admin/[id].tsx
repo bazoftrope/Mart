@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import type { PublicUser } from '@/types/auth';
+import type { AttachmentData } from '@/types/attachments';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './AdminReviewTemplate.module.css';
 import { apiFetch } from '@/lib/apiClient';
-import KinescopePlayer from '@/components/day/KinescopePlayer';
+import AttachmentPlayers from '@/components/attachments/AttachmentPlayers';
 
 type TemplateDay = {
   id: string;
   dayNumber: number;
   textContent?: string;
-  audioUrl?: string;
-  videoId?: string;
+  isMeasurementDay?: boolean;
+  attachments: AttachmentData[];
 };
 
 type TemplateDetail = {
@@ -21,6 +22,8 @@ type TemplateDetail = {
   description?: string;
   durationDays: number;
   status: string;
+  introText: string | null;
+  introAttachments: AttachmentData[];
   createdAt: string;
   updatedAt: string;
   mentor: PublicUser | null;
@@ -97,6 +100,11 @@ export default function AdminReviewTemplatePage() {
     }
   }
 
+  function renderText(text: string | null | undefined) {
+    if (!text) return null;
+    return <div className={styles.richText} dangerouslySetInnerHTML={{ __html: text }} />;
+  }
+
   return (
     <main className={styles.main}>
       <p>
@@ -125,31 +133,38 @@ export default function AdminReviewTemplatePage() {
             </p>
           </section>
 
+          {(template.introText || template.introAttachments.length > 0) && (
+            <section className={styles.section}>
+              <h3>Предстартовая страница</h3>
+              {renderText(template.introText)}
+              {template.introAttachments.length > 0 ? (
+                <AttachmentPlayers attachments={template.introAttachments} />
+              ) : (
+                <p className={styles.muted}>Вложений нет.</p>
+              )}
+            </section>
+          )}
+
           <section className={styles.section}>
             <h3>Дни</h3>
             {template.days.length === 0 && <p>Дни не настроены.</p>}
             {template.days.map((day) => (
-              <article
-                key={day.id}
-                className={styles.card}
-              >
-                <h4 className={styles.cardTitle}>День {day.dayNumber}</h4>
+              <article key={day.id} className={styles.card}>
+                <h4 className={styles.cardTitle}>
+                  День {day.dayNumber}
+                  {day.isMeasurementDay && (
+                    <span className={styles.measurementBadge}>замер</span>
+                  )}
+                </h4>
                 {day.textContent ? (
-                  <p className={styles.preWrap}>{day.textContent}</p>
-                ) : (
+                  renderText(day.textContent)
+                ) : day.attachments.length === 0 ? (
                   <p className={styles.muted}>Нет содержимого</p>
-                )}
-                {day.audioUrl && (
-                  <p>
-                    <a href={day.audioUrl} target="_blank" rel="noreferrer">
-                      Аудио
-                    </a>
-                  </p>
-                )}
-                {day.videoId && (
-                  <div className={styles.videoBlock}>
-                    <KinescopePlayer videoId={day.videoId} />
-                  </div>
+                ) : null}
+                {day.attachments.length > 0 ? (
+                  <AttachmentPlayers attachments={day.attachments} />
+                ) : (
+                  <p className={styles.muted}>Вложений нет.</p>
                 )}
               </article>
             ))}

@@ -4,6 +4,7 @@ import { User } from './models/User';
 import { Product } from './models/Product';
 import { MarathonTemplate } from './models/MarathonTemplate';
 import { TemplateDay } from './models/TemplateDay';
+import { TemplateAttachment } from './models/TemplateAttachment';
 import { Stream } from './models/Stream';
 import { StreamEnrollment } from './models/StreamEnrollment';
 import { DailyReport } from './models/DailyReport';
@@ -47,6 +48,7 @@ export const sequelize = new Sequelize({
     Product,
     MarathonTemplate,
     TemplateDay,
+    TemplateAttachment,
     Stream,
     StreamEnrollment,
     DailyReport,

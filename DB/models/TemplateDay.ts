@@ -38,16 +38,9 @@ export class TemplateDay extends Model {
   textContent?: string;
 
   @Column({
-    type: DataType.STRING,
-    allowNull: true,
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   })
-  audioUrl?: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: true,
-  })
-  videoId?: string;
-
-
+  isMeasurementDay!: boolean;
 }

@@ -75,7 +75,11 @@ export default function EditTemplatePage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ title, description, durationDays }),
+        body: JSON.stringify({
+          title,
+          description,
+          durationDays,
+        }),
       });
       const json = await res.json().catch(() => ({}));
 
@@ -99,7 +103,7 @@ export default function EditTemplatePage() {
     );
   }
 
-  if (error) {
+  if (error && !template) {
     return (
       <main className="containerMd">
         <p className="error">{error}</p>
@@ -122,7 +126,7 @@ export default function EditTemplatePage() {
 
   return (
     <main className="containerMd">
-      <h1 className="pageTitle">Редактировать шаблон марафона</h1>
+      <h1 className="pageTitle">Основная информация</h1>
       {!isEditable && (
         <p className="error">
           Этот шаблон {template.status === 'approved' ? 'одобрен' : 'на проверке'} и не может быть изменён.
@@ -167,10 +171,19 @@ export default function EditTemplatePage() {
             className="input"
           />
         </div>
+
+        {error && <p className="error">{error}</p>}
+
         <div className={styles.actions}>
           <button type="submit" disabled={saving || !isEditable} className="btn btnPrimary">
             {saving ? 'Сохранение...' : 'Сохранить изменения'}
           </button>
+          <Link href={`/mentor/templates/${templateId}/intro`}>
+            <button type="button" className="btn btnOutline">Предстартовая страница</button>
+          </Link>
+          <Link href={`/mentor/templates/${templateId}/days`}>
+            <button type="button" className="btn btnOutline">Дни</button>
+          </Link>
           <Link href="/mentor/templates">
             <button type="button" className="btn btnOutline">Отмена</button>
           </Link>

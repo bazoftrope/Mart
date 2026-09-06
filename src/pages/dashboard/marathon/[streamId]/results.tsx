@@ -44,7 +44,8 @@ type ResultsData = {
 
 export default function ResultsPage() {
   const router = useRouter();
-  const { streamId } = router.query;
+  const rawStreamId = router.query.streamId;
+  const streamId = Array.isArray(rawStreamId) ? rawStreamId[0] : rawStreamId;
 
   const [data, setData] = useState<ResultsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,9 +119,19 @@ export default function ResultsPage() {
 
   return (
     <main className={styles.main}>
-      <Link href="/dashboard" className={styles.backLink}>
-        &larr; К моим марафонам
-      </Link>
+      <div className={styles.topActions}>
+        <Link href="/dashboard" className={styles.backLink}>
+          &larr; К моим марафонам
+        </Link>
+        {streamId && (
+          <Link
+            href={`/dashboard/marathon/${streamId}?view=materials`}
+            className={styles.materialsLink}
+          >
+            Материалы
+          </Link>
+        )}
+      </div>
 
       <h1 className={styles.title}>{stream.title}</h1>
       <p className={styles.period}>

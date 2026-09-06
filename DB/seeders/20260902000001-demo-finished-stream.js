@@ -47,7 +47,7 @@ function dayContent(day) {
     'Закрепляем привычки и планируем меню.',
     'Финал: итоги, поздравления и следующий шаг.',
   ];
-  return texts[day - 1];
+  return `<p>${texts[day - 1]}</p>`;
 }
 
 // Демо-участник: 12 из 14 дней, вес 90 -> 84.2
@@ -137,7 +137,9 @@ module.exports = {
       {
         id: UUID.template, mentor_id: UUID.mentor, title: 'Демо марафон здорового питания',
         description: 'Демонстрационный марафон на 14 дней для просмотра результатов.',
-        duration_days: DURATION, status: 'approved', created_at: createdAt, updated_at: createdAt,
+        duration_days: DURATION, status: 'approved',
+        intro_text: '<p>Добро пожаловать в демо-марафон! Это предстартовый текст.</p>',
+        created_at: createdAt, updated_at: createdAt,
       },
     ]);
 
@@ -148,8 +150,7 @@ module.exports = {
         template_id: UUID.template,
         day_number: d,
         text_content: dayContent(d),
-        audio_url: null,
-        video_id: null,
+        is_measurement_day: d === 1 || d === 8 || d === 14,
       });
     }
     await queryInterface.bulkInsert('template_days', templateDays);

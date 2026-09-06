@@ -27,6 +27,11 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true,
       },
+      is_measurement_day: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       audio_url: {
         type: Sequelize.STRING,
         allowNull: true,

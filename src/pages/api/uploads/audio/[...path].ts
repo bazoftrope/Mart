@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { apiHandler } from '@/lib/apiHandler';
-import { withAuth } from '@/lib/middleware';
 import { NotFound } from '@/lib/errors';
-import { resolveAudioPath } from '@/lib/audioUpload';
+import { resolveUploadPath } from '@/lib/fileUpload';
 import fs from 'fs';
 
 export const config = {
@@ -21,25 +20,14 @@ const MIME_BY_EXT: Record<string, string> = {
 
 async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   const parts = Array.isArray(req.query.path) ? req.query.path : [req.query.path as string];
-  const fullPath = resolveAudioPath(parts.map((p) => p as string));
+  const fullPath = resolveUploadPath(parts.map((p) => p as string));
 
   if (!fullPath) {
     throw new NotFound('Audio not found');
   }
 
-  const ext = fullPath.toLowerCase().endsWith('.mp3')
-    ? '.mp3'
-    : fullPath.toLowerCase().endsWith('.m4a')
-    ? '.m4a'
-    : fullPath.toLowerCase().endsWith('.ogg')
-    ? '.ogg'
-    : fullPath.toLowerCase().endsWith('.wav')
-    ? '.wav'
-    : fullPath.toLowerCase().endsWith('.webm')
-    ? '.webm'
-    : '';
-
-  const mime = MIME_BY_EXT[ext] || 'application/octet-stream';
+  const ext = Object.keys(MIME_BY_EXT).find((key) => fullPath.toLowerCase().endsWith(key));
+  const mime = ext ? MIME_BY_EXT[ext] : 'application/octet-stream';
   const stat = fs.statSync(fullPath);
 
   res.setHeader('Content-Type', mime);
@@ -67,5 +55,5 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 export default apiHandler({
-  GET: withAuth(getHandler),
+  GET: getHandler,
 });

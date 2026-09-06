@@ -24,6 +24,9 @@ body {
   --bg-info: #f0f7ff;
   --bg-danger: #fee2e2;
 
+  --bg-fon: white;
+  --bg-fon1:#fff5eb;
+
   /* Semantic surfaces */
   --bg-success: #d4edda;
   --bg-role-admin: #fee2e2;
@@ -50,7 +53,7 @@ body {
   --text-value: #111827;
 
   /* Borders */
-  --border-default: #cccccc;
+  --border-default: #ffe3c7;
   --border-light: #dddddd;
   --border-lighter: #eeeeee;
   --border-lightest: #f0f0f0;

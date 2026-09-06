@@ -21,10 +21,51 @@
 
 .cardTitle {
   margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.measurementBadge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #e8f0fe;
+  color: #1a3a6e;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .preWrap {
   white-space: pre-wrap;
+}
+
+.richText {
+  line-height: var(--line-height-relaxed);
+  overflow-wrap: break-word;
+}
+
+.richText h1,
+.richText h2,
+.richText h3,
+.richText h4 {
+  margin: 0.75rem 0 0.4rem;
+}
+
+.richText p {
+  margin: 0.4rem 0;
+}
+
+.richText ul,
+.richText ol {
+  margin: 0.4rem 0;
+  padding-left: 1.5rem;
+}
+
+.richText blockquote {
+  border-left: 3px solid var(--border-default);
+  padding-left: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .muted {
