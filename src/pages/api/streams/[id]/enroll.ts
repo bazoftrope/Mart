@@ -17,10 +17,8 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
     throw new NotFound('Stream not found');
   }
 
-  if (stream.status === 'finished') {
-    throw new BadRequest('Cannot enroll in a finished stream');
-  }
-
+  // Тестовый режим: запись разрешена в потоки с любым статусом, включая
+  // идущие и завершённые, чтобы можно было проверить логику работы.
   const existing = await StreamEnrollment.findOne({
     where: { streamId: stream.id, participantId: user.userId },
   });

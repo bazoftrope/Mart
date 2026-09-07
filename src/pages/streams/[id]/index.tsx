@@ -145,10 +145,6 @@ export default function StreamPage() {
             <button disabled className="btn">
               Вы записаны
             </button>
-          ) : stream.status === 'finished' ? (
-            <button disabled className="btn">
-              Поток завершён
-            </button>
           ) : (
             <div className={styles.enrollBox}>
               <div className={styles.enrollTitle}>Цель на этот поток</div>
