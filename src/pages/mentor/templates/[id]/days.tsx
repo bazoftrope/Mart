@@ -6,6 +6,8 @@ import styles from '../../TemplateDays.module.css';
 import { apiFetch } from '@/lib/apiClient';
 import RichTextEditor from '@/components/editor/RichTextEditor';
 import AttachmentManager from '@/components/mentor/AttachmentManager';
+import PairManager from '@/components/mentor/PairManager';
+import { canEditMarathonTemplate } from '@/lib/templateStatus';
 import type { AttachmentData } from '@/types/attachments';
 
 type Template = {
@@ -46,6 +48,8 @@ function toPayloadAttachment(attachment: AttachmentData) {
     fileName: attachment.fileName ?? null,
     mimeType: attachment.mimeType ?? null,
     sizeBytes: attachment.sizeBytes ?? null,
+    position: attachment.position,
+    pairId: attachment.pairId ?? null,
   };
 }
 
@@ -207,15 +211,22 @@ export default function TemplateDaysPage() {
     );
   }
 
-  const isEditable = template.status === 'draft';
+  const isEditable = canEditMarathonTemplate(template.status);
 
   return (
     <main className={styles.main}>
       <h1>Шаг 3 из 3. Дни: {template.title}</h1>
       <p>
         Длительность: {template.durationDays} дн. Для каждого дня можно написать текст в
-        редакторе, прикрепить PDF-документы и добавить аудио/видео. День можно оставить пустым.
+        редакторе, добавить комплект «PDF + аудио», прикрепить PDF-документы и добавить
+        аудио/видео. День можно оставить пустым.
       </p>
+
+      {template.status === 'approved' && (
+        <p className="textMuted">
+          Шаблон одобрен. Изменения сохранятся сразу и будут видны во всех потоках.
+        </p>
+      )}
 
       <Link href={`/mentor/templates/${templateId}/intro`}>
         <button type="button" className="btn btnOutline">← Назад к предстартовой странице</button>
@@ -253,6 +264,12 @@ export default function TemplateDaysPage() {
 
             {templateId && (
               <>
+                <PairManager
+                  templateId={templateId}
+                  attachments={day.attachments}
+                  onChange={(attachments) => updateDayAttachments(index, attachments)}
+                  disabled={!isEditable}
+                />
                 <AttachmentManager
                   templateId={templateId}
                   kind="file"
@@ -284,19 +301,19 @@ export default function TemplateDaysPage() {
 
         <div className={styles.buttonRow}>
           {isEditable && (
-            <>
-              <button type="submit" disabled={saving}>
-                {saving ? 'Сохранение...' : 'Сохранить дни'}
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={handleSubmit}
-                className={styles.submitReviewBtn}
-              >
-                {submitting ? 'Отправка...' : 'Отправить на проверку'}
-              </button>
-            </>
+            <button type="submit" disabled={saving}>
+              {saving ? 'Сохранение...' : 'Сохранить дни'}
+            </button>
+          )}
+          {template.status === 'draft' && (
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={handleSubmit}
+              className={styles.submitReviewBtn}
+            >
+              {submitting ? 'Отправка...' : 'Отправить на проверку'}
+            </button>
           )}
           <Link href="/mentor/templates">
             <button type="button">Назад к шаблонам</button>

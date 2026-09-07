@@ -9,6 +9,7 @@ import { marathonTemplateSchema } from '@/lib/validate';
 import { NotFound, Forbidden, BadRequest } from '@/lib/errors';
 import { sequelize } from '@db/db';
 import { serializeAttachments, sanitizeTemplateText } from '@/lib/attachmentUtils';
+import { canEditMarathonTemplate } from '@/lib/templateStatus';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 function getTemplateId(req: NextApiRequest): string {
@@ -101,8 +102,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
 async function putHandler(req: NextApiRequest, res: NextApiResponse) {
   const template = await loadOwnedTemplate(req);
 
-  if (template.status !== 'draft') {
-    throw new BadRequest('Only draft templates can be edited');
+  if (!canEditMarathonTemplate(template.status)) {
+    throw new BadRequest('Only draft or approved templates can be edited');
   }
 
   const parsed = marathonTemplateSchema.safeParse(req.body);

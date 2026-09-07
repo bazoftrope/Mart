@@ -11,6 +11,7 @@ export function serializeAttachment(attachment: TemplateAttachment): AttachmentD
     mimeType: attachment.mimeType ?? null,
     sizeBytes: attachment.sizeBytes ?? null,
     position: attachment.position,
+    pairId: attachment.pairId ?? null,
   };
 }
 

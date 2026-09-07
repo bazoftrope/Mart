@@ -16,6 +16,9 @@
 # production
 /build
 
+# user uploaded files (audio/pdf attachments, pairs)
+/data/uploads/
+
 # misc
 .DS_Store
 *.pem

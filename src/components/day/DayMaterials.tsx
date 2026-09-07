@@ -16,15 +16,8 @@ export default function DayMaterials({ materials }: DayMaterialsProps) {
   }
 
   const hasText = Boolean(materials.textContent);
-  const mediaAttachments = materials.attachments.filter(
-    (attachment) => attachment.kind === 'audio' || attachment.kind === 'video',
-  );
-  const fileAttachments = materials.attachments.filter(
-    (attachment) => attachment.kind === 'file',
-  );
-  const hasMedia = mediaAttachments.length > 0;
-  const hasFiles = fileAttachments.length > 0;
-  const hasAnyContent = hasText || hasMedia || hasFiles;
+  const hasAttachments = materials.attachments.length > 0;
+  const hasAnyContent = hasText || hasAttachments;
 
   if (!hasAnyContent) {
     return (
@@ -34,46 +27,23 @@ export default function DayMaterials({ materials }: DayMaterialsProps) {
     );
   }
 
-  const hasSplitLayout = hasMedia && (hasText || hasFiles);
-
   return (
     <section className={styles.section}>
-      <div className={hasSplitLayout ? styles.splitLayout : styles.stackLayout}>
-        {hasMedia && (
+      <div className={hasText && hasAttachments ? styles.splitLayout : styles.stackLayout}>
+        {hasAttachments && (
           <div className={styles.mediaColumn}>
-            <AttachmentPlayers attachments={mediaAttachments} />
+            <AttachmentPlayers attachments={materials.attachments} />
           </div>
         )}
 
-        {(hasText || hasFiles) && (
+        {hasText && (
           <div className={styles.contentColumn}>
-            {hasFiles && (
-              <div className={styles.pdfBlock}>
-                <div className={styles.pdfList}>
-                  {fileAttachments.map((attachment) => (
-                    <a
-                      key={attachment.id || attachment.url}
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className={styles.pdfLink}
-                    >
-                      {attachment.fileName || 'PDF'}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-            {hasText && (
-              <div className={styles.textBlock}>
-                <div
-                  className={`${styles.textContent} ${styles.richText}`}
-                  dangerouslySetInnerHTML={{ __html: materials.textContent || '' }}
-                />
-              </div>
-            )}
-
-
+            <div className={styles.textBlock}>
+              <div
+                className={`${styles.textContent} ${styles.richText}`}
+                dangerouslySetInnerHTML={{ __html: materials.textContent || '' }}
+              />
+            </div>
           </div>
         )}
       </div>

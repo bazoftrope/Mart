@@ -110,6 +110,12 @@ marathon-platform/
 - `GET/POST /api/messages` — список бесед / создать беседу
 - `GET/POST /api/messages/[id]` — сообщения беседы / отправить сообщение
 
+**uploads/**
+- `POST /api/uploads/audio` — загрузка аудиофайлов (ментор)
+- `POST /api/uploads/file` — загрузка PDF (ментор)
+- `POST /api/uploads/pair` — загрузка комплекта «PDF + аудио» одним запросом (ментор)
+- `GET /api/uploads/audio/[...path]`, `GET /api/uploads/file/[...path]` — отдача файлов (Range)
+
 **rating/**
 - `POST /api/rating/calculate` — ручной пересчёт рейтинга (admin)
 
@@ -193,8 +199,18 @@ export default apiHandler({ GET: withMentor(getHandler) });
 | `20240815000002-create-conversations.js` | conversations + members + messages |
 | `20240816000001-add-weight-fields-to-stream-ratings.js` | вес в рейтинге |
 | `20260831000001-add-video-id-to-template-days.js` | `video_id` Kinescope |
+| `20260905000001-create-template-attachments.js` | вложения `template_attachments` (`pair_id`) + `intro_text` |
+| `20260905000002-add-session1-missing-columns.js` | поля сессии 1 |
+| `20260905000003-remove-text-editor.js` | удаление настройки редактора |
+| `20260905000004-fix-attachment-filenames-encoding.js` | починка имён файлов (mojibake) |
 
 Команды: `npx sequelize-cli db:migrate` / `db:migrate:undo` / `db:seed:all` / `db:seed:undo:all`.
+
+> **Соглашение по миграциям (важно для агента).** Сейчас рабочей/прод-базы с данными нет.
+> Поэтому новые файлы миграций **не создаём**: изменения схемы вносим правкой уже
+> существующих файлов миграций (например, `20260905000001-create-template-attachments.js`).
+> Если миграции уже были применены локально — откатить до нужной (`db:migrate:undo`) или
+> пересоздать базу, а затем выполнить `db:migrate` заново.
 
 ## Расчёт калорий (`src/lib/calorieCalculator.ts`)
 

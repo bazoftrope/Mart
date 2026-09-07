@@ -7,6 +7,7 @@ import RichTextEditor from '@/components/editor/RichTextEditor';
 import AttachmentManager from '@/components/mentor/AttachmentManager';
 import type { AttachmentData } from '@/types/attachments';
 import styles from './edit.module.css';
+import { canEditMarathonTemplate } from '@/lib/templateStatus';
 
 type Template = {
   id: string;
@@ -129,7 +130,7 @@ export default function TemplateIntroPage() {
     );
   }
 
-  const isEditable = template.status === 'draft';
+  const isEditable = canEditMarathonTemplate(template.status);
 
   return (
     <main className="containerMd">
@@ -140,9 +141,11 @@ export default function TemplateIntroPage() {
       </p>
 
       {!isEditable && (
-        <p className="error">
-          Шаблон {template.status === 'approved' ? 'одобрен' : 'на проверке'} — изменить
-          предстартовую страницу нельзя.
+        <p className="error">Шаблон на проверке — изменить предстартовую страницу нельзя.</p>
+      )}
+      {template.status === 'approved' && (
+        <p className="textMuted">
+          Шаблон одобрен. Изменения сохранятся сразу и будут видны во всех потоках.
         </p>
       )}
 
@@ -191,12 +194,16 @@ export default function TemplateIntroPage() {
         <div className={styles.actions}>
           {isEditable && (
             <button type="submit" disabled={saving} className="btn btnPrimary">
-              {saving ? 'Сохранение...' : 'Сохранить и перейти к дням'}
+              {saving
+                ? 'Сохранение...'
+                : template.status === 'draft'
+                  ? 'Сохранить и перейти к дням'
+                  : 'Сохранить изменения'}
             </button>
           )}
           <Link href={`/mentor/templates/${templateId}/days`}>
             <button type="button" className="btn btnOutline">
-              {isEditable ? 'Пропустить' : 'К дням'}
+              {template.status === 'draft' ? 'Пропустить' : 'К дням'}
             </button>
           </Link>
           <Link href="/mentor/templates">

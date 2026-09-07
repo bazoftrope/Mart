@@ -69,6 +69,7 @@ export const templateAttachmentSchema = z
     mimeType: z.string().max(255, 'MIME-тип слишком длинный').nullable().optional(),
     sizeBytes: z.number().int().nonnegative('Некорректный размер файла').nullable().optional(),
     position: z.number().int().nonnegative('Некорректная позиция').optional(),
+    pairId: z.string().uuid('Неверный идентификатор комплекта').nullable().optional(),
   })
   .refine(
     (data) => {

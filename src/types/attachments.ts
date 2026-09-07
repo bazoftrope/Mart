@@ -9,6 +9,7 @@ export type AttachmentData = {
   mimeType?: string | null;
   sizeBytes?: number | null;
   position?: number;
+  pairId?: string | null;
 };
 
 export type AttachmentInput = {
@@ -18,4 +19,5 @@ export type AttachmentInput = {
   mimeType?: string | null;
   sizeBytes?: number | null;
   position?: number;
+  pairId?: string | null;
 };

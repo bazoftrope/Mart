@@ -28,11 +28,13 @@ export default function AttachmentManager({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = attachments
-    .filter((attachment) => attachment.kind === kind)
+    .filter((attachment) => attachment.kind === kind && !attachment.pairId)
     .map((attachment, index) => ({ ...attachment, position: index }));
 
   function setFiltered(next: AttachmentData[]) {
-    const others = attachments.filter((attachment) => attachment.kind !== kind);
+    const others = attachments.filter(
+      (attachment) => attachment.kind !== kind || Boolean(attachment.pairId),
+    );
     onChange([...others, ...next]);
   }
 

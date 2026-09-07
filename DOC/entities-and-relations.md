@@ -67,6 +67,8 @@ draft → pending_review  (ментор отправляет, POST /api/marathon
 pending_review → approved (админ одобряет, POST /api/admin/:id/approve)
 ```
 - Одобренные шаблоны можно запускать в потоки (`POST /api/streams`).
+- Одобренный шаблон может редактировать ментор-владелец **без повторной проверки**;
+  изменения сразу видны во всех потоках (без снимков материалов).
 
 ---
 
@@ -101,11 +103,13 @@ pending_review → approved (админ одобряет, POST /api/admin/:id/ap
 | mimeType | string | nullable | MIME |
 | sizeBytes | integer | nullable | Размер |
 | position | integer | not null, default 0 | Порядок вывода |
+| pairId | UUID | nullable | `pair_id` — общий идентификатор комплекта «PDF + аудио»; у двух строк пары одинаковый |
 | createdAt | datetime | | `created_at` |
 
 **Ограничения:**
 - `templateDayId = NULL` + `scope = 'intro'` — материалы предстартовой страницы шаблона (общие для всех потоков).
 - Аудио/видео/PDF у дня — строки со `scope = 'day'`.
+- Комплект «PDF + аудио» — две строки одного дня (`scope = 'day'`) с одинаковым `pairId`: одна с `kind = 'file'` (PDF), вторая с `kind = 'audio'`. У одиночных вложений `pairId = NULL`.
 - При сохранении дней шаблона вложения пересоздаются вместе с днями (текущее поведение `POST /days`).
 
 ---

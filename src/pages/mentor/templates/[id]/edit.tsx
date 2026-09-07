@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './edit.module.css';
 import { apiFetch } from '@/lib/apiClient';
+import { canEditMarathonTemplate } from '@/lib/templateStatus';
 
 type Template = {
   id: string;
@@ -122,14 +123,17 @@ export default function EditTemplatePage() {
     );
   }
 
-  const isEditable = template.status === 'draft';
+  const isEditable = canEditMarathonTemplate(template.status);
 
   return (
     <main className="containerMd">
       <h1 className="pageTitle">Основная информация</h1>
       {!isEditable && (
-        <p className="error">
-          Этот шаблон {template.status === 'approved' ? 'одобрен' : 'на проверке'} и не может быть изменён.
+        <p className="error">Этот шаблон на проверке и не может быть изменён.</p>
+      )}
+      {template.status === 'approved' && (
+        <p className="textMuted">
+          Шаблон одобрен. Изменения сохранятся сразу и будут видны во всех потоках.
         </p>
       )}
       <form onSubmit={handleSubmit}>

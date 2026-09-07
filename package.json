@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "cron": "tsx src/cron-worker.ts"
+    "cron": "tsx src/cron-worker.ts",
+    "db:reset": "node scripts/reset-db.cjs"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -43,6 +44,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
     "reflect-metadata": "^0.2.2",
+    "sequelize-cli": "^6.6.5",
     "tsx": "^4.7.0",
     "typescript": "^5"
   }

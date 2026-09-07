@@ -16,6 +16,10 @@
   gap: 1.5rem;
 }
 
+.pairsBlock {
+  margin-bottom: 1.5rem;
+}
+
 .splitLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);

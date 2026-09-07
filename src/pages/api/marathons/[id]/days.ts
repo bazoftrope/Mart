@@ -10,6 +10,7 @@ import { updateTemplateDaysSchema } from '@/lib/validate';
 import { NotFound, Forbidden, BadRequest } from '@/lib/errors';
 import { sequelize } from '@db/db';
 import { serializeAttachments, sanitizeTemplateText } from '@/lib/attachmentUtils';
+import { canEditMarathonTemplate } from '@/lib/templateStatus';
 import type { AuthenticatedRequest } from '@/types/auth';
 
 async function loadOwnedTemplate(req: NextApiRequest) {
@@ -72,8 +73,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
 async function postHandler(req: NextApiRequest, res: NextApiResponse) {
   const template = await loadOwnedTemplate(req);
 
-  if (template.status !== 'draft') {
-    throw new BadRequest('Only draft templates can be edited');
+  if (!canEditMarathonTemplate(template.status)) {
+    throw new BadRequest('Only draft or approved templates can be edited');
   }
 
   const parsed = updateTemplateDaysSchema.safeParse(req.body);
@@ -123,6 +124,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
       mimeType: string | null;
       sizeBytes: number | null;
       position: number;
+      pairId: string | null;
     }> = [];
     for (let i = 0; i < createdDays.length; i++) {
       const createdDay = createdDays[i];
@@ -140,6 +142,7 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
           mimeType: attachment.mimeType ?? null,
           sizeBytes: attachment.sizeBytes ?? null,
           position: attachment.position ?? index,
+          pairId: attachment.pairId ?? null,
         });
       });
     }

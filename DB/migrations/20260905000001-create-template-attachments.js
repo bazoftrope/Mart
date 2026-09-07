@@ -60,6 +60,10 @@ module.exports = {
         allowNull: false,
         defaultValue: 0,
       },
+      pair_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -68,6 +72,9 @@ module.exports = {
     });
 
     await queryInterface.addIndex('template_attachments', ['template_id', 'scope', 'position']);
+    await queryInterface.addIndex('template_attachments', ['template_day_id', 'pair_id'], {
+      name: 'template_attachments_template_day_id_pair_id',
+    });
 
     await queryInterface.addColumn('marathon_templates', 'intro_text', {
       type: Sequelize.TEXT,

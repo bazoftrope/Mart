@@ -78,6 +78,12 @@ export class TemplateAttachment extends Model {
   })
   position!: number;
 
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  pairId?: string | null;
+
   @CreatedAt
   createdAt!: Date;
 }
